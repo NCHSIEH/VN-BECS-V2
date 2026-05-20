@@ -1,0 +1,14 @@
+node_modules/
+build/
+dist/
+.next/
+out/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+.firebase/
+firestore-debug.log
+ui_harmonized_*.png
+*.tsbuildinfo

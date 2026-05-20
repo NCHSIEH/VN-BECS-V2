@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>血液供應鏈網路系統 - 專案文件 (System Architecture & Manual)</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, 'Microsoft JhengHei', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #2980b9; margin-top: 30px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        h3 { color: #34495e; margin-top: 20px; }
+        p { margin-bottom: 15px; }
+        ul, ol { margin-bottom: 20px; }
+        li { margin-bottom: 8px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f2f2f2; color: #333; }
+        .logic-box { background-color: #f8f9fa; border-left: 4px solid #e74c3c; padding: 15px; margin: 15px 0; }
+        .logic-box strong { color: #c0392b; }
+        code { background-color: #eee; padding: 2px 5px; border-radius: 3px; font-family: monospace; color: #d35400;}
+        .btn-print {
+            display: inline-block;
+            background-color: #27ae60;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-print:hover { background-color: #2ecc71; }
+        @media print {
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; border-radius: 0; padding: 0; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="btn-print no-print" onclick="window.print()">列印 / 另存為 PDF (可匯入Word)</button>
+        <p class="no-print" style="color: #666; font-size: 0.9em;">提示：若需 Word 檔案，請直接全選本畫面所有內容（Ctrl+A），然後直接貼上（Ctrl+V）至空白的 Word 文件中，排版格式將會完美保留。</p>
+        
+        <h1>血液供應鏈網路 (Blood Supply Chain Network) - 系統交付文件</h1>
+        <p><strong>文件版本：</strong> 1.1.0 | <strong>系統架構師：</strong> Google AI Studio (Senior HIS Architect)</p>
+        <p>本文件旨在提供給醫院業主、系統維運人員及使用者，包含詳細系統架構、操作手冊、邏輯檢驗規則及資料庫結構。</p>
+
+        <h2>1. 系統功能架構 (System Functional Architecture)</h2>
+        <p>本系統分為 <strong>供血端 (LIMS 模擬器)</strong> 與 <strong>需求端 (供應鏈與醫院)</strong> 兩大模組，透過單一介面模擬端到端 (End-to-End) 血液生命週期，確保從「手臂到手臂 (Vein-to-Vein)」的高度可追溯性與安全性。</p>
+        <ul>
+            <li><strong>前端技術棧：</strong> React 18, Vite, TypeScript, Tailwind CSS, Lucide React</li>
+            <li><strong>後端技術棧：</strong> Node.js, Express.js (Port 3000)</li>
+            <li><strong>邊緣資料庫：</strong> SQLite (Better-SQLite3) 運行於本地系統，具備無縫離線能力與快取</li>
+            <li><strong>多語系架構 (i18n)：</strong> 系統內建繁體中文、英文、越南文切換，滿足跨國與移工操作落地需求。</li>
+        </ul>
+
+        <h2>2. 系統操作說明與檢驗邏輯 (Operation Manual & Validation Logic)</h2>
+        
+        <h3>2.1 提供端：血站管理 / LIMS Simulator</h3>
+        <p>負責模擬各捐血中心的作業流程與實驗室資訊系統 (LIMS)。</p>
+        <ul>
+            <li><strong>【階段A】註冊與採血 (Donation)：</strong> 負責建立捐血者檔案(Donors)，登錄性別、年齡。建立問卷調查防禦線。
+                <div class="logic-box">
+                    <strong>[邏輯檢驗] 台灣身分證字號驗證：</strong> 嚴格檢查首字母對應的縣市代碼、第2碼的性別代碼(1或2)，以及透過「權重乘積和模數10 (Modulus 10)」驗證檢查碼，失敗一律阻攔，不允許建立假資料。
+                </div>
+            </li>
+            <li><strong>【階段B】檢驗實驗室 (Lab Testing)：</strong> 收取試管，對血袋進行 ABO / RhD 驗明正身。進行傳染病 (IDM - Infectious Disease Marker) 檢測。只有 <code>CLEARED</code> (陰性) 才能往下流動；若為 <code>REACTIVE</code> (陽性) 則全批銷毀。</li>
+            <li><strong>【階段C】製造分離 (Processing)：</strong> 將全血透過離心技術，分離為 紅血球(RBC, E000100) 與 血小板(Platelets, E420600) 或 血漿(Plasma)。</li>
+            <li><strong>【階段D】品管核發 (QA Release / Cross-check)：</strong> 核發前，系統將血品條碼、血型與實驗室檢驗報告比對。若完全吻合，才賦予 <code>ISBT-128 條碼</code> 並放行至總部倉庫。</li>
+        </ul>
+
+        <h3>2.2 需求端：醫院與供應鏈管理 (Hospital & Supply Chain)</h3>
+        <p>處理血庫調度、醫院下單、派車與臨床輸血，並結合 AI 計算。</p>
+        <ul>
+            <li><strong>(1) 下單 (Hospital Operator)：</strong> 醫院提出需求，填寫病人資訊、血型與優先層級 (Routine / ASAP / STAT)。系統將依據需求產生即時的 <code>手術部位感染高危險 (HICI) 評分</code>。</li>
+            <li><strong>(2) AI 派送與調度 (Dispatcher)：</strong> 在庫存短缺或大量傷患 (MTP) 時，由 AI (模擬演算法) 接管調度規則，找出最短路徑及資源配置最佳解。</li>
+            <li><strong>(3) 倉庫出庫 (Warehouse Issuer)：</strong> 庫管人員針對訂單掃描出庫，系統動態生成血袋條碼清單，並追蹤血品效期。
+                <div class="logic-box">
+                    <strong>[防呆設計] 效期監控機制：</strong> 出庫時，表格自動驗證血袋 <code>expiryDate</code>，如已過期將整行標示為紅底並打上 <code style="color:white;background-color:#e74c3c;">EXPIRED</code> 與 <code style="color:white;background-color:#e74c3c;">WASTED</code> 標籤，絕對禁止發配。
+                </div>
+            </li>
+            <li><strong>(4) 冷鏈追蹤 (Courier)：</strong> 運送途中監聽各階段的物流溫度，若超出正常範圍 (2~6度等)，護理師端將自動拒收。</li>
+            <li><strong>(5) 床邊核對 (Bedside Verification - Nurse)：</strong> 臨床端進行三方條碼核對與病人驗明。這也是整套供應鏈的重點防護網。
+                <div class="logic-box">
+                    <strong>[防呆設計] ISBT 128 條碼解析規範：</strong><br>
+                    系統前台元件 (BedsideVerificationView) 強制限制：捐血碼必需符合 13 碼 ISBT 規範 <code>=(13碼)</code> 格式。(e.g., =W0000 24 10000101)。<br>
+                    若格式有誤，會觸發前端 <code>validateISBT128</code> 失敗，按鈕強制反灰。<br><br>
+                    <strong>[核心檢驗] ABO / RhD 相容性配對引擎：</strong><br>
+                    病患血型 O 型 → 只能接受 O 型。<br>
+                    病患血型 A 型 → 可接受 A 型、O 型。<br>
+                    病患血型 B 型 → 可接受 B 型、O 型。<br>
+                    病患血型 AB 型 → 可接受 AB, A, B, O 型 (萬能受血者)。<br>
+                    RhD 相容邏輯：陰性(-) 患者只能接受陰性(-) 的血。若為陽性患者，陰性/陽性皆可。
+                </div>
+            </li>
+            <li><strong>(6) 醫療主管覆審與 KPI (Manager / Auditor)：</strong> 大量輸血 (MTP)、未配血的緊急救援，將進入 Dual Review 覆審流程。</li>
+        </ul>
+
+        <h2>3. 資料庫實體關聯圖與結構 (Database Entity Relationship)</h2>
+        <p>系統使用邊緣關聯式資料庫 (SQLite)，所有關聯嚴格參照。</p>
+        <table>
+            <tr>
+                <th>資料表 (Table)</th>
+                <th>主鍵 (Primary Key)</th>
+                <th>重要欄位與關聯 (Fields & Foreign Keys)</th>
+                <th>設計說明與約束</th>
+            </tr>
+            <tr>
+                <td>donors <strong>(捐血者)</strong></td>
+                <td>id (TEXT)</td>
+                <td>nationalId(UNIQUE), name, dob, bloodType, rhd</td>
+                <td>捐血者基本資料，身分證有 UNIQUE 唯一值約束</td>
+            </tr>
+            <tr>
+                <td>questionnaires <strong>(問卷紀錄)</strong></td>
+                <td>id (TEXT)</td>
+                <td>donorId (FK), isPassed, answersJson</td>
+                <td>保存訪談歷史與適宜性</td>
+            </tr>
+            <tr>
+                <td>donations <strong>(採血紀錄)</strong></td>
+                <td>id (TEXT)</td>
+                <td>donorId(FK), questionnaireId(FK), volume, type</td>
+                <td>Id 會映射為 ISBT 全球唯一捐血碼</td>
+            </tr>
+            <tr>
+                <td>lab_tests <strong>(檢驗報告)</strong></td>
+                <td>id (TEXT)</td>
+                <td>donationId (FK), abo, rhd, idmStatus</td>
+                <td>記錄三區化驗報告(CLEARED/REACTIVE)</td>
+            </tr>
+            <tr>
+                <td>components <strong>(分裝血庫存)</strong></td>
+                <td>id (TEXT)</td>
+                <td>donationId(FK), productCode, status, expiryDate</td>
+                <td>最終被送至中央 Hub 的核發單位。包含過期計算。</td>
+            </tr>
+        </table>
+
+        <h2>4. 部署維運及交付注意事項</h2>
+        <ol>
+            <li><strong>連線失效問題 (關於對外發布的分享網址無效)：</strong><br> 
+               Google AI Studio 的 Share (Shared App URL) 分享功能，需要等待發布流程自動把 <code>dist/</code> 靜態檔案建立完畢，並掛載至 Cloud Run 後才會生效。若開啟分享網址遇到 "404 Page not found" 或是 "The requested URL was not found on this server"，通常是因為：
+               <br> (a) 剛剛結束改版，自動化 CI/CD pipeline 仍在佈署中，只需等待 1~3 分鐘重新整理即可。
+               <br> (b) 尚未主動按下右上角介面的 "Share" 更新按鈕，導致舊狀態失效。
+            </li>
+            <li><strong>本機與離線測試 (Offline Sync Simulator)：</strong><br>
+               本系統為滿足醫院緊急網路中斷時的情境，特別設計了「Offline Mode (離線模式)」按鈕。開啟後前端 API 不會連線後台，將快取積壓於 Local Storage，復網後再發送 Sync 批次同步，開發者請利用右上角紅色 Offline 按鈕測試。
+            </li>
+            <li><strong>重新起始系統：</strong><br>
+               您可以隨時於畫面上方點選「Reset System Data」按鈕，這會呼叫後端 API，將資料庫徹底清空並補入預設的 10~15 筆完美擬真教學資料，不會影響穩定性。
+            </li>
+        </ol>
+
+        <div style="margin-top: 40px; padding: 20px; background-color: #ecf0f1; border-radius: 8px; text-align: center;">
+            <strong>- Google AI Studio (Senior HIS Architect) / 系統產生完畢 -</strong><br>
+            <span style="font-size: 0.9em; color: #7f8c8d;">此文件完全基於先前的歷程、實作邏輯與代碼現狀重新撰寫，保證高度一致性。</span>
+        </div>
+    </div>
+</body>
+</html>

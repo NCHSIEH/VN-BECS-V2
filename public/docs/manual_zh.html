@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VN-BECS V1.0 臨床作業指揮手冊 - 6大功能區架構</title>
+    <style>
+        :root {
+            --primary-color: #0b1120;
+            --accent-color: #e11d48;
+            --text-main: #334155;
+            --text-light: #64748b;
+            --bg-light: #f8fafc;
+            --border-color: #e2e8f0;
+        }
+        body {
+            font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+            color: var(--text-main);
+            line-height: 1.8;
+            margin: 0;
+            padding: 0;
+            background-color: white;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--primary-color);
+            font-weight: 900;
+            text-transform: uppercase;
+            font-style: italic;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+        .cover-page {
+            text-align: left;
+            border-bottom: 4px solid var(--accent-color);
+            padding-bottom: 4rem;
+            margin-bottom: 4rem;
+        }
+        .cover-title {
+            font-size: 3.5rem;
+            line-height: 1.1;
+            margin-bottom: 1rem;
+            letter-spacing: -0.05em;
+        }
+        .cover-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-light);
+            font-weight: 300;
+            letter-spacing: 0.2em;
+        }
+        .cover-date {
+            margin-top: 4rem;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.4em;
+        }
+        
+        .section-title {
+            font-size: 2rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+            margin-top: 4rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .node-num {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 0.2rem 1rem;
+            border-radius: 8px;
+            font-size: 1.2rem;
+        }
+        
+        p {
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .alert {
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--accent-color);
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 0 12px 12px 0;
+        }
+        .alert-title {
+            font-weight: 900;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            display: block;
+            font-size: 0.8rem;
+            letter-spacing: 0.2em;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+            font-size: 0.95rem;
+        }
+        th, td {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.2rem;
+            text-align: left;
+        }
+        th {
+            font-weight: 900;
+            color: var(--primary-color);
+            background-color: var(--bg-light);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 0.75rem;
+        }
+        
+        .step-container {
+            margin: 2rem 0;
+        }
+        .step {
+            display: flex;
+            margin-bottom: 2rem;
+            align-items: flex-start;
+        }
+        .step-number {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1.5rem;
+            flex-shrink: 0;
+            font-size: 0.9rem;
+        }
+        .step-title {
+            font-weight: 900;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .toc {
+            background-color: var(--bg-light);
+            padding: 2.5rem;
+            margin-bottom: 4rem;
+            border-radius: 24px;
+        }
+        .toc ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin: 0;
+        }
+        .toc li {
+            margin-bottom: 1rem;
+        }
+        .toc a {
+            color: var(--primary-color);
+            text-decoration: none;
+            display: flex;
+            justify-content: space-between;
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+        }
+        .toc a:hover {
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="cover-page">
+        <h1 class="cover-title">VN-BECS V1.0<br>臨床作業指揮手冊</h1>
+        <div class="cover-subtitle">6大核心功能區架構與作戰指南</div>
+        <div class="cover-date">SYSTEM ARCHITECTURE V3.0 | CONFIDENTIAL</div>
+    </div>
+
+    <div class="toc">
+        <h3 style="margin-top: 0; font-size: 0.8rem; letter-spacing: 0.3em; color: var(--text-light);">作戰目錄 (NODE DIRECTORY)</h3>
+        <ul>
+            <li><a href="#lims">NODE 01: 捐血中心站 (LIMS) <span>REGISTRATION</span></a></li>
+            <li><a href="#lab">NODE 02: 品質檢驗實驗室 (LAB) <span>PRECISION</span></a></li>
+            <li><a href="#hub">NODE 03: 供應鏈調度中心 (HUB) <span>LOGISTICS</span></a></li>
+            <li><a href="#hospital">NODE 04: 臨床醫療節點 (HOSPITAL) <span>FRONT-LINE</span></a></li>
+            <li><a href="#national">NODE 05: 戰略指揮中心 (NATIONAL) <span>INTELLIGENCE</span></a></li>
+            <li><a href="#mdm">NODE 06: 主數據管理中心 (MDM) <span>GOVERNANCE</span></a></li>
+        </ul>
+    </div>
+
+    <p>VN-BECS V1.0 已全面進化，不再採用線性的 SOP 模式，而是轉化為具備「戰略縱深」的 **6大核心功能區 (Nodes)** 架構。本手冊旨在引導各級人員在對應的功能節點中執行臨床作戰任務，確保從「捐贈者血管」到「病患血管」的全生命週期 (Vein-to-Vein) 絕對安全。</p>
+
+    <h2 id="lims" class="section-title"><span class="node-num">01</span> 捐血中心站 (LIMS)</h2>
+    <p>LIMS 節點負責血液供應鏈的初始採集與身分定義，是數據真實性的唯一源頭。該子系統透過與<strong>越南國家身分證資料庫</strong>及 <strong>ISBT-128 條碼協定標準</strong>的數位整合，將捐血者的實體身分與採集血品進行「數位雙胞胎」綁定。</p>
+    
+    <h3 style="font-size: 1.4rem; color: var(--primary-color); margin-top: 2rem;">一、 階段式四重作業流 (Four-Stage Workflow)</h3>
+    <p>LIMS 子系統內部運作劃分為四個「戰略階段」，採取單向硬鎖定流程，確保上一階段未完成之血袋無法進入後續加工或調度：</p>
+    
+    <div class="step-container">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <div class="step-title">Registry Control (登記控制)</div>
+                <p>收集捐血者基本資料，進行越南 12 位身分證編碼格式校驗與捐血適齡性（16 至 65 歲）即時篩查。</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <div class="step-title">Clinical Screening (臨床檢驗篩選)</div>
+                <p>執行傳染病標記 (IDM) 及核酸檢測 (NAT)。檢驗通過前，系統將血袋狀態永久鎖定為「隔離 (PENDING)」，阻斷 any 物流出庫。</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <div class="step-title">Phlebotomy Ops (採血作業)</div>
+                <p>將核定通過之捐贈案綁定 ISBT-128 DIN（捐贈識別碼）。進行成分血（紅血球、血漿、血小板）的分離製作。</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <div class="step-title">Chain of Custody (保管與釋放)</div>
+                <p>完成所有品質認證與出庫審核，數位發布至調度系統，移交 <strong>HUB 供應鏈中心</strong>實行調配。</p>
+            </div>
+        </div>
+    </div>
+
+    <h3 style="font-size: 1.4rem; color: var(--primary-color); margin-top: 2rem;">二、 功能模組與畫面對照 (Features & Visual Screens)</h3>
+    
+    <h4 style="color: var(--primary-color); margin-top: 1.5rem; font-style: italic;">1. 登記控制台與 CCCD 晶片卡模擬</h4>
+    <p>此界面負責捐血者的初審與基本資料登記，整合了越南身分證 (CCCD) 的合法校驗器與晶片模擬掃描鈕。支援自動識別 Rh- 陰性等罕見血型，在系統中即時啟用高亮黃色標籤，以在物流與配血階段提供戰略防護。</p>
+    <div style="text-align: center; margin: 2rem 0; border: 1px solid var(--border-color); border-radius: 16px; padding: 10px; background-color: var(--bg-light);">
+        <img src="./images/lims_donor_registration.png" alt="登記控制台與 CCCD 模擬界面" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);" />
+        <p style="font-size: 0.85rem; color: var(--text-light); margin-top: 0.5rem; font-style: italic;">圖 1.1：LIMS 捐贈者入庫登記控制界面 (Donor Enrollment Console)</p>
+    </div>
+
+    <h4 style="color: var(--primary-color); margin-top: 1.5rem; font-style: italic;">2. 採血開工與品質保證硬閘門</h4>
+    <p>此界面負責血品採集、ISBT-128 DIN 條碼宣告以及檢測與加工。畫面上展示了當前安全聯鎖閘門生效，阻斷製作流程的實時情境。將 DIN 與捐贈者的身分編號 (CCCD) 進行「1對1 數位綁定」，確保該血袋後續在品質篩檢、成分分離、臨床输配及不良反應通報中皆可精準追溯至源頭捐贈者。</p>
+    <div style="text-align: center; margin: 2rem 0; border: 1px solid var(--border-color); border-radius: 16px; padding: 10px; background-color: var(--bg-light);">
+        <img src="./images/lims_phlebotomy_gating.png" alt="採血與設備聯鎖界面" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);" />
+        <p style="font-size: 0.85rem; color: var(--text-light); margin-top: 0.5rem; font-style: italic;">圖 1.2：LIMS 採血作業與品質管理聯鎖界面 (Phlebotomy & Gating Console)</p>
+    </div>
+
+    <h3 style="font-size: 1.4rem; color: var(--primary-color); margin-top: 2rem;">三、 資料欄位與欄位值說明 (Data Fields & Value Definition)</h3>
+    
+    <h4 style="color: var(--primary-color); margin-top: 1.5rem; font-style: italic;">1. 捐贈者登記表單 (Donor Registry Form)</h4>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 25%;">欄位名稱 (Field Name)</th>
+                <th style="width: 15%;">資料類型</th>
+                <th style="width: 25%;">格式條件 (Validation/Format)</th>
+                <th style="width: 35%;">說明與欄位值定義 (Description & Values)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Donor ID (捐贈者代號)</strong></td>
+                <td>String (UUID)</td>
+                <td>系統唯讀自動產生</td>
+                <td>捐血者於系統內部的永久識別碼，用於關聯歷次採血紀錄。</td>
+            </tr>
+            <tr>
+                <td><strong>Full Name (姓名)</strong></td>
+                <td>String</td>
+                <td>長度 &ge; 2 字元，英文大寫</td>
+                <td>捐血者之法定姓名。例：<code>NGUYEN VAN A</code>。<strong>不允許純數字。</strong></td>
+            </tr>
+            <tr>
+                <td><strong>National ID (CCCD)</strong></td>
+                <td>String</td>
+                <td>12 位純數字</td>
+                <td>越南國民身分證編號。首 3 位為省份代碼（<code>001</code> 至 <code>096</code>），第 4 位代表世紀與性別（<code>0-9</code>）。</td>
+            </tr>
+            <tr>
+                <td><strong>Date of Birth (出生日期)</strong></td>
+                <td>Date</td>
+                <td>YYYY-MM-DD</td>
+                <td>捐血者生日。系統將依此即時計算年齡，未成年或超齡者將被拒絕登記。</td>
+            </tr>
+            <tr>
+                <td><strong>Blood Type (血型)</strong></td>
+                <td>Enum</td>
+                <td>O | A | B | AB</td>
+                <td>捐血者的主要 ABO 血型系統類別。</td>
+            </tr>
+            <tr>
+                <td><strong>Rh Factor (Rh因子)</strong></td>
+                <td>Enum</td>
+                <td>Positive (+) | Negative (-)</td>
+                <td>RhD 血型系統分類。<strong>Negative 屬於罕見血型，會觸發系統高亮黃色標記。</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4 style="color: var(--primary-color); margin-top: 1.5rem; font-style: italic;">2. 採血初始化表單 (Phlebotomy Initiation Form)</h4>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 25%;">欄位名稱 (Field Name)</th>
+                <th style="width: 15%;">資料類型</th>
+                <th style="width: 25%;">格式條件 (Validation/Format)</th>
+                <th style="width: 35%;">說明與欄位值定義 (Description & Values)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Donation ID (DIN)</strong></td>
+                <td>String</td>
+                <td>開頭為 <code>=</code>，長度 &ge; 13 字元</td>
+                <td>ISBT-128 標準捐贈識別碼。格式：<code>=W[機構4碼] [年份2碼] [流水號6碼]</code>。例：<code>=W0000 24 102938</code>。</td>
+            </tr>
+            <tr>
+                <td><strong>Target Volume (採血量)</strong></td>
+                <td>Integer</td>
+                <td>200 至 600 (單位: mL)</td>
+                <td>本次預計採血的毫升數。預設值為 <code>500</code>。</td>
+            </tr>
+            <tr>
+                <td><strong>Collection Type (採血方式)</strong></td>
+                <td>Enum</td>
+                <td>WholeBlood | Apheresis</td>
+                <td>
+                    <code>WholeBlood</code>: 全血採集（血量 200~600mL）<br/>
+                    <code>Apheresis</code>: 分離術採集（血量上限為 300mL，超額會觸發警報）
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3 style="font-size: 1.4rem; color: var(--primary-color); margin-top: 2rem;">四、 安全聯鎖「硬閘門」與防錯條件 (Safety Interlocks & Hard Gating Rules)</h3>
+    <p>為落實臨床 100% 安全防護，系統於前端與後端資料庫層面均部署了「強制連鎖閘門 (Hard Gating)」，當條件不滿足時，操作按鈕會呈現灰色鎖定，並伴隨醒目的紅色 <code>SAFETY INTERLOCK ACTIVE</code> 警示：</p>
+    
+    <div class="alert" style="border-left-color: var(--accent-color);">
+        <span class="alert-title" style="color: var(--accent-color);">SYSTEM SECURITY GATE POLICY</span>
+        <ul style="padding-left: 1.2rem; margin: 0.5rem 0;">
+            <li style="margin-bottom: 0.8rem;">
+                <strong>身份安全閘門 (Identity Gate)</strong>: 身分證字號必須通過 <code>LocalCCCDValidator</code> 算法校驗。若長度不足 12 位、首 3 位省份碼不符合越南官方對應範圍 (<code>001</code>-<code>096</code>)，登記按鈕強制鎖定，並顯示錯誤提示。
+            </li>
+            <li style="margin-bottom: 0.8rem;">
+                <strong>年齡限制閘門 (Age Verification Gate)</strong>: 依據 <code>Date of Birth</code> 即時計算的年齡必須落在開設定位區間內（越南標準為 16 至 65 歲）。若計算年齡 &lt; 16 或 &gt; 65 歲，系統直接拒絕送出，從源頭杜絕超齡或未成年採血之法規風險。
+            </li>
+            <li style="margin-bottom: 0.8rem;">
+                <strong>試劑到期閘門 (Expired Reagent Lock)</strong>: 若庫存主數據管理模組 (MDM) 中，當前檢測用試劑 (Reagent) 的狀態被標記為 <code>Expired</code>，LIMS 實驗室檢驗模組的 <code>Process Diagnostics</code> 按鈕立即失能，系統拋出試劑過期硬阻斷。
+            </li>
+            <li style="margin-bottom: 0.8rem;">
+                <strong>儀器維保閘門 (Analyzer Maintenance Lock)</strong>: 若檢測分析儀 (Analyzer) 的設備狀態為 <code>MaintenanceRequired</code>，系統封鎖全部檢測運行操作，提示維保警報。
+            </li>
+            <li style="margin-bottom: 0.8rem;">
+                <strong>設備維護閘門 (Centrifuge Maintenance Lock)</strong>: 若血液離心機 (Centrifuge) 設備狀態為 <code>MaintenanceRequired</code>，系統阻斷 <code>Fabricate Components</code> 製作流程，強制要求完成儀器維修後方可開鎖。
+            </li>
+            <li style="margin-bottom: 0.8rem;">
+                <strong>陽性隔離閘門 (Bio-risk Quarantine Lock)</strong>: 若 Donation 案之檢測結果 <code>idmStatus === 'REACTIVE'</code>，<code>Fabricate Components</code> 按鈕永久失效，顯示 <code>QUARANTINE RESTRICTED</code>。系統將該血袋強行鎖定於隔離資料表，禁止任何出庫操作。
+            </li>
+        </ul>
+    </div>
+
+    <h2 id="lab" class="section-title"><span class="node-num">02</span> 品質檢驗實驗室 (LAB)</h2>
+    <p>LAB 節點是血液放行的技術守門員，確保每一單位血品皆符合國家安全檢驗標準。</p>
+    <div class="alert">
+        <span class="alert-title">CRITICAL: 隔離機制 (QUARANTINE)</span>
+        <p>所有新進血品在完成 IDM (傳染病標記) 與 NAT 核酸檢測前，均會被系統鎖定在「強制隔離」狀態，嚴禁調度出庫。</p>
+    </div>
+    <p>關鍵流程包含自動化 IDM 篩檢、精準 ABO/RhD 定型、以及成分血分離製作 (紅血球、血漿、血小板)。</p>
+
+    <h2 id="hub" class="section-title"><span class="node-num">03</span> 供應鏈調度中心 (HUB)</h2>
+    <p>HUB 節點是系統的物流引擎，負責全國庫存的動態調配與精準派發。</p>
+    <table>
+        <thead>
+            <tr>
+                <th>技術核心</th>
+                <th>作業內容</th>
+                <th>戰略價值</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>FEFO 演算法</td>
+                <td>優先推薦最接近過期日的血袋。</td>
+                <td>將全國血液浪費率降低至 2% 以下。</td>
+            </tr>
+            <tr>
+                <td>IoT 冷鏈追蹤</td>
+                <td>運送箱溫度每 5 分鐘實時上傳。</td>
+                <td>確保血液在運輸過程中活性不受損。</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2 id="hospital" class="section-title"><span class="node-num">04</span> 臨床醫療節點 (HOSPITAL)</h2>
+    <p>HOSPITAL 節點是臨床執行端，負責病患端的訂血、配血與最後一道輸血安全防線。</p>
+    <div class="step-container">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <div class="step-title">B2B 數位訂血</div>
+                <p>護理人員透過系統直接與 HUB 對接，分為常規 (Routine)、急件 (ASAP) 與極急件 (STAT) 三種等級。</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <div class="step-title">床邊掃描雙重驗證</div>
+                <p>在輸血前，必須同時掃描病患手環與血袋條碼。若血型不合或條碼錯誤，系統會觸發「強制鎖定」，防止意外發生。</p>
+            </div>
+        </div>
+    </div>
+
+    <h2 id="national" class="section-title"><span class="node-num">05</span> 戰略指揮中心 (NATIONAL)</h2>
+    <p>NATIONAL 節點為國家級指揮官提供宏觀視野，監控全國血液供應的安全與韌性。</p>
+    <p>功能包含實時全國庫存地圖、物流效率矩陣，以及針對突發大量傷亡事件的「危機模擬推演」工具。</p>
+
+    <h2 id="mdm" class="section-title"><span class="node-num">06</span> 主數據管理中心 (MDM)</h2>
+    <p>MDM 是系統的行政大腦，管理所有組織節點、帳號權限與產品目錄。</p>
+    <div class="alert">
+        <span class="alert-title">ADMIN GOVERNANCE</span>
+        <p>系統管理員必須在此節點配置 RBAC 角色政策，確保不同職能的人員僅能訪問對應的功能區塊。</p>
+    </div>
+
+    <p style="text-align: center; margin-top: 5rem; color: var(--text-light); font-size: 0.7rem; letter-spacing: 0.5em; text-transform: uppercase;">
+        --- END OF COMMAND MANUAL ---
+    </p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,127 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --color-clinical-bg: #0b1120;
+  --color-clinical-card: #020617;
+  --color-clinical-primary: #e11d48;
+  --color-clinical-secondary: #0ea5e9;
+  --color-clinical-success: #10b981;
+  --color-clinical-text: #f1f5f9;
+  --color-clinical-muted: #94a3b8;
+  --color-clinical-border: #1e293b;
+}
+
+@layer base {
+  body {
+    @apply bg-clinical-bg text-clinical-text font-sans antialiased selection:bg-rose-500/30 selection:text-white;
+    font-size: 16px;
+  }
+}
+
+@layer components {
+  .clinical-card {
+    @apply bg-slate-900/40 backdrop-blur-3xl border border-clinical-border rounded-[40px] shadow-2xl transition-all duration-700 hover:shadow-[0_0_80px_rgba(0,0,0,0.5)] hover:border-slate-700;
+  }
+
+  .glass-station {
+    @apply bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[48px] shadow-[0_40px_100px_rgba(0,0,0,0.8)] transition-all duration-700;
+  }
+
+  .clinical-btn-primary {
+    @apply bg-clinical-primary hover:bg-rose-500 text-white font-black py-6 px-12 rounded-[24px] shadow-2xl shadow-rose-900/40 transition-all hover:scale-[1.03] active:scale-95 disabled:opacity-50 uppercase tracking-[0.3em] text-[13px] flex items-center justify-center gap-4 italic;
+  }
+
+  .clinical-input {
+    @apply w-full bg-slate-950/80 border border-clinical-border text-clinical-text p-6 rounded-[24px] focus:outline-none focus:ring-4 focus:ring-rose-500/20 focus:border-rose-500/50 transition-all font-semibold placeholder:text-slate-800 text-lg shadow-inner;
+  }
+
+  .premium-heading {
+    @apply text-6xl lg:text-7xl font-black text-white uppercase italic tracking-tighter leading-[0.9] bg-clip-text text-transparent bg-gradient-to-br from-white via-white to-slate-600;
+  }
+
+  .premium-subtitle {
+    @apply text-[12px] font-black text-rose-500 uppercase tracking-[0.5em] mb-6 flex items-center gap-6;
+  }
+
+  .animate-float {
+    animation: float 8s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(1deg); }
+  }
+
+  .animate-glow {
+    animation: glow 4s ease-in-out infinite;
+  }
+
+  @keyframes glow {
+    0%, 100% { filter: drop-shadow(0 0 10px rgba(225,29,72,0.4)); }
+    50% { filter: drop-shadow(0 0 30px rgba(225,29,72,0.8)); }
+  }
+}
+
+/* Fluid Typography */
+:root {
+  --fluid-h1: clamp(1.5rem, 4vw, 2.5rem);
+  --fluid-h2: clamp(1.25rem, 3vw, 2rem);
+  --fluid-h3: clamp(1rem, 2vw, 1.5rem);
+  --fluid-text: clamp(0.75rem, 1vw, 1rem);
+}
+
+.fluid-h1 { font-size: var(--fluid-h1); }
+.fluid-h2 { font-size: var(--fluid-h2); }
+.fluid-h3 { font-size: var(--fluid-h3); }
+.fluid-text { font-size: var(--fluid-text); }
+
+/* Responsive Grid System */
+.adaptive-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+@media (min-width: 768px) {
+  .adaptive-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .adaptive-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Sidebar & Layout Transitions */
+aside {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Advanced Glassmorphism */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.3);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.2);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.5);
+}

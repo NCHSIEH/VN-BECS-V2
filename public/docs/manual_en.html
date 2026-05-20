@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VN-BECS V1.0 Operational Command Manual - 6 Functional Nodes</title>
+    <style>
+        :root {
+            --primary-color: #0b1120;
+            --accent-color: #e11d48;
+            --text-main: #334155;
+            --text-light: #64748b;
+            --bg-light: #f8fafc;
+            --border-color: #e2e8f0;
+        }
+        body {
+            font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+            color: var(--text-main);
+            line-height: 1.8;
+            margin: 0;
+            padding: 0;
+            background-color: white;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--primary-color);
+            font-weight: 900;
+            text-transform: uppercase;
+            font-style: italic;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+        .cover-page {
+            text-align: left;
+            border-bottom: 4px solid var(--accent-color);
+            padding-bottom: 4rem;
+            margin-bottom: 4rem;
+        }
+        .cover-title {
+            font-size: 3.5rem;
+            line-height: 1.1;
+            margin-bottom: 1rem;
+            letter-spacing: -0.05em;
+        }
+        .cover-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-light);
+            font-weight: 300;
+            letter-spacing: 0.2em;
+        }
+        .cover-date {
+            margin-top: 4rem;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.4em;
+        }
+        
+        .section-title {
+            font-size: 2rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+            margin-top: 4rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .node-num {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 0.2rem 1rem;
+            border-radius: 8px;
+            font-size: 1.2rem;
+        }
+        
+        p {
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .alert {
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--accent-color);
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 0 12px 12px 0;
+        }
+        .alert-title {
+            font-weight: 900;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            display: block;
+            font-size: 0.8rem;
+            letter-spacing: 0.2em;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+            font-size: 0.95rem;
+        }
+        th, td {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.2rem;
+            text-align: left;
+        }
+        th {
+            font-weight: 900;
+            color: var(--primary-color);
+            background-color: var(--bg-light);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 0.75rem;
+        }
+        
+        .step-container {
+            margin: 2rem 0;
+        }
+        .step {
+            display: flex;
+            margin-bottom: 2rem;
+            align-items: flex-start;
+        }
+        .step-number {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1.5rem;
+            flex-shrink: 0;
+            font-size: 0.9rem;
+        }
+        .step-title {
+            font-weight: 900;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .toc {
+            background-color: var(--bg-light);
+            padding: 2.5rem;
+            margin-bottom: 4rem;
+            border-radius: 24px;
+        }
+        .toc ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin: 0;
+        }
+        .toc li {
+            margin-bottom: 1rem;
+        }
+        .toc a {
+            color: var(--primary-color);
+            text-decoration: none;
+            display: flex;
+            justify-content: space-between;
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+        }
+        .toc a:hover {
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="cover-page">
+        <h1 class="cover-title">VN-BECS V1.0<br>COMMAND MANUAL</h1>
+        <div class="cover-subtitle">Operational Guide for the 6 Core Functional Nodes</div>
+        <div class="cover-date">SYSTEM ARCHITECTURE V3.0 | CONFIDENTIAL</div>
+    </div>
+
+    <div class="toc">
+        <h3 style="margin-top: 0; font-size: 0.8rem; letter-spacing: 0.3em; color: var(--text-light);">NODE DIRECTORY</h3>
+        <ul>
+            <li><a href="#lims">NODE 01: DONOR CENTER (LIMS) <span>REGISTRATION</span></a></li>
+            <li><a href="#lab">NODE 02: QUALITY LAB (LAB) <span>PRECISION</span></a></li>
+            <li><a href="#hub">NODE 03: SUPPLY CHAIN HUB (HUB) <span>LOGISTICS</span></a></li>
+            <li><a href="#hospital">NODE 04: CLINICAL NODE (HOSPITAL) <span>FRONT-LINE</span></a></li>
+            <li><a href="#national">NODE 05: STRATEGIC HUB (NATIONAL) <span>INTELLIGENCE</span></a></li>
+            <li><a href="#mdm">NODE 06: MASTER DATABASE (MDM) <span>GOVERNANCE</span></a></li>
+        </ul>
+    </div>
+
+    <p>VN-BECS V1.0 has transitioned from a linear SOP model to a high-resilience **6 Core Functional Node** architecture. This manual guides all personnel through mission-critical tasks within their assigned nodes, ensuring a safe and efficient Vein-to-Vein blood management lifecycle.</p>
+
+    <h2 id="lims" class="section-title"><span class="node-num">01</span> DONOR CENTER (LIMS)</h2>
+    <p>The LIMS node manages the primary intake and identity definition of the blood supply chain. It establishes the digital twin for each physical donation by binding the donor's citizen identity to the ISBT-128 standard barcode protocols, integrating with the Vietnam National CCCD database.</p>
+    
+    <h3 style="font-size: 1.4rem; color: var(--primary-color); margin-top: 2rem;">I. Four-Stage Workflow</h3>
+    <p>The LIMS subsystem operates through four sequential stages with strict one-way gating, ensuring that any unit not cleared in a prior phase cannot proceed further in processing or distribution:</p>
+    
+    <div class="step-container">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <div class="step-title">Registry Control</div>
+                <p>Collect donor demographic data, run real-time format validation on the 12-digit Vietnam National CCCD, and instantly filter donor eligibility based on age limits (16 to 65 years).</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <div class="step-title">Clinical Screening</div>
+                <p>Perform infectious disease markers (IDM) and Nucleic Acid Testing (NAT). Prior to validation, the unit is permanently locked in "PENDING" status to block any dispatch.</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <div class="step-title">Phlebotomy Ops</div>
+                <p>Bind the cleared donor record to a unique ISBT-128 DIN (Donation Identification Number) and perform component fabrication (Red Blood Cells, Plasma, Platelets).</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <div class="step-title">Chain of Custody</div>
+                <p>Complete all quality certifications and outbound release audits, digitally releasing the cleared blood units to the supply chain for HUB allocation.</p>
+            </div>
+        </div>
+    </div>
+
+    <h3 style="font-size: 1.4rem; color: var(--primary-color); margin-top: 2rem;">II. Features & Visual Screens</h3>
+    
+    <h4 style="color: var(--primary-color); margin-top: 1.5rem; font-style: italic;">1. Donor Enrollment Console & CCCD Simulator</h4>
+    <p>This interface handles donor pre-screening and registry intake, embedding a validator for Vietnam CCCD and a chip card simulator. It supports automatic identification of rare phenotypes like Rh- negative, instantly activating high-contrast yellow tags for downstream protection.</p>
+    <div style="text-align: center; margin: 2rem 0; border: 1px solid var(--border-color); border-radius: 16px; padding: 10px; background-color: var(--bg-light);">
+        <img src="./images/lims_donor_registration.png" alt="Donor Enrollment Console & CCCD Simulator" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);" />
+        <p style="font-size: 0.85rem; color: var(--text-light); margin-top: 0.5rem; font-style: italic;">Figure 1.1: LIMS Donor Enrollment Console</p>
+    </div>
+
+    <h4 style="color: var(--primary-color); margin-top: 1.5rem; font-style: italic;">2. Phlebotomy Gating Console</h4>
+    <p>This interface manages blood collection, ISBT-128 DIN registration, and component fabrication. The screen demonstrates real-time safety interlock policies blocking the workflow under non-compliant equipment status. It establishes 1-to-1 digital binding between the DIN and the donor's national ID, ensuring end-to-end traceability for adverse event lookbacks.</p>
+    <div style="text-align: center; margin: 2rem 0; border: 1px solid var(--border-color); border-radius: 16px; padding: 10px; background-color: var(--bg-light);">
+        <img src="./images/lims_phlebotomy_gating.png" alt="Phlebotomy & Gating Console" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);" />
+        <p style="font-size: 0.85rem; color: var(--text-light); margin-top: 0.5rem; font-style: italic;">Figure 1.2: LIMS Phlebotomy & Gating Console</p>
+    </div>
+
+    <h3 style="font-size: 1.4rem; color: var(--primary-color); margin-top: 2rem;">III. Data Fields & Value Definition</h3>
+    
+    <h4 style="color: var(--primary-color); margin-top: 1.5rem; font-style: italic;">1. Donor Registry Form</h4>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 25%;">Field Name</th>
+                <th style="width: 15%;">Data Type</th>
+                <th style="width: 25%;">Validation/Format</th>
+                <th style="width: 35%;">Description & Value Definition</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Donor ID</strong></td>
+                <td>String (UUID)</td>
+                <td>Read-only, auto-generated</td>
+                <td>The unique identifier for the donor within the system, used to link historical donation records.</td>
+            </tr>
+            <tr>
+                <td><strong>Full Name</strong></td>
+                <td>String</td>
+                <td>Length &ge; 2 chars, uppercase English</td>
+                <td>The legal name of the donor. Example: <code>NGUYEN VAN A</code>. <strong>Numeric characters are not allowed.</strong></td>
+            </tr>
+            <tr>
+                <td><strong>National ID (CCCD)</strong></td>
+                <td>String</td>
+                <td>12-digit numeric</td>
+                <td>Vietnam National Identity Card number. The first 3 digits represent the province code (<code>001</code> to <code>096</code>), and the 4th digit represents the century and gender (<code>0-9</code>).</td>
+            </tr>
+            <tr>
+                <td><strong>Date of Birth</strong></td>
+                <td>Date</td>
+                <td>YYYY-MM-DD</td>
+                <td>The donor's birth date. The system uses this to calculate age in real-time. Underage or over-aged donors will be rejected.</td>
+            </tr>
+            <tr>
+                <td><strong>Blood Type</strong></td>
+                <td>Enum</td>
+                <td>O | A | B | AB</td>
+                <td>The donor's primary ABO blood group classification.</td>
+            </tr>
+            <tr>
+                <td><strong>Rh Factor</strong></td>
+                <td>Enum</td>
+                <td>Positive (+) | Negative (-)</td>
+                <td>The RhD blood group classification. <strong>Negative is flagged in high-contrast yellow as a rare phenotype.</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4 style="color: var(--primary-color); margin-top: 1.5rem; font-style: italic;">2. Phlebotomy Initiation Form</h4>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 25%;">Field Name</th>
+                <th style="width: 15%;">Data Type</th>
+                <th style="width: 25%;">Validation/Format</th>
+                <th style="width: 35%;">Description & Value Definition</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Donation ID (DIN)</strong></td>
+                <td>String</td>
+                <td>Starts with <code>=</code>, length &ge; 13 chars</td>
+                <td>ISBT-128 standard Donation Identification Number. Format: <code>=W[4-digit facility] [2-digit year] [6-digit sequence]</code>. Example: <code>=W0000 24 102938</code>.</td>
+            </tr>
+            <tr>
+                <td><strong>Target Volume</strong></td>
+                <td>Integer</td>
+                <td>200 to 600 (unit: mL)</td>
+                <td>The volume of blood expected to be collected during this session. The default value is <code>500</code>.</td>
+            </tr>
+            <tr>
+                <td><strong>Collection Type</strong></td>
+                <td>Enum</td>
+                <td>WholeBlood | Apheresis</td>
+                <td>
+                    <code>WholeBlood</code>: Whole blood collection (200~600mL).<br/>
+                    <code>Apheresis</code>: Apheresis collection (limit 300mL, exceeding will trigger an alert).
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3 style="font-size: 1.4rem; color: var(--primary-color); margin-top: 2rem;">IV. Safety Interlocks & Hard Gating Rules</h3>
+    <p>To enforce 100% clinical safety, the system deploys "Hard Gating" interlocks at both frontend and database layers. When conditions are not met, the action buttons are grayed out and locked, accompanied by a prominent red <code>SAFETY INTERLOCK ACTIVE</code> warning:</p>
+    
+    <div class="alert" style="border-left-color: var(--accent-color);">
+         <span class="alert-title" style="color: var(--accent-color);">SYSTEM SECURITY GATE POLICY</span>
+         <ul style="padding-left: 1.2rem; margin: 0.5rem 0;">
+             <li style="margin-bottom: 0.8rem;">
+                 <strong>Identity Gate</strong>: The National ID (CCCD) must pass `LocalCCCDValidator` algorithm checks. If the length is less than 12 digits or the first 3 digits do not match the official Vietnam province codes (<code>001</code>-<code>096</code>), the registration button is hard-locked with a validation error message.
+             </li>
+             <li style="margin-bottom: 0.8rem;">
+                 <strong>Age Verification Gate</strong>: The calculated age based on the <code>Date of Birth</code> must fall within the configured eligibility window (16 to 65 years under Vietnam standards). If the calculated age is &lt; 16 or &gt; 65 years, the system rejects the submission, eliminating compliance risks from the source.
+             </li>
+             <li style="margin-bottom: 0.8rem;">
+                 <strong>Expired Reagent Lock</strong>: If the current testing reagent status in the Master Data Management (MDM) module is marked as <code>Expired</code>, the <code>Process Diagnostics</code> button in LIMS is instantly disabled, throwing a hard reagent expiry block.
+             </li>
+             <li style="margin-bottom: 0.8rem;">
+                 <strong>Analyzer Maintenance Lock</strong>: If the test analyzer's status is <code>MaintenanceRequired</code>, the system blocks all diagnostic runs and prompts a critical maintenance warning.
+             </li>
+             <li style="margin-bottom: 0.8rem;">
+                 <strong>Centrifuge Maintenance Lock</strong>: If the blood centrifuge equipment status is <code>MaintenanceRequired</code>, the system blocks the <code>Fabricate Components</code> action, requiring equipment servicing to unlock the workflow.
+             </li>
+             <li style="margin-bottom: 0.8rem;">
+                 <strong>Bio-risk Quarantine Lock</strong>: If a donation's test result is <code>idmStatus === 'REACTIVE'</code>, the <code>Fabricate Components</code> button is permanently disabled, showing <code>QUARANTINE RESTRICTED</code>. The system permanently routes the unit to the quarantine ledger, blocking any outbound dispatch.
+             </li>
+         </ul>
+    </div>
+
+    <h2 id="lab" class="section-title"><span class="node-num">02</span> QUALITY LAB (LAB)</h2>
+    <p>The LAB node serves as the technical gatekeeper, ensuring all units meet national safety screening standards.</p>
+    <div class="alert">
+        <span class="alert-title">CRITICAL: QUARANTINE PROTOCOL</span>
+        <p>All incoming units are locked in a "Quarantine" state until NAT and IDM testing results are verified. Dispatch is strictly prohibited until clearance.</p>
+    </div>
+    <p>Key processes include automated infectious disease screening, precision ABO/RhD typing, and component fabrication.</p>
+
+    <h2 id="hub" class="section-title"><span class="node-num">03</span> SUPPLY CHAIN HUB (HUB)</h2>
+    <p>The HUB node is the logistics engine, managing dynamic inventory allocation and precision distribution.</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Core Tech</th>
+                <th>Operation</th>
+                <th>Strategic Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>FEFO Algorithm</td>
+                <td>Recommends units closest to expiry.</td>
+                <td>Reduces national wastage to < 2%.</td>
+            </tr>
+            <tr>
+                <td>IoT Cold Chain</td>
+                <td>Real-time temperature telemetry.</td>
+                <td>Ensures unit viability during transit.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2 id="hospital" class="section-title"><span class="node-num">04</span> CLINICAL NODE (HOSPITAL)</h2>
+    <p>The HOSPITAL node is the frontline execution point for patient orders and transfusion safety.</p>
+    <div class="step-container">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <div class="step-title">Digital B2B Requisitions</div>
+                <p>Staff place orders directly to the HUB with priority levels: Routine, ASAP, and STAT.</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <div class="step-title">Bedside Double-Verification</div>
+                <p>Scanning both patient wristbands and bag barcodes. System locks the process if a mismatch is detected.</p>
+            </div>
+        </div>
+    </div>
+
+    <h2 id="national" class="section-title"><span class="node-num">05</span> STRATEGIC HUB (NATIONAL)</h2>
+    <p>The NATIONAL node provides commanders with a macro-view of the entire national supply chain grid.</p>
+    <p>Includes real-time inventory maps, logistics efficiency matrices, and crisis simulation tools for mass-casualty event planning.</p>
+
+    <h2 id="mdm" class="section-title"><span class="node-num">06</span> MASTER DATABASE (MDM)</h2>
+    <p>The MDM node is the administrative core, managing organizational nodes, user permissions, and product catalogs.</p>
+    <div class="alert">
+        <span class="alert-title">ADMIN GOVERNANCE</span>
+        <p>Administrators must configure RBAC policies here to ensure functional isolation between different tactical roles.</p>
+    </div>
+
+    <p style="text-align: center; margin-top: 5rem; color: var(--text-light); font-size: 0.7rem; letter-spacing: 0.5em; text-transform: uppercase;">
+        --- END OF COMMAND MANUAL ---
+    </p>
+</div>
+
+</body>
+</html>

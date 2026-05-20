@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VN-BECS V1.0 Sổ tay Chỉ dẫn Vận hành - 6 Phân khu Chức năng</title>
+    <style>
+        :root {
+            --primary-color: #0b1120;
+            --accent-color: #e11d48;
+            --text-main: #334155;
+            --text-light: #64748b;
+            --bg-light: #f8fafc;
+            --border-color: #e2e8f0;
+        }
+        body {
+            font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+            color: var(--text-main);
+            line-height: 1.8;
+            margin: 0;
+            padding: 0;
+            background-color: white;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--primary-color);
+            font-weight: 900;
+            text-transform: uppercase;
+            font-style: italic;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+        .cover-page {
+            text-align: left;
+            border-bottom: 4px solid var(--accent-color);
+            padding-bottom: 4rem;
+            margin-bottom: 4rem;
+        }
+        .cover-title {
+            font-size: 3.5rem;
+            line-height: 1.1;
+            margin-bottom: 1rem;
+            letter-spacing: -0.05em;
+        }
+        .cover-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-light);
+            font-weight: 300;
+            letter-spacing: 0.2em;
+        }
+        .cover-date {
+            margin-top: 4rem;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.4em;
+        }
+        
+        .section-title {
+            font-size: 2rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+            margin-top: 4rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .node-num {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 0.2rem 1rem;
+            border-radius: 8px;
+            font-size: 1.2rem;
+        }
+        
+        p {
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .alert {
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--accent-color);
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 0 12px 12px 0;
+        }
+        .alert-title {
+            font-weight: 900;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            display: block;
+            font-size: 0.8rem;
+            letter-spacing: 0.2em;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+            font-size: 0.95rem;
+        }
+        th, td {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.2rem;
+            text-align: left;
+        }
+        th {
+            font-weight: 900;
+            color: var(--primary-color);
+            background-color: var(--bg-light);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 0.75rem;
+        }
+        
+        .step-container {
+            margin: 2rem 0;
+        }
+        .step {
+            display: flex;
+            margin-bottom: 2rem;
+            align-items: flex-start;
+        }
+        .step-number {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1.5rem;
+            flex-shrink: 0;
+            font-size: 0.9rem;
+        }
+        .step-title {
+            font-weight: 900;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .toc {
+            background-color: var(--bg-light);
+            padding: 2.5rem;
+            margin-bottom: 4rem;
+            border-radius: 24px;
+        }
+        .toc ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin: 0;
+        }
+        .toc li {
+            margin-bottom: 1rem;
+        }
+        .toc a {
+            color: var(--primary-color);
+            text-decoration: none;
+            display: flex;
+            justify-content: space-between;
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+        }
+        .toc a:hover {
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="cover-page">
+        <h1 class="cover-title">VN-BECS V1.0<br>SỔ TAY VẬN HÀNH</h1>
+        <div class="cover-subtitle">Hướng dẫn cho 6 Phân khu Chức năng Cốt lõi</div>
+        <div class="cover-date">SYSTEM ARCHITECTURE V3.0 | BẢO MẬT</div>
+    </div>
+
+    <div class="toc">
+        <h3 style="margin-top: 0; font-size: 0.8rem; letter-spacing: 0.3em; color: var(--text-light);">DANH MỤC PHÂN KHU</h3>
+        <ul>
+            <li><a href="#lims">PHÂN KHU 01: TRUNG TÂM HIẾN MÁU (LIMS) <span>ĐĂNG KÝ</span></a></li>
+            <li><a href="#lab">PHÂN KHU 02: PHÒNG XÉT NGHIỆM (LAB) <span>CHÍNH XÁC</span></a></li>
+            <li><a href="#hub">PHÂN KHU 03: TRUNG TÂM ĐIỀU PHỐI (HUB) <span>HẬU CẦN</span></a></li>
+            <li><a href="#hospital">PHÂN KHU 04: ĐIỂM LÂM SÀNG (HOSPITAL) <span>TIỀN TUYẾN</span></a></li>
+            <li><a href="#national">PHÂN KHU 05: TRUNG TÂM CHIẾN LƯỢC (NATIONAL) <span>TRÍ TUỆ</span></a></li>
+            <li><a href="#mdm">PHÂN KHU 06: CƠ SỞ DỮ LIỆU CHÍNH (MDM) <span>QUẢN TRỊ</span></a></li>
+        </ul>
+    </div>
+
+    <p>VN-BECS V1.0 đã chuyển đổi từ mô hình SOP tuyến tính sang kiến trúc **6 Phân khu Chức năng** có khả năng phục hồi cao. Sổ tay này hướng dẫn nhân viên thực hiện các nhiệm vụ quan trọng trong các phân khu được chỉ định, đảm bảo chu kỳ quản lý máu an toàn từ Người hiến đến Bệnh nhân.</p>
+
+    <h2 id="lims" class="section-title"><span class="node-num">01</span> TRUNG TÂM HIẾN MÁU (LIMS)</h2>
+    <p>Phân khu LIMS quản lý việc tiếp nhận ban đầu và xác định danh tính của chuỗi cung ứng máu. Phân khu này thiết lập "bản sao kỹ thuật số" cho mỗi túi máu bằng cách liên kết danh tính công dân của người hiến với giao thức mã vạch tiêu chuẩn ISBT-128, được tích hợp với cơ sở dữ liệu CCCD Quốc gia Việt Nam.</p>
+    
+    <h3 style="font-size: 1.4rem; color: var(--primary-color); margin-top: 2rem;">I. Quy trình 4 Giai đoạn (Four-Stage Workflow)</h3>
+    <p>Phân khu LIMS vận hành qua bốn giai đoạn tuần tự với các chốt chặn một chiều nghiêm ngặt, đảm bảo bất kỳ túi máu nào chưa được phê duyệt ở giai đoạn trước sẽ không thể chuyển sang giai đoạn xử lý hoặc điều phối tiếp theo:</p>
+    
+    <div class="step-container">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <div class="step-title">Kiểm soát Đăng ký (Registry Control)</div>
+                <p>Thu thập thông tin nhân khẩu học của người hiến, thực hiện xác thực định dạng thời gian thực trên Căn cước công dân (CCCD) 12 số và kiểm tra ngay tính hợp lệ về độ tuổi (16 đến 65 tuổi).</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <div class="step-title">Sàng lọc Lâm sàng (Clinical Screening)</div>
+                <p>Thực hiện xét nghiệm các dấu ấn bệnh truyền nhiễm (IDM) và xét nghiệm axit nucleic (NAT). Trước khi có kết quả xác nhận, túi máu sẽ bị khóa vĩnh viễn ở trạng thái "PENDING" để ngăn chặn mọi hoạt động xuất kho.</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <div class="step-title">Nghiệp vụ Lấy máu (Phlebotomy Ops)</div>
+                <p>Liên kết hồ sơ người hiến đã được phê duyệt với Mã định danh túi máu ISBT-128 DIN duy nhất và tiến hành sản xuất các thành phần máu (Hồng cầu, Huyết tương, Tiểu cầu).</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <div class="step-title">Giám sát & Giải phóng (Chain of Custody)</div>
+                <p>Hoàn thành tất cả các chứng nhận chất lượng và kiểm toán giải phóng xuất kho, giải phóng túi máu đủ điều kiện lên hệ thống điều phối của HUB trung tâm.</p>
+            </div>
+        </div>
+    </div>
+
+    <h3 style="font-size: 1.4rem; color: var(--primary-color); margin-top: 2rem;">II. Tính năng & Đối chiếu Giao diện (Features & Visual Screens)</h3>
+    
+    <h4 style="color: var(--primary-color); margin-top: 1.5rem; font-style: italic;">1. Bảng điều khiển Đăng ký & Giả lập Đọc thẻ CCCD</h4>
+    <p>Giao diện này xử lý việc sàng lọc trước và đăng ký người hiến, tích hợp bộ xác thực CCCD Việt Nam và giả lập quét thẻ chip. Tính năng hỗ trợ tự động nhận diện các kiểu hình hiếm như Rh- âm tính, kích hoạt ngay thẻ màu vàng nổi bật để bảo vệ túi máu trong các khâu tiếp theo.</p>
+    <div style="text-align: center; margin: 2rem 0; border: 1px solid var(--border-color); border-radius: 16px; padding: 10px; background-color: var(--bg-light);">
+        <img src="./images/lims_donor_registration.png" alt="Donor Enrollment Console & CCCD Simulator" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);" />
+        <p style="font-size: 0.85rem; color: var(--text-light); margin-top: 0.5rem; font-style: italic;">Hình 1.1: Giao diện Đăng ký Người hiến LIMS</p>
+    </div>
+
+    <h4 style="color: var(--primary-color); margin-top: 1.5rem; font-style: italic;">2. Bảng điều khiển Chốt chặn Lấy máu</h4>
+    <p>Giao diện này quản lý việc thu thập máu, khai báo mã vạch ISBT-128 DIN và tách chiết thành phần máu. Màn hình hiển thị tình huống thực tế khi chốt chặn an toàn hoạt động, ngăn chặn quy trình khi thiết bị không đạt chuẩn bảo trì. Hệ thống thực hiện liên kết kỹ thuật số 1-1 giữa mã DIN và CCCD của người hiến, đảm bảo khả năng truy xuất nguồn gốc tuyệt đối cho việc hồi cứu thông tin.</p>
+    <div style="text-align: center; margin: 2rem 0; border: 1px solid var(--border-color); border-radius: 16px; padding: 10px; background-color: var(--bg-light);">
+        <img src="./images/lims_phlebotomy_gating.png" alt="Phlebotomy & Gating Console" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);" />
+        <p style="font-size: 0.85rem; color: var(--text-light); margin-top: 0.5rem; font-style: italic;">Hình 1.2: Giao diện Chốt chặn & Nghiệp vụ Lấy máu LIMS</p>
+    </div>
+
+    <h3 style="font-size: 1.4rem; color: var(--primary-color); margin-top: 2rem;">III. Trường Dữ liệu & Định nghĩa Giá trị (Data Fields & Value Definition)</h3>
+    
+    <h4 style="color: var(--primary-color); margin-top: 1.5rem; font-style: italic;">1. Biểu mẫu Đăng ký Người hiến máu (Donor Registry Form)</h4>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 25%;">Tên trường (Field Name)</th>
+                <th style="width: 15%;">Kiểu dữ liệu</th>
+                <th style="width: 25%;">Điều kiện định dạng (Validation/Format)</th>
+                <th style="width: 35%;">Mô tả & Định nghĩa giá trị (Description & Values)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Donor ID (Mã người hiến)</strong></td>
+                <td>String (UUID)</td>
+                <td>Hệ thống tự động tạo, chỉ đọc</td>
+                <td>Mã nhận diện duy nhất của người hiến trong hệ thống, dùng để liên kết lịch sử hiến máu.</td>
+            </tr>
+            <tr>
+                <td><strong>Full Name (Họ tên)</strong></td>
+                <td>String</td>
+                <td>Độ dài &ge; 2 ký tự, chữ in hoa không dấu</td>
+                <td>Họ và tên pháp lý của người hiến máu. Ví dụ: <code>NGUYEN VAN A</code>. <strong>Không được phép chứa chữ số.</strong></td>
+            </tr>
+            <tr>
+                <td><strong>National ID (CCCD)</strong></td>
+                <td>String</td>
+                <td>12 ký số</td>
+                <td>Số Căn cước công dân Việt Nam. 3 chữ số đầu là mã tỉnh/thành phố (<code>001</code> đến <code>096</code>), chữ số thứ 4 là mã thế kỷ và giới tính (<code>0-9</code>).</td>
+            </tr>
+            <tr>
+                <td><strong>Date of Birth (Ngày sinh)</strong></td>
+                <td>Date</td>
+                <td>YYYY-MM-DD</td>
+                <td>Ngày sinh của người hiến. Hệ thống sẽ tính tuổi thời gian thực. Người chưa đủ tuổi hoặc quá tuổi quy định sẽ bị từ chối đăng ký.</td>
+            </tr>
+            <tr>
+                <td><strong>Blood Type (Nhóm máu)</strong></td>
+                <td>Enum</td>
+                <td>O | A | B | AB</td>
+                <td>Phân loại nhóm máu hệ ABO chính của người hiến.</td>
+            </tr>
+            <tr>
+                <td><strong>Rh Factor (Yếu tố Rh)</strong></td>
+                <td>Enum</td>
+                <td>Positive (+) | Negative (-)</td>
+                <td>Phân loại hệ nhóm máu RhD. <strong>Yếu tố Negative thuộc nhóm máu hiếm, sẽ được hệ thống đánh dấu màu vàng nổi bật để cảnh báo.</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4 style="color: var(--primary-color); margin-top: 1.5rem; font-style: italic;">2. Biểu mẫu Khởi tạo Lấy máu (Phlebotomy Initiation Form)</h4>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 25%;">Tên trường (Field Name)</th>
+                <th style="width: 15%;">Kiểu dữ liệu</th>
+                <th style="width: 25%;">Điều kiện định dạng (Validation/Format)</th>
+                <th style="width: 35%;">Mô tả & Định nghĩa giá trị (Description & Values)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Donation ID (DIN - Mã túi máu)</strong></td>
+                <td>String</td>
+                <td>Bắt đầu bằng <code>=</code>, độ dài &ge; 13 ký tự</td>
+                <td>Mã định danh túi máu theo tiêu chuẩn ISBT-128. Định dạng: <code>=W[Mã cơ sở 4 số] [Năm 2 số] [Số lưu trình 6 số]</code>. Ví dụ: <code>=W0000 24 102938</code>.</td>
+            </tr>
+            <tr>
+                <td><strong>Target Volume (Thể tích thu gom)</strong></td>
+                <td>Integer</td>
+                <td>200 đến 600 (Đơn vị: mL)</td>
+                <td>Thể tích máu toàn phần dự kiến thu gom. Giá trị mặc định là <code>500</code>.</td>
+            </tr>
+            <tr>
+                <td><strong>Collection Type (Phương thức lấy máu)</strong></td>
+                <td>Enum</td>
+                <td>WholeBlood | Apheresis</td>
+                <td>
+                    <code>WholeBlood</code>: Lấy máu toàn phần (thể tích 200~600mL).<br/>
+                    <code>Apheresis</code>: Lấy máu gạn tách (giới hạn 300mL, vượt quá sẽ kích hoạt cảnh báo).
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3 style="font-size: 1.4rem; color: var(--primary-color); margin-top: 2rem;">IV. Quy tắc Liên khóa An toàn & Chốt chặn Cứng (Safety Interlocks & Hard Gating Rules)</h3>
+    <p>Để đảm bảo an toàn lâm sàng 100%, hệ thống triển khai các chốt chặn "Chốt cứng (Hard Gating)" ở cả lớp giao diện người dùng và cơ sở dữ liệu. Khi các điều kiện không được thỏa mãn, các nút thao tác sẽ bị khóa xám kèm theo cảnh báo màu đỏ nổi bật <code>SAFETY INTERLOCK ACTIVE</code>:</p>
+    
+    <div class="alert" style="border-left-color: var(--accent-color);">
+         <span class="alert-title" style="color: var(--accent-color);">CHÍNH SÁCH CHỐT CHẶN AN TOÀN HỆ THỐNG</span>
+         <ul style="padding-left: 1.2rem; margin: 0.5rem 0;">
+             <li style="margin-bottom: 0.8rem;">
+                 <strong>Chốt xác minh Danh tính (Identity Gate)</strong>: Số Căn cước công dân (CCCD) phải vượt qua kiểm tra thuật toán của <code>LocalCCCDValidator</code>. Nếu độ dài dưới 12 chữ số hoặc 3 chữ số đầu không khớp với mã tỉnh chính thức của Việt Nam (<code>001</code>-<code>096</code>), nút đăng ký sẽ bị khóa cứng kèm thông báo lỗi.
+             </li>
+             <li style="margin-bottom: 0.8rem;">
+                 <strong>Chốt xác minh Tuổi (Age Verification Gate)</strong>: Tuổi tính toán dựa trên <code>Date of Birth</code> phải nằm trong phạm vi quy định (từ 16 đến 65 tuổi theo tiêu chuẩn Việt Nam). Nếu tuổi &lt; 16 hoặc &gt; 65 tuổi, hệ thống sẽ từ chối gửi biểu mẫu, loại bỏ rủi ro pháp lý ngay từ nguồn.
+             </li>
+             <li style="margin-bottom: 0.8rem;">
+                 <strong>Khóa Hóa chất Hết hạn (Expired Reagent Lock)</strong>: Nếu trạng thái hóa chất xét nghiệm hiện tại trong phân khu Quản trị Dữ liệu (MDM) bị đánh dấu là <code>Expired</code>, nút <code>Process Diagnostics</code> trong LIMS sẽ bị vô hiệu hóa ngay lập tức, đưa ra lệnh chặn cứng do hóa chất hết hạn.
+             </li>
+             <li style="margin-bottom: 0.8rem;">
+                 <strong>Khóa Bảo dưỡng Máy phân tích (Analyzer Maintenance Lock)</strong>: Nếu trạng thái máy phân tích xét nghiệm là <code>MaintenanceRequired</code>, hệ thống sẽ chặn tất cả các hoạt động chạy xét nghiệm và hiển thị cảnh báo bảo trì khẩn cấp.
+             </li>
+             <li style="margin-bottom: 0.8rem;">
+                 <strong>Khóa Bảo dưỡng Máy ly tâm (Centrifuge Maintenance Lock)</strong>: Nếu trạng thái máy ly tâm túi máu là <code>MaintenanceRequired</code>, hệ thống sẽ chặn thao tác <code>Fabricate Components</code>, yêu cầu thực hiện bảo trì thiết bị để mở khóa quy trình.
+             </li>
+             <li style="margin-bottom: 0.8rem;">
+                 <strong>Khóa Cách ly Sinh học (Bio-risk Quarantine Lock)</strong>: Nếu kết quả xét nghiệm của túi máu là <code>idmStatus === 'REACTIVE'</code>, nút <code>Fabricate Components</code> sẽ bị vô hiệu hóa vĩnh viễn và hiển thị <code>QUARANTINE RESTRICTED</code>. Hệ thống sẽ khóa túi máu đó trong danh sách cách ly, nghiêm cấm mọi hoạt động xuất kho.
+             </li>
+         </ul>
+    </div>
+
+    <h2 id="lab" class="section-title"><span class="node-num">02</span> PHÒNG XÉT NGHIỆM (LAB)</h2>
+    <p>Phân khu LAB đóng vai trò là người gác cổng kỹ thuật, đảm bảo mọi đơn vị máu đều đáp ứng các tiêu chuẩn sàng lọc an toàn quốc gia.</p>
+    <div class="alert">
+        <span class="alert-title">QUAN TRỌNG: GIAO THỨC CÁCH LY</span>
+        <p>Mọi đơn vị máu mới đều bị khóa ở trạng thái "Cách ly" cho đến khi kết quả xét nghiệm NAT và IDM được xác nhận.</p>
+    </div>
+
+    <h2 id="hub" class="section-title"><span class="node-num">03</span> TRUNG TÂM ĐIỀU PHỐI (HUB)</h2>
+    <p>Phân khu HUB là động cơ hậu cần, quản lý phân bổ kho hàng động và phân phối chính xác.</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Công nghệ Lõi</th>
+                <th>Vận hành</th>
+                <th>Giá trị Chiến lược</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Thuật toán FEFO</td>
+                <td>Ưu tiên xuất các đơn vị gần hết hạn.</td>
+                <td>Giảm tỷ lệ hao hụt quốc gia xuống < 2%.</td>
+            </tr>
+            <tr>
+                <td>IoT Chuỗi lạnh</td>
+                <td>Theo dõi nhiệt độ thời gian thực.</td>
+                <td>Đảm bảo chất lượng máu trong vận chuyển.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2 id="hospital" class="section-title"><span class="node-num">04</span> ĐIỂM LÂM SÀNG (HOSPITAL)</h2>
+    <p>Phân khu HOSPITAL là điểm thực thi tiền tuyến cho các đơn hàng bệnh nhân và an toàn truyền máu.</p>
+    <div class="step-container">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <div class="step-title">Đặt hàng B2B Kỹ thuật số</div>
+                <p>Nhân viên đặt hàng trực tiếp đến HUB với các mức độ ưu tiên: Routine, ASAP và STAT.</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <div class="step-title">Xác minh Kép tại giường</div>
+                <p>Quét cả vòng tay bệnh nhân và mã vạch túi máu. Hệ thống sẽ khóa quy trình nếu phát hiện sai lệch.</p>
+            </div>
+        </div>
+    </div>
+
+    <h2 id="national" class="section-title"><span class="node-num">05</span> TRUNG TÂM CHIẾN LƯỢC (NATIONAL)</h2>
+    <p>Phân khu NATIONAL cung cấp cho các nhà chỉ huy cái nhìn vĩ mô về toàn bộ mạng lưới cung ứng quốc gia.</p>
+
+    <h2 id="mdm" class="section-title"><span class="node-num">06</span> CƠ SỞ DỮ LIỆU CHÍNH (MDM)</h2>
+    <p>Phân khu MDM là lõi quản trị, quản lý các nút tổ chức, quyền người dùng và danh mục sản phẩm.</p>
+
+    <p style="text-align: center; margin-top: 5rem; color: var(--text-light); font-size: 0.7rem; letter-spacing: 0.5em; text-transform: uppercase;">
+        --- KẾT THÚC SỔ TAY CHỈ HUY ---
+    </p>
+</div>
+
+</body>
+</html>

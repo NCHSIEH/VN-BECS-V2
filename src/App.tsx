@@ -1,0 +1,285 @@
+import React, { useState, useEffect, Suspense, lazy } from 'react';
+import { GlobalHeader } from './components/GlobalHeader';
+import { MessagingCenter } from './components/MessagingCenter';
+import { BloodDropLogo } from './components/BloodDropLogo';
+import { HospitalOperatorView } from './components/HospitalOperatorView';
+import { HospitalInventoryView } from './components/HospitalInventoryView';
+import { SystemSwitcher } from './components/SystemSwitcher';
+import { DispatcherView } from './components/DispatcherView';
+import { WarehouseView } from './components/WarehouseView';
+import { AuditLogViewer } from './components/AuditLogViewer';
+import { MedicalReviewerView } from './components/MedicalReviewerView';
+import { ManagerKPIView } from './components/ManagerKPIView';
+import { CourierView } from './components/CourierView';
+import { BedsideVerificationView } from './components/BedsideVerificationView';
+import { SystemDiagnosticView } from './components/SystemDiagnosticView';
+import { DonorCenterSimulatorView } from './components/DonorCenterSimulatorView';
+import { FlowIndicator } from './components/FlowIndicator';
+import { Role, User, SystemType } from './types';
+import { I18nProvider, useI18n } from './lib/i18n';
+import { 
+  ArrowLeft, 
+  BookOpen, 
+  Layers, 
+  Settings, 
+  Truck, 
+  Syringe, 
+  ClipboardCheck, 
+  Globe, 
+  ExternalLink, 
+  Activity, 
+  RefreshCcw, 
+  LogOut, 
+  ChevronLeft, 
+  Database, 
+  ShieldAlert, 
+  ShieldCheck, 
+  Zap, 
+  AlertTriangle, 
+  ArrowUpRight, 
+  Package, 
+  ArrowRightLeft,
+  X
+} from 'lucide-react';
+import { LoginView } from './components/LoginView';
+import { PortalView } from './components/PortalView';
+import { Tooltip } from './components/Tooltip';
+import { AdminMDMView } from './components/AdminMDMView';
+import { DocsView } from './components/DocsView';
+import { CrossmatchView } from './components/CrossmatchView';
+import { IssueReturnView } from './components/IssueReturnView';
+import { HemovigilanceView } from './components/HemovigilanceView';
+import { RareDonorView } from './components/RareDonorView';
+import { MtpEmergencyView } from './components/MtpEmergencyView';
+import { ResourceManagementView } from './components/ResourceManagementView';
+import { NationalDashboardView } from './components/NationalDashboardView';
+import { Sidebar } from './components/Sidebar';
+import { TaskQueue } from './components/TaskQueue';
+import { offlineStore } from './lib/offlineStore';
+
+function getSubRoles(mainRole: string): Role[] {
+  if (mainRole === 'Admin') return ['HospitalOperator', 'Nurse', 'WarehouseIssuer', 'Dispatcher', 'Courier', 'Manager', 'NationalCommander', 'Auditor'];
+  if (mainRole === 'Manager') return ['Manager', 'Auditor', 'NationalCommander'];
+  return [mainRole as Role];
+}
+
+function AppContent() {
+  const { t } = useI18n();
+  const [user, setUser] = useState<User | null>(null);
+  const [currentSystem, setCurrentSystem] = useState<SystemType | null>(null);
+  const [role, setRole] = useState<Role>(() => {
+    const saved = localStorage.getItem('vnbbms_role');
+    return saved ? saved as Role : 'Manager';
+  });
+  const [isOffline, setIsOffline] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [showConfirmReset, setShowConfirmReset] = useState(false);
+  const [showDocs, setShowDocs] = useState(false);
+  const [inventory, setInventory] = useState<any[]>([]);
+  const [localEventsCount, setLocalEventsCount] = useState(0);
+  const [nationalTab, setNationalTab] = useState('overview');
+  const [showDiagnostic, setShowDiagnostic] = useState(false);
+  const [showSwitcher, setShowSwitcher] = useState(false);
+  const [showMessages, setShowMessages] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(3);
+
+  const fetchInventory = async () => {
+    try {
+      const res = await fetch('/api/v1/inventory');
+      const data = await res.json();
+      setInventory(data);
+    } catch (e) {}
+  };
+
+  useEffect(() => {
+    if (user && currentSystem === 'HUB') fetchInventory();
+  }, [user, currentSystem]);
+
+  useEffect(() => {
+    localStorage.setItem('vnbbms_role', role);
+  }, [role]);
+
+  const handleLogin = (u: User) => {
+    setUser(u);
+    setRole('Dashboard' as Role);
+    if (u.permittedSystems.length === 1) setCurrentSystem(u.permittedSystems[0]);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setCurrentSystem(null);
+  };
+
+  const handleResetSystem = async () => {
+    setShowConfirmReset(false);
+    setIsResetting(true);
+    try {
+      await fetch('/api/v1/reset', { method: 'POST' });
+      window.location.reload();
+    } catch (e) {
+      setIsResetting(false);
+    }
+  };
+
+  const handleOfflineRelease = async (unitId: string, pId: string, dId: string) => {
+    try {
+      await offlineStore.saveEvent({
+        hospitalId: 'HOSP-DEFAULT',
+        unitBarcodeRaw: unitId,
+        patientTempId: pId,
+        authorizationDoctorId: dId,
+        timestamp: new Date().toISOString()
+      });
+      const pending = await offlineStore.getPendingEvents();
+      setLocalEventsCount(pending.length);
+    } catch (e) {}
+  };
+
+  const renderSystemView = () => {
+    if (currentSystem === 'MDM') return <AdminMDMView onBack={() => setCurrentSystem(null)} />;
+    
+    if (currentSystem === 'NATIONAL') {
+       return (
+         <div className="flex-1 flex overflow-hidden">
+            <aside className="hidden md:flex w-20 xl:w-24 border-r border-slate-800/30 bg-slate-950/80 backdrop-blur-3xl flex-col p-4 xl:p-6 z-10 transition-all duration-500 shadow-2xl">
+               <nav className="flex-1 flex flex-col items-center gap-6">
+                  <CompactSidebarItem icon={<Activity size={24} />} active={nationalTab === 'overview'} onClick={() => setNationalTab('overview')} />
+                  <CompactSidebarItem icon={<Database size={24} />} active={nationalTab === 'inventory'} onClick={() => setNationalTab('inventory')} />
+                  <CompactSidebarItem icon={<Truck size={24} />} active={nationalTab === 'logistics'} onClick={() => setNationalTab('logistics')} />
+                  <CompactSidebarItem icon={<ShieldCheck size={24} />} active={nationalTab === 'surveillance'} onClick={() => setNationalTab('surveillance')} />
+                  <CompactSidebarItem icon={<Zap size={24} />} active={nationalTab === 'war_games'} onClick={() => setNationalTab('war_games')} />
+                  <div className="w-8 h-px bg-slate-800 my-4"></div>
+                  <button onClick={() => setCurrentSystem(null)} className="p-3 text-slate-500 hover:text-rose-500 transition-all"><ArrowLeft size={24} /></button>
+               </nav>
+            </aside>
+            <main className="flex-1 overflow-y-auto bg-[#020617] relative">
+               {nationalTab === 'overview' && <NationalDashboardView />}
+               {nationalTab === 'inventory' && <HospitalInventoryView />}
+               {nationalTab === 'logistics' && <ResourceManagementView />}
+               {nationalTab === 'surveillance' && <AuditLogViewer />}
+               {nationalTab === 'war_games' && (
+                  <div className="flex-1 flex flex-col items-center justify-center min-h-[400px] text-slate-700">
+                     <h3 className="text-3xl font-black text-slate-800 uppercase italic">Command War Games Active</h3>
+                  </div>
+               )}
+            </main>
+         </div>
+       );
+    }
+
+    if (currentSystem === 'LIMS') return <DonorCenterSimulatorView initialTab={role === 'LabTech_Crossmatch' ? 'LAB' : 'DONOR'} />;
+    
+    if (currentSystem === 'HOSPITAL') {
+       return (
+         <div className="flex-1 p-4 lg:p-6 overflow-y-auto bg-[#0b1120]">
+            <HospitalOperatorView 
+               user={user!} inventory={inventory} isOffline={isOffline} 
+               localEventsCount={localEventsCount} onSync={fetchInventory} onLogout={handleLogout} 
+               onOfflineRelease={handleOfflineRelease} 
+            />
+         </div>
+       );
+    }
+
+    if (currentSystem === 'HUB') {
+       return (
+         <div className="flex-1 flex flex-col overflow-hidden">
+            <FlowIndicator role={role} />
+            <main className="flex-1 p-4 lg:p-6 overflow-y-auto bg-[#0b1120]">
+               {role === ('Dashboard' as Role) && <TaskQueue role={user!.role} onNavigate={setRole} />}
+               {role === 'HospitalOperator' && (
+                <HospitalOperatorView 
+                  user={user!} inventory={inventory} isOffline={isOffline} 
+                  localEventsCount={localEventsCount} onSync={fetchInventory} onLogout={handleLogout} 
+                  onOfflineRelease={handleOfflineRelease} 
+                />
+              )}
+               {role === 'Nurse' && <BedsideVerificationView />}
+               {role === 'Nurse_Hemovigilance' && <HemovigilanceView />}
+               {role === 'LabTech_Crossmatch' && <CrossmatchView />}
+               {role === 'Dispatcher' && <DispatcherView />}
+               {role === 'WarehouseIssuer' && <WarehouseView />}
+               {role === 'Warehouse_IssueReturn' && <IssueReturnView />}
+               {role === 'Courier' && <CourierView />}
+               {role === 'Auditor' && <AuditLogViewer />}
+               {role === 'MedicalReviewer' && <MedicalReviewerView />}
+               {role === 'Manager' && <ManagerKPIView />}
+               {role === 'NationalCommander' && <HospitalInventoryView />}
+               {role === 'Nurse_MTP' && <MtpEmergencyView />}
+               {role === 'SOP11_RareDonor' && <RareDonorView />}
+               {role === ('Resource' as Role) && <ResourceManagementView />}
+            </main>
+         </div>
+       );
+    }
+
+    return <PortalView user={user!} onSelectSystem={setCurrentSystem} onSelectRole={setRole} onLogout={handleLogout} onOpenDocs={() => setShowDocs(true)} onOpenSwitcher={() => setShowSwitcher(true)} />;
+  };
+
+  if (showDocs) return <DocsView onBack={() => setShowDocs(false)} />;
+  if (!user) return <LoginView onLogin={handleLogin} onOpenDocs={() => setShowDocs(true)} />;
+
+  return (
+    <div className="flex flex-col h-screen bg-[#020617] text-slate-200 overflow-hidden font-inter selection:bg-rose-500/30">
+      <GlobalHeader 
+        user={user} 
+        isOffline={isOffline} 
+        onLogout={handleLogout} 
+        onOpenMessages={() => { setShowMessages(true); setUnreadCount(0); }}
+        onOpenSwitcher={() => setShowSwitcher(true)}
+        unreadMessages={unreadCount}
+        systemName={currentSystem ? `VN-BECS V1.0 ${currentSystem} COMMAND` : "VN-BECS V1.0 ENTERPRISE COMMAND"}
+      />
+      
+      <div className="flex flex-1 overflow-hidden relative">
+        {currentSystem && currentSystem !== 'NATIONAL' && currentSystem !== 'MDM' && (
+          <Sidebar 
+            currentRole={role} 
+            setRole={setRole} 
+            allowedRoles={getSubRoles(user.role)} 
+            onReturnToPortal={() => setCurrentSystem(null)}
+          />
+        )}
+        <main className="flex-1 relative overflow-hidden flex flex-col">
+           <Suspense fallback={<div className="flex items-center justify-center h-full"><div className="w-12 h-12 border-4 border-rose-600 border-t-transparent rounded-full animate-spin" /></div>}>
+              {renderSystemView()}
+           </Suspense>
+        </main>
+      </div>
+
+      <MessagingCenter currentUser={user} isOpen={showMessages} onClose={() => setShowMessages(false)} />
+      <SystemSwitcher isOpen={showSwitcher} onClose={() => setShowSwitcher(false)} onSelect={setCurrentSystem} currentSystem={currentSystem} />
+      {showDocs && <DocsView onBack={() => setShowDocs(false)} />}
+      {showDiagnostic && <SystemDiagnosticView onClose={() => setShowDiagnostic(false)} />}
+
+      {showConfirmReset && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+          <div className="clinical-card max-w-sm w-full bg-slate-900 border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+             <div className="p-6 border-b border-slate-800 bg-slate-950"><h3 className="text-sm font-black text-white uppercase italic tracking-widest">Confirm System Reset</h3></div>
+             <div className="p-8"><p className="text-slate-400 text-[11px] font-black uppercase tracking-widest leading-relaxed">Execute full command reset? All data will be baseline initialized.</p></div>
+             <div className="p-6 bg-slate-950/50 border-t border-slate-800 flex justify-end gap-3">
+               <button onClick={() => setShowConfirmReset(false)} className="px-6 py-2 text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-widest">Cancel</button>
+               <button onClick={handleResetSystem} className="px-8 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-900/40">Reset</button>
+             </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CompactSidebarItem({ icon, active = false, onClick }: any) {
+  return (
+    <button onClick={onClick} className={`w-14 h-14 flex items-center justify-center rounded-[18px] transition-all group ${active ? 'bg-rose-600 text-white shadow-xl shadow-rose-900/40' : 'text-slate-500 hover:bg-slate-900/50 hover:text-slate-300'}`}>
+      <div className="transition-transform group-hover:scale-110">{icon}</div>
+    </button>
+  );
+}
+
+export default function App() {
+  return (
+    <I18nProvider>
+      <AppContent />
+    </I18nProvider>
+  );
+}
