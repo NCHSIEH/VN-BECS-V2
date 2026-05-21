@@ -41,23 +41,23 @@ export function SearchableSelect({ options, value, onChange, placeholder, label,
     <div className={`relative ${className}`} ref={wrapperRef}>
       {label && <label className="text-[10px] text-cyan-500 font-bold uppercase tracking-widest mb-1 block">{label}</label>}
       <div 
-        className="w-full bg-[#0b1120] border border-slate-700 text-slate-300 rounded p-2 text-sm flex justify-between items-center cursor-pointer hover:border-cyan-400 transition-colors font-mono min-h-[42px]"
+        className="w-full bg-[#0b1120] border border-slate-700 text-slate-700 rounded p-2 text-sm flex justify-between items-center cursor-pointer hover:border-cyan-400 transition-colors font-mono min-h-[42px]"
         onClick={() => { setIsOpen(!isOpen); setSearchTerm(""); }}
       >
-        <span className={selectedOption ? "text-slate-200" : "text-slate-500"}>
+        <span className={selectedOption ? "text-slate-800" : "text-slate-600"}>
           {selectedOption ? selectedOption.label : (placeholder || "Select an option...")}
         </span>
-        <ChevronDown size={16} className="text-slate-500 shrink-0 ml-2" />
+        <ChevronDown size={16} className="text-slate-600 shrink-0 ml-2" />
       </div>
 
       {isOpen && (
         <div className="absolute z-50 w-full mt-1 bg-[#020617] border border-cyan-900/50 rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.5)] overflow-hidden">
           <div className="p-2 border-b border-slate-800 flex items-center gap-2 bg-[#0b1120]">
-            <Search size={14} className="text-slate-500 shrink-0" />
+            <Search size={14} className="text-slate-600 shrink-0" />
             <input
               autoFocus
               type="text"
-              className="w-full bg-transparent border-none outline-none text-slate-300 text-sm font-sans"
+              className="w-full bg-transparent border-none outline-none text-slate-700 text-sm font-sans"
               placeholder="Search..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
@@ -65,12 +65,12 @@ export function SearchableSelect({ options, value, onChange, placeholder, label,
           </div>
           <ul className="max-h-48 overflow-y-auto custom-scrollbar p-1">
             {filteredOptions.length === 0 ? (
-              <li className="p-3 text-slate-500 text-sm italic text-center">No results found</li>
+              <li className="p-3 text-slate-600 text-sm italic text-center">No results found</li>
             ) : (
               filteredOptions.map((opt) => (
                 <li
                   key={opt.value}
-                  className={`p-2.5 rounded-md text-sm font-mono cursor-pointer transition-colors ${value === opt.value ? 'bg-cyan-950/40 text-cyan-400 font-bold' : 'text-slate-300 hover:bg-slate-800'}`}
+                  className={`p-2.5 rounded-md text-sm font-mono cursor-pointer transition-colors ${value === opt.value ? 'bg-cyan-950/40 text-cyan-400 font-bold' : 'text-slate-700 hover:bg-slate-800'}`}
                   onClick={() => {
                     onChange(opt.value);
                     setIsOpen(false);

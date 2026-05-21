@@ -77,7 +77,7 @@ export function PortalView({ user, onSelectSystem, onSelectRole, onLogout, onOpe
       id: 'MDM',
       title: t('portal_station_mdm_title'),
       subtitle: t('portal_station_mdm_sub'),
-      icon: <Database className="text-slate-400" size={32} />,
+      icon: <Database className="text-slate-600" size={32} />,
       roles: ['Admin'],
       description: t('portal_station_mdm_desc'),
       color: 'slate',
@@ -136,11 +136,11 @@ export function PortalView({ user, onSelectSystem, onSelectRole, onLogout, onOpe
                 <div className="h-12 w-2 bg-rose-600 rounded-full shadow-[0_0_20px_rgba(225,29,72,0.6)]" />
                 <span className="text-[12px] font-black text-rose-500 uppercase tracking-[0.6em] italic">VN-BECS V1.0</span>
              </div>
-             <h1 className="text-6xl font-black text-white uppercase italic tracking-tighter mb-6">VN-BECS Portal</h1>
-            <div className="flex items-center gap-6 text-[11px] font-black text-slate-500 uppercase tracking-[0.4em] ml-8">
-               <span>User: <strong className="text-white">{user.username}</strong></span>
+             <h1 className="text-6xl font-black text-slate-800 uppercase italic tracking-tighter mb-6">VN-BECS Portal</h1>
+            <div className="flex items-center gap-6 text-[11px] font-black text-slate-600 uppercase tracking-[0.4em] ml-8">
+               <span>User: <strong className="text-slate-800">{user.username}</strong></span>
                <div className="w-1.5 h-1.5 rounded-full bg-slate-800" />
-               <span>Terminal: <strong className="text-white">VN-HQ-STRAT-01</strong></span>
+               <span>Terminal: <strong className="text-slate-800">VN-HQ-STRAT-01</strong></span>
             </div>
           </div>
 
@@ -152,7 +152,7 @@ export function PortalView({ user, onSelectSystem, onSelectRole, onLogout, onOpe
                    <p className="text-[9px] font-black text-slate-600 uppercase tracking-[0.4em] italic">Knowledge Base</p>
                    <button 
                      onClick={() => setShowManual(true)}
-                     className="flex items-center gap-3 px-6 py-2.5 bg-indigo-950/40 border border-indigo-500/30 text-indigo-400 rounded-[20px] hover:bg-indigo-600 hover:text-white transition-all group shadow-xl active:scale-95"
+                     className="flex items-center gap-3 px-6 py-2.5 bg-indigo-950/40 border border-indigo-500/30 text-indigo-600 rounded-[20px] hover:bg-indigo-600 hover:text-slate-800 transition-all group shadow-xl active:scale-95"
                    >
                       <BookOpen size={16} className="group-hover:rotate-12 transition-transform" />
                       <span className="text-[10px] font-black uppercase tracking-[0.2em]">{t('ui_system_manual')}</span>
@@ -162,13 +162,13 @@ export function PortalView({ user, onSelectSystem, onSelectRole, onLogout, onOpe
                 {/* Language Selection */}
                 <div className="flex flex-col items-end gap-3">
                    <p className="text-[9px] font-black text-slate-600 uppercase tracking-[0.4em] italic">Interface Language</p>
-                   <div className="flex items-center gap-2 bg-slate-950/80 p-1.5 rounded-[22px] border border-slate-800 shadow-2xl">
+                   <div className="flex items-center gap-2 bg-slate-50/80 p-1.5 rounded-[22px] border border-slate-800 shadow-2xl">
                       <button 
                         onClick={() => setLang('en')} 
                         className={`px-5 py-2.5 text-[10px] font-black rounded-xl transition-all duration-300 flex items-center gap-2 ${
                           lang === 'en' 
                             ? 'bg-rose-600 text-white shadow-lg' 
-                            : 'text-slate-600 hover:text-slate-400 hover:bg-slate-900'
+                            : 'text-slate-600 hover:text-slate-600 hover:bg-slate-900'
                         }`}
                       >
                         EN
@@ -178,7 +178,7 @@ export function PortalView({ user, onSelectSystem, onSelectRole, onLogout, onOpe
                         className={`px-5 py-2.5 text-[10px] font-black rounded-xl transition-all duration-300 flex items-center gap-2 ${
                           lang === 'zh-TW' 
                             ? 'bg-rose-600 text-white shadow-lg' 
-                            : 'text-slate-600 hover:text-slate-400 hover:bg-slate-900'
+                            : 'text-slate-600 hover:text-slate-600 hover:bg-slate-900'
                         }`}
                       >
                         繁中
@@ -188,7 +188,7 @@ export function PortalView({ user, onSelectSystem, onSelectRole, onLogout, onOpe
                         className={`px-5 py-2.5 text-[10px] font-black rounded-xl transition-all duration-300 flex items-center gap-2 ${
                           lang === 'vi' 
                             ? 'bg-rose-600 text-white shadow-lg' 
-                            : 'text-slate-600 hover:text-slate-400 hover:bg-slate-900'
+                            : 'text-slate-600 hover:text-slate-600 hover:bg-slate-900'
                         }`}
                       >
                         TIẾNG VIỆT
@@ -202,7 +202,7 @@ export function PortalView({ user, onSelectSystem, onSelectRole, onLogout, onOpe
                 {onOpenSwitcher && (
                   <button 
                     onClick={onOpenSwitcher}
-                    className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-indigo-950/50 to-slate-900 border border-indigo-500/30 text-indigo-400 rounded-3xl hover:from-indigo-600 hover:to-indigo-500 hover:text-white transition-all group shadow-xl active:scale-95"
+                    className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-indigo-950/50 to-slate-900 border border-indigo-500/30 text-indigo-600 rounded-3xl hover:from-indigo-600 hover:to-indigo-500 hover:text-slate-800 transition-all group shadow-xl active:scale-95"
                   >
                     <ArrowRightLeft size={18} className="text-indigo-500 group-hover:rotate-180 transition-all duration-500" />
                     <span className="text-[10px] font-black uppercase tracking-[0.2em]">Switch System Hub</span>
@@ -232,22 +232,22 @@ export function PortalView({ user, onSelectSystem, onSelectRole, onLogout, onOpe
                 transition={{ delay: 0.1 * idx, duration: 0.6 }}
                 onClick={() => isPermitted && handleEnterStation(station.system, station.id)}
                 className={`relative flex flex-col p-10 text-left group transition-all duration-700 ${
-                  isPermitted ? 'glass-station cursor-pointer hover:scale-[1.02]' : 'bg-slate-950/50 border border-slate-900 opacity-50 grayscale cursor-not-allowed'
+                  isPermitted ? 'glass-station cursor-pointer hover:scale-[1.02]' : 'bg-slate-50/50 border border-slate-900 opacity-50 grayscale cursor-not-allowed'
                 }`}
               >
                 {/* Station Icon & Status */}
                 <div className="flex justify-between items-start mb-10">
-                   <div className="w-16 h-16 rounded-[24px] bg-slate-950 flex items-center justify-center shadow-inner border border-slate-800 group-hover:scale-110 transition-transform">
+                   <div className="w-16 h-16 rounded-[24px] bg-slate-50 flex items-center justify-center shadow-inner border border-slate-800 group-hover:scale-110 transition-transform">
                       {station.icon}
                    </div>
                    {isPermitted ? (
-                     <div className="flex items-center gap-3 bg-slate-950/50 px-4 py-2 rounded-full border border-slate-800">
+                     <div className="flex items-center gap-3 bg-slate-50/50 px-4 py-2 rounded-full border border-slate-800">
                         <div className={`w-2 h-2 rounded-full animate-pulse shadow-[0_0_10px] ${
                           station.color === 'rose' ? 'bg-rose-500 shadow-rose-500' :
                           station.color === 'sky' ? 'bg-sky-500 shadow-sky-500' :
                           station.color === 'emerald' ? 'bg-emerald-500 shadow-emerald-500' : 'bg-amber-500 shadow-amber-500'
                         }`} />
-                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">{station.status}</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-600">{station.status}</span>
                      </div>
                    ) : (
                      <Lock size={20} className="text-slate-700" />
@@ -258,9 +258,9 @@ export function PortalView({ user, onSelectSystem, onSelectRole, onLogout, onOpe
                 <div className="space-y-4 mb-10">
                    <div className="space-y-1">
                       <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.3em] italic">{station.subtitle}</p>
-                      <h3 className="text-3xl font-black text-white uppercase italic tracking-tighter tracking-tight group-hover:translate-x-2 transition-transform">{station.title}</h3>
+                      <h3 className="text-3xl font-black text-slate-800 uppercase italic tracking-tighter tracking-tight group-hover:translate-x-2 transition-transform">{station.title}</h3>
                    </div>
-                   <p className="text-slate-500 text-[13px] font-medium leading-relaxed uppercase tracking-wide line-clamp-3">
+                   <p className="text-slate-600 text-[13px] font-medium leading-relaxed uppercase tracking-wide line-clamp-3">
                      {station.description}
                    </p>
                 </div>
@@ -269,7 +269,7 @@ export function PortalView({ user, onSelectSystem, onSelectRole, onLogout, onOpe
                 <div className="mt-auto flex justify-between items-center border-t border-slate-800/50 pt-8">
                    <div className="flex -space-x-3">
                       {[1,2,3].map(i => (
-                        <div key={i} className="w-8 h-8 rounded-full bg-slate-800 border-2 border-slate-950 flex items-center justify-center text-[8px] font-black text-slate-500">
+                        <div key={i} className="w-8 h-8 rounded-full bg-slate-800 border-2 border-slate-950 flex items-center justify-center text-[8px] font-black text-slate-600">
                           U{i}
                         </div>
                       ))}
@@ -304,7 +304,7 @@ export function PortalView({ user, onSelectSystem, onSelectRole, onLogout, onOpe
              <div key={i} className="flex flex-col items-center">
                 <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2">{stat.label}</span>
                 <div className="flex items-center gap-3">
-                   <span className="text-lg font-black text-white italic">{stat.value}</span>
+                   <span className="text-lg font-black text-slate-800 italic">{stat.value}</span>
                    <span className="text-[9px] font-black text-emerald-500">{stat.trend}</span>
                 </div>
              </div>
@@ -314,14 +314,14 @@ export function PortalView({ user, onSelectSystem, onSelectRole, onLogout, onOpe
 
       {/* Manual & Help Quick Access */}
       <div className="fixed bottom-12 right-12 flex flex-col gap-4">
-         <button onClick={onOpenDocs} className="w-16 h-16 rounded-full bg-slate-950 border border-slate-800 flex items-center justify-center text-slate-500 hover:text-white hover:bg-slate-900 transition-all shadow-2xl hover:scale-110">
+         <button onClick={onOpenDocs} className="w-16 h-16 rounded-full bg-slate-50 border border-slate-800 flex items-center justify-center text-slate-600 hover:text-slate-800 hover:bg-slate-900 transition-all shadow-2xl hover:scale-110">
             <BookOpen size={24} />
          </button>
       </div>
 
        <AnimatePresence>
          {showManual && (
-           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-xl">
+           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-50/80 backdrop-blur-xl">
               <motion.div 
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -329,17 +329,17 @@ export function PortalView({ user, onSelectSystem, onSelectRole, onLogout, onOpe
                 className="w-full max-w-5xl max-h-[90vh] bg-slate-900 border border-slate-800 rounded-[40px] shadow-2xl flex flex-col overflow-hidden"
               >
                  {/* Modal Header */}
-                 <div className="p-10 border-b border-slate-800 bg-slate-950/50 flex justify-between items-center shrink-0">
+                 <div className="p-10 border-b border-slate-800 bg-slate-50/50 flex justify-between items-center shrink-0">
                     <div>
                        <div className="flex items-center gap-4 mb-2">
                           <BookOpen className="text-rose-500" size={24} />
-                          <h2 className="text-2xl font-black text-white uppercase italic tracking-widest">{t('manual_title')}</h2>
+                          <h2 className="text-2xl font-black text-slate-800 uppercase italic tracking-widest">{t('manual_title')}</h2>
                        </div>
-                       <p className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">{t('manual_subtitle')}</p>
+                       <p className="text-[11px] font-black text-slate-600 uppercase tracking-[0.2em]">{t('manual_subtitle')}</p>
                     </div>
                     <button 
                       onClick={() => setShowManual(false)}
-                      className="p-4 bg-slate-800/50 hover:bg-rose-600 hover:text-white rounded-full transition-all text-slate-500 shadow-xl"
+                      className="p-4 bg-slate-800/50 hover:bg-rose-600 hover:text-white rounded-full transition-all text-slate-600 shadow-xl"
                     >
                        <X size={24} />
                     </button>
@@ -352,69 +352,69 @@ export function PortalView({ user, onSelectSystem, onSelectRole, onLogout, onOpe
                        <div className="space-y-4">
                           <div className="flex items-center gap-4">
                              <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-white">00</div>
-                             <h3 className="text-lg font-black text-white uppercase italic">{t('manual_portal_title')}</h3>
+                             <h3 className="text-lg font-black text-slate-800 uppercase italic">{t('manual_portal_title')}</h3>
                           </div>
-                          <p className="text-sm text-slate-400 leading-relaxed pl-14">{t('manual_portal_desc')}</p>
+                          <p className="text-sm text-slate-600 leading-relaxed pl-14">{t('manual_portal_desc')}</p>
                        </div>
 
                        {/* LIMS */}
                        <div className="space-y-4">
                           <div className="flex items-center gap-4">
                              <div className="w-10 h-10 rounded-xl bg-rose-600/20 text-rose-500 flex items-center justify-center font-black">01</div>
-                             <h3 className="text-lg font-black text-white uppercase italic">{t('manual_lims_title')}</h3>
+                             <h3 className="text-lg font-black text-slate-800 uppercase italic">{t('manual_lims_title')}</h3>
                           </div>
-                          <p className="text-sm text-slate-400 leading-relaxed pl-14">{t('manual_lims_desc')}</p>
+                          <p className="text-sm text-slate-600 leading-relaxed pl-14">{t('manual_lims_desc')}</p>
                        </div>
 
                        {/* LAB */}
                        <div className="space-y-4">
                           <div className="flex items-center gap-4">
                              <div className="w-10 h-10 rounded-xl bg-sky-600/20 text-sky-500 flex items-center justify-center font-black">02</div>
-                             <h3 className="text-lg font-black text-white uppercase italic">{t('manual_lab_title')}</h3>
+                             <h3 className="text-lg font-black text-slate-800 uppercase italic">{t('manual_lab_title')}</h3>
                           </div>
-                          <p className="text-sm text-slate-400 leading-relaxed pl-14">{t('manual_lab_desc')}</p>
+                          <p className="text-sm text-slate-600 leading-relaxed pl-14">{t('manual_lab_desc')}</p>
                        </div>
 
                        {/* HUB */}
                        <div className="space-y-4">
                           <div className="flex items-center gap-4">
                              <div className="w-10 h-10 rounded-xl bg-emerald-600/20 text-emerald-500 flex items-center justify-center font-black">03</div>
-                             <h3 className="text-lg font-black text-white uppercase italic">{t('manual_hub_title')}</h3>
+                             <h3 className="text-lg font-black text-slate-800 uppercase italic">{t('manual_hub_title')}</h3>
                           </div>
-                          <p className="text-sm text-slate-400 leading-relaxed pl-14">{t('manual_hub_desc')}</p>
+                          <p className="text-sm text-slate-600 leading-relaxed pl-14">{t('manual_hub_desc')}</p>
                        </div>
 
                        {/* HOSPITAL */}
                        <div className="space-y-4">
                           <div className="flex items-center gap-4">
                              <div className="w-10 h-10 rounded-xl bg-amber-600/20 text-amber-500 flex items-center justify-center font-black">04</div>
-                             <h3 className="text-lg font-black text-white uppercase italic">{t('manual_hospital_title')}</h3>
+                             <h3 className="text-lg font-black text-slate-800 uppercase italic">{t('manual_hospital_title')}</h3>
                           </div>
-                          <p className="text-sm text-slate-400 leading-relaxed pl-14">{t('manual_hospital_desc')}</p>
+                          <p className="text-sm text-slate-600 leading-relaxed pl-14">{t('manual_hospital_desc')}</p>
                        </div>
 
                        {/* NATIONAL */}
                        <div className="space-y-4">
                           <div className="flex items-center gap-4">
                              <div className="w-10 h-10 rounded-xl bg-indigo-600/20 text-indigo-500 flex items-center justify-center font-black">05</div>
-                             <h3 className="text-lg font-black text-white uppercase italic">{t('manual_national_title')}</h3>
+                             <h3 className="text-lg font-black text-slate-800 uppercase italic">{t('manual_national_title')}</h3>
                           </div>
-                          <p className="text-sm text-slate-400 leading-relaxed pl-14">{t('manual_national_desc')}</p>
+                          <p className="text-sm text-slate-600 leading-relaxed pl-14">{t('manual_national_desc')}</p>
                        </div>
 
                        {/* MDM */}
                        <div className="space-y-4">
                           <div className="flex items-center gap-4">
-                             <div className="w-10 h-10 rounded-xl bg-slate-700/50 text-slate-400 flex items-center justify-center font-black">06</div>
-                             <h3 className="text-lg font-black text-white uppercase italic">{t('manual_mdm_title')}</h3>
+                             <div className="w-10 h-10 rounded-xl bg-slate-700/50 text-slate-600 flex items-center justify-center font-black">06</div>
+                             <h3 className="text-lg font-black text-slate-800 uppercase italic">{t('manual_mdm_title')}</h3>
                           </div>
-                          <p className="text-sm text-slate-400 leading-relaxed pl-14">{t('manual_mdm_desc')}</p>
+                          <p className="text-sm text-slate-600 leading-relaxed pl-14">{t('manual_mdm_desc')}</p>
                        </div>
                     </div>
                  </div>
 
                  {/* Modal Footer */}
-                 <div className="p-8 border-t border-slate-800 bg-slate-950/50 flex justify-center shrink-0">
+                 <div className="p-8 border-t border-slate-800 bg-slate-50/50 flex justify-center shrink-0">
                     <button 
                       onClick={() => setShowManual(false)}
                       className="px-12 py-4 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] transition-all"

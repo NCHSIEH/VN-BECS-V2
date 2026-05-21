@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
-  LocalCCCDValidator,
+  VietnamIdValidator,
   validateDonorAge,
   validateDonorWeight,
   validateVietnamDeferralRules
@@ -10,18 +10,18 @@ describe('Vietnam Validation Standards', () => {
   describe('CCCD Validation', () => {
     it('should pass for a valid 12-digit CCCD with correct province code', () => {
       // 001 is a valid province code, followed by 9 random digits making 12 total
-      const result = LocalCCCDValidator.validate('001199123456');
+      const result = VietnamIdValidator.validate('001199123456');
       expect(result.valid).toBe(true);
     });
 
     it('should fail if CCCD is not 12 digits', () => {
-      const result = LocalCCCDValidator.validate('00119912345');
+      const result = VietnamIdValidator.validate('00119912345');
       expect(result.valid).toBe(false);
       expect(result.errors).toContain('CCCD must be exactly 12 digits');
     });
 
     it('should fail if CCCD has invalid province code', () => {
-      const result = LocalCCCDValidator.validate('999199123456');
+      const result = VietnamIdValidator.validate('999199123456');
       // Province code > 96
       expect(result.errors.some(e => e.includes('Invalid province code'))).toBe(true);
     });

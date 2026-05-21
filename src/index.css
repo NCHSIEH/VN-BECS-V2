@@ -3,46 +3,46 @@
 
 @theme {
   --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
-  --color-clinical-bg: #0b1120;
-  --color-clinical-card: #020617;
+  --color-clinical-bg: #f8fafc;
+  --color-clinical-card: #ffffff;
   --color-clinical-primary: #e11d48;
   --color-clinical-secondary: #0ea5e9;
   --color-clinical-success: #10b981;
-  --color-clinical-text: #f1f5f9;
-  --color-clinical-muted: #94a3b8;
-  --color-clinical-border: #1e293b;
+  --color-clinical-text: #0f172a;
+  --color-clinical-muted: #64748b;
+  --color-clinical-border: #e2e8f0;
 }
 
 @layer base {
   body {
-    @apply bg-clinical-bg text-clinical-text font-sans antialiased selection:bg-rose-500/30 selection:text-white;
+    @apply bg-clinical-bg text-clinical-text font-sans antialiased selection:bg-rose-500/30 selection:text-slate-900;
     font-size: 16px;
   }
 }
 
 @layer components {
   .clinical-card {
-    @apply bg-slate-900/40 backdrop-blur-3xl border border-clinical-border rounded-[40px] shadow-2xl transition-all duration-700 hover:shadow-[0_0_80px_rgba(0,0,0,0.5)] hover:border-slate-700;
+    @apply bg-white/90 backdrop-blur-3xl border border-clinical-border rounded-[24px] shadow-sm transition-all duration-300 hover:shadow-md hover:border-slate-300;
   }
 
   .glass-station {
-    @apply bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[48px] shadow-[0_40px_100px_rgba(0,0,0,0.8)] transition-all duration-700;
+    @apply bg-white/80 backdrop-blur-3xl border border-slate-200 rounded-[24px] shadow-lg transition-all duration-300;
   }
 
   .clinical-btn-primary {
-    @apply bg-clinical-primary hover:bg-rose-500 text-white font-black py-6 px-12 rounded-[24px] shadow-2xl shadow-rose-900/40 transition-all hover:scale-[1.03] active:scale-95 disabled:opacity-50 uppercase tracking-[0.3em] text-[13px] flex items-center justify-center gap-4 italic;
+    @apply bg-clinical-primary hover:bg-rose-500 text-white font-bold py-4 px-8 rounded-xl shadow-sm transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 tracking-wide text-sm flex items-center justify-center gap-3;
   }
 
   .clinical-input {
-    @apply w-full bg-slate-950/80 border border-clinical-border text-clinical-text p-6 rounded-[24px] focus:outline-none focus:ring-4 focus:ring-rose-500/20 focus:border-rose-500/50 transition-all font-semibold placeholder:text-slate-800 text-lg shadow-inner;
+    @apply w-full bg-slate-50 border border-slate-200 text-clinical-text p-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-medium placeholder:text-slate-400 text-base shadow-inner;
   }
 
   .premium-heading {
-    @apply text-6xl lg:text-7xl font-black text-white uppercase italic tracking-tighter leading-[0.9] bg-clip-text text-transparent bg-gradient-to-br from-white via-white to-slate-600;
+    @apply text-4xl lg:text-5xl font-bold text-slate-800 tracking-tight leading-tight;
   }
 
   .premium-subtitle {
-    @apply text-[12px] font-black text-rose-500 uppercase tracking-[0.5em] mb-6 flex items-center gap-6;
+    @apply text-sm font-semibold text-rose-600 uppercase tracking-wider mb-4 flex items-center gap-3;
   }
 
   .animate-float {
@@ -51,7 +51,7 @@
 
   @keyframes float {
     0%, 100% { transform: translateY(0) rotate(0deg); }
-    50% { transform: translateY(-20px) rotate(1deg); }
+    50% { transform: translateY(-10px) rotate(1deg); }
   }
 
   .animate-glow {
@@ -59,8 +59,8 @@
   }
 
   @keyframes glow {
-    0%, 100% { filter: drop-shadow(0 0 10px rgba(225,29,72,0.4)); }
-    50% { filter: drop-shadow(0 0 30px rgba(225,29,72,0.8)); }
+    0%, 100% { filter: drop-shadow(0 0 5px rgba(225,29,72,0.2)); }
+    50% { filter: drop-shadow(0 0 15px rgba(225,29,72,0.4)); }
   }
 }
 
@@ -98,30 +98,30 @@
 
 /* Sidebar & Layout Transitions */
 aside {
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Advanced Glassmorphism */
 .glass-panel {
-  background: rgba(15, 23, 42, 0.3);
+  background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(241, 245, 249, 0.5);
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(56, 189, 248, 0.2);
+  background: rgba(203, 213, 225, 0.8);
   border-radius: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(56, 189, 248, 0.5);
+  background: rgba(148, 163, 184, 0.8);
 }

@@ -83,7 +83,7 @@ export function HospitalInventoryView() {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-4 text-slate-500 animate-pulse">
+      <div className="flex-1 flex flex-col items-center justify-center gap-4 text-slate-600 animate-pulse">
         <Building2 className="animate-bounce" size={48} />
         <span className="font-black uppercase tracking-[0.3em]">Synchronizing Regional Inventory...</span>
       </div>
@@ -100,7 +100,7 @@ export function HospitalInventoryView() {
                <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.4em] bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/20">VMI Protocol Active</span>
                <div className="h-px w-12 bg-slate-800"></div>
             </div>
-            <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic leading-none">Regional Inventory Visibility</h1>
+            <h1 className="text-4xl font-black text-slate-800 tracking-tighter uppercase italic leading-none">Regional Inventory Visibility</h1>
          </div>
 
          <div className="flex gap-4">
@@ -109,16 +109,16 @@ export function HospitalInventoryView() {
                   <Package size={20} />
                </div>
                <div>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Total Units</p>
-                  <p className="text-xl font-black text-white tracking-tighter">{regionalStats.totalUnits}</p>
+                  <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest leading-none mb-1">Total Units</p>
+                  <p className="text-xl font-black text-slate-800 tracking-tighter">{regionalStats.totalUnits}</p>
                </div>
             </div>
             <div className="bg-slate-900/40 border border-slate-800 p-4 rounded-2xl flex items-center gap-4 min-w-[140px] shadow-xl">
-               <div className="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center text-rose-400">
+               <div className="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center text-rose-600">
                   <AlertCircle size={20} />
                </div>
                <div>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Critical</p>
+                  <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest leading-none mb-1">Critical</p>
                   <p className="text-xl font-black text-rose-500 tracking-tighter">{regionalStats.criticalHospitals}</p>
                </div>
             </div>
@@ -127,18 +127,18 @@ export function HospitalInventoryView() {
 
       {/* Search & Filter Bar */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-slate-900/20 p-6 rounded-[32px] border border-slate-800 backdrop-blur-xl">
-         <div className="flex items-center gap-4 bg-slate-950/50 p-2 rounded-2xl border border-slate-800 w-full md:w-auto">
+         <div className="flex items-center gap-4 bg-slate-50/50 p-2 rounded-2xl border border-slate-800 w-full md:w-auto">
             <Search size={18} className="text-slate-600 ml-2" />
             <input 
               type="text" 
               placeholder="Search by Hospital Name or Province..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-transparent border-none focus:ring-0 text-sm font-medium text-slate-300 w-full md:w-80" 
+              className="bg-transparent border-none focus:ring-0 text-sm font-medium text-slate-700 w-full md:w-80"
             />
          </div>
          <div className="flex gap-3">
-            <button className="flex items-center gap-2 px-6 py-3 bg-slate-800 text-slate-300 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-700 transition-all">
+            <button className="flex items-center gap-2 px-6 py-3 bg-slate-800 text-slate-700 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-700 transition-all">
                <TrendingUp size={14} /> Usage Analytics
             </button>
             <button className="flex items-center gap-2 px-6 py-3 bg-sky-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-sky-900/40 hover:scale-105 active:scale-95 transition-all">
@@ -153,7 +153,7 @@ export function HospitalInventoryView() {
             <div key={hospital.id} className="clinical-card group hover:border-slate-600 transition-all bg-slate-900/10 backdrop-blur-xl border-slate-800 overflow-hidden flex flex-col">
                <div className="p-8 border-b border-slate-800 flex justify-between items-start bg-slate-900/20">
                   <div className="flex items-center gap-5">
-                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg ${
+                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-slate-800 shadow-lg ${
                         hospital.status === 'Critical' ? 'bg-rose-600 shadow-rose-900/30' : 
                         hospital.status === 'Low Stock' ? 'bg-amber-600 shadow-amber-900/30' : 
                         'bg-emerald-600 shadow-emerald-900/30'
@@ -161,11 +161,11 @@ export function HospitalInventoryView() {
                         <Building2 size={28} />
                      </div>
                      <div>
-                        <h3 className="text-2xl font-black text-white tracking-tighter uppercase italic">{hospital.name}</h3>
+                        <h3 className="text-2xl font-black text-slate-800 tracking-tighter uppercase italic">{hospital.name}</h3>
                         <div className="flex items-center gap-3 mt-1">
-                           <span className="flex items-center gap-1 text-[10px] font-black text-slate-500 uppercase tracking-widest"><MapPin size={10} /> {hospital.location}</span>
+                           <span className="flex items-center gap-1 text-[10px] font-black text-slate-600 uppercase tracking-widest"><MapPin size={10} /> {hospital.location}</span>
                            <span className="text-slate-700">•</span>
-                           <span className="text-[10px] font-mono font-bold text-slate-500">{hospital.id}</span>
+                           <span className="text-[10px] font-mono font-bold text-slate-600">{hospital.id}</span>
                         </div>
                      </div>
                   </div>
@@ -178,7 +178,7 @@ export function HospitalInventoryView() {
                   </div>
                </div>
 
-               <div className="p-8 grid grid-cols-2 md:grid-cols-4 gap-6 bg-slate-950/20">
+               <div className="p-8 grid grid-cols-2 md:grid-cols-4 gap-6 bg-slate-50/20">
                   {Object.entries(hospital.stock).map(([type, qty]: [string, any]) => {
                      const abo = type.split('_')[0];
                      const rhd = type.split('_')[1];
@@ -190,7 +190,7 @@ export function HospitalInventoryView() {
                         <div key={type} className={`p-4 rounded-2xl border ${cls.border} ${cls.bg} flex flex-col items-center justify-center gap-1 transition-all hover:scale-105`}>
                            <span className={`text-xs font-black ${cls.text}`}>{abo} {rhd === 'POS' ? '+' : '-'}</span>
                            <span className={`text-2xl font-black italic tracking-tighter ${cls.text}`}>{qty}</span>
-                           <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">{dos.toFixed(1)} DOS</span>
+                           <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">{dos.toFixed(1)} DOS</span>
                         </div>
                      );
                   })}
@@ -200,17 +200,17 @@ export function HospitalInventoryView() {
                   <div className="flex items-center gap-6">
                      <div className="space-y-1">
                         <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest leading-none">Daily Burn Rate</p>
-                        <p className="text-sm font-black text-slate-400 tracking-tighter">{hospital.avgDailyUsage} Units/Day</p>
+                        <p className="text-sm font-black text-slate-600 tracking-tighter">{hospital.avgDailyUsage} Units/Day</p>
                      </div>
                      <div className="h-8 w-px bg-slate-800"></div>
                      <div className="space-y-1">
                         <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest leading-none">Last Supply</p>
-                        <p className="text-sm font-black text-slate-400 tracking-tighter flex items-center gap-2">
+                        <p className="text-sm font-black text-slate-600 tracking-tighter flex items-center gap-2">
                            <Clock size={12} /> {new Date(hospital.lastDelivery).toLocaleDateString()}
                         </p>
                      </div>
                   </div>
-                  <button className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-slate-400 border border-slate-800 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 hover:text-white transition-all">
+                  <button className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-slate-600 border border-slate-800 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 hover:text-white transition-all">
                      View Details <ChevronRight size={14} />
                   </button>
                </div>

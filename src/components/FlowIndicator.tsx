@@ -13,19 +13,19 @@ export function LimsFlowIndicator({ activeTab }: { activeTab: string }) {
   return (
     <div className="bg-[#0b1120]/80 border-b border-slate-700 p-3 overflow-x-auto custom-scrollbar">
       <div className="flex items-center gap-2 text-xs font-bold w-max mx-auto px-4">
-        <span className="text-slate-500 mr-2 uppercase tracking-widest hidden lg:inline">{t('flow_lims_title')}</span>
+        <span className="text-slate-600 mr-2 uppercase tracking-widest hidden lg:inline">{t('flow_lims_title')}</span>
         {limsSteps.map((step, idx) => (
           <React.Fragment key={step.id}>
             <div className={`px-4 py-1.5 rounded-full flex flex-col items-center justify-center transition-all ${
               activeTab === step.id 
-                ? 'bg-blue-400 border border-blue-950/300 shadow-[0_0_10px_rgba(59,130,246,0.3)] text-white'
-                : 'bg-[#020617]/50 text-slate-500 border border-slate-700'
+                ? 'bg-blue-400 border border-blue-950/300 shadow-[0_0_10px_rgba(59,130,246,0.3)] text-slate-800'
+                : 'bg-[#020617]/50 text-slate-600 border border-slate-700'
             }`}>
               <span className="text-[10px] font-mono opacity-80 leading-none mb-0.5">{step.sop}</span>
               <span className="leading-none">{step.label}</span>
             </div>
             {idx < limsSteps.length - 1 && (
-              <div className="text-slate-400 font-black">➔</div>
+              <div className="text-slate-600 font-black">➔</div>
             )}
           </React.Fragment>
         ))}
@@ -53,21 +53,21 @@ export function FlowIndicator({ role }: { role: Role }) {
   return (
     <div className="bg-[#0b1120]/80 border-b border-slate-700 p-3 overflow-x-auto custom-scrollbar shadow-inner">
       <div className="flex items-center gap-2 text-xs font-bold w-max mx-auto px-4">
-        <span className="text-slate-500 mr-2 uppercase tracking-widest hidden xl:inline">{t('flow_sc_title')}</span>
+        <span className="text-slate-600 mr-2 uppercase tracking-widest hidden xl:inline">{t('flow_sc_title')}</span>
         {mainSteps.map((step, idx) => (
           <React.Fragment key={idx}>
             <div className={`px-4 py-1.5 rounded-full flex flex-col items-center justify-center transition-all whitespace-nowrap ${
               currentStepIdx === idx 
-                ? 'bg-lime-400 border border-lime-400 shadow-[0_0_10px_rgba(16,185,129,0.3)] text-white font-extrabold'
+                ? 'bg-lime-400 border border-lime-400 shadow-[0_0_10px_rgba(16,185,129,0.3)] text-slate-800 font-extrabold'
                 : currentStepIdx > idx 
                   ? 'bg-lime-950/40 text-lime-400 border border-lime-900/50'
-                  : 'bg-[#020617]/50 text-slate-500 border border-slate-700'
+                  : 'bg-[#020617]/50 text-slate-600 border border-slate-700'
             }`}>
               <span className="text-[10px] font-mono opacity-80 leading-none mb-0.5 font-bold tracking-wider">{step.sop}</span>
               <span className="leading-none">{step.label}</span>
             </div>
             {idx < mainSteps.length - 1 && (
-              <div className={`text-sm ${currentStepIdx > idx ? 'text-lime-950/300 font-bold' : 'text-slate-400'}`}>➔</div>
+              <div className={`text-sm ${currentStepIdx > idx ? 'text-lime-950/300 font-bold' : 'text-slate-600'}`}>➔</div>
             )}
           </React.Fragment>
         ))}

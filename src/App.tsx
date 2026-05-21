@@ -58,8 +58,8 @@ import { TaskQueue } from './components/TaskQueue';
 import { offlineStore } from './lib/offlineStore';
 
 function getSubRoles(mainRole: string): Role[] {
-  if (mainRole === 'Admin') return ['HospitalOperator', 'Nurse', 'WarehouseIssuer', 'Dispatcher', 'Courier', 'Manager', 'NationalCommander', 'Auditor'];
-  if (mainRole === 'Manager') return ['Manager', 'Auditor', 'NationalCommander'];
+  if (mainRole === 'Admin') return ['HospitalOperator', 'Nurse', 'WarehouseIssuer', 'Dispatcher', 'Courier', 'Admin'];
+  if (mainRole === 'Manager') return ['Admin'];
   return [mainRole as Role];
 }
 
@@ -69,7 +69,7 @@ function AppContent() {
   const [currentSystem, setCurrentSystem] = useState<SystemType | null>(null);
   const [role, setRole] = useState<Role>(() => {
     const saved = localStorage.getItem('vnbbms_role');
-    return saved ? saved as Role : 'Manager';
+    return saved ? saved as Role : 'Admin';
   });
   const [isOffline, setIsOffline] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
@@ -167,7 +167,7 @@ function AppContent() {
        );
     }
 
-    if (currentSystem === 'LIMS') return <DonorCenterSimulatorView initialTab={role === 'LabTech_Crossmatch' ? 'LAB' : 'DONOR'} />;
+    if (currentSystem === 'LIMS') return <DonorCenterSimulatorView initialTab={role === 'LIMS_Simulator' ? 'LAB' : 'DONOR'} />;
     
     if (currentSystem === 'HOSPITAL') {
        return (
@@ -195,19 +195,19 @@ function AppContent() {
                 />
               )}
                {role === 'Nurse' && <BedsideVerificationView />}
-               {role === 'Nurse_Hemovigilance' && <HemovigilanceView />}
-               {role === 'LabTech_Crossmatch' && <CrossmatchView />}
+               {role === 'QA_Officer' && <HemovigilanceView />}
+               {role === 'LIMS_Simulator' && <CrossmatchView />}
                {role === 'Dispatcher' && <DispatcherView />}
                {role === 'WarehouseIssuer' && <WarehouseView />}
-               {role === 'Warehouse_IssueReturn' && <IssueReturnView />}
+               {role === 'WarehouseIssuer' && <IssueReturnView />}
                {role === 'Courier' && <CourierView />}
-               {role === 'Auditor' && <AuditLogViewer />}
-               {role === 'MedicalReviewer' && <MedicalReviewerView />}
-               {role === 'Manager' && <ManagerKPIView />}
-               {role === 'NationalCommander' && <HospitalInventoryView />}
-               {role === 'Nurse_MTP' && <MtpEmergencyView />}
-               {role === 'SOP11_RareDonor' && <RareDonorView />}
-               {role === ('Resource' as Role) && <ResourceManagementView />}
+               {role === 'QA_Officer' && <AuditLogViewer />}
+               {role === 'QA_Officer' && <MedicalReviewerView />}
+               {role === 'Admin' && <ManagerKPIView />}
+               {role === 'Admin' && <HospitalInventoryView />}
+               {role === 'Nurse' && <MtpEmergencyView />}
+               {role === 'DonorScreener' && <RareDonorView />}
+               {role === ('Admin' as Role) && <ResourceManagementView />}
             </main>
          </div>
        );

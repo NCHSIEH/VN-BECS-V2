@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import * as db from '@/src/server/db';
-import { LocalCCCDValidator, validateDonorAge, validateDonorName } from '@/src/lib/validators';
+import { VietnamIdValidator, validateDonorAge, validateDonorName } from '@/src/lib/validators';
 
 export async function GET() {
   try {
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: nameVal.errors.join(", ") }, { status: 400 });
     }
 
-    const cccdVal = LocalCCCDValidator.validate(data.nationalId);
+    const cccdVal = VietnamIdValidator.validate(data.nationalId);
     if (!cccdVal.valid) {
       return NextResponse.json({ error: `Vietnam CCCD Invalid: ${cccdVal.errors.join(", ")}` }, { status: 400 });
     }

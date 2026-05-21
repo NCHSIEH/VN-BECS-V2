@@ -63,13 +63,13 @@ export function MessagingCenter({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 right-0 w-96 bg-slate-950 border-l border-slate-800 shadow-2xl z-[100] flex flex-col animate-in slide-in-from-right duration-500">
+    <div className="fixed inset-y-0 right-0 w-96 bg-slate-50 border-l border-slate-800 shadow-2xl z-[100] flex flex-col animate-in slide-in-from-right duration-500">
       <div className="p-6 border-b border-slate-800 bg-slate-900/50 flex items-center justify-between">
         <div className="flex items-center gap-3">
            <Mail className="text-rose-500" />
-           <h2 className="text-sm font-black text-white uppercase tracking-widest">Command Message Center</h2>
+           <h2 className="text-sm font-black text-slate-800 uppercase tracking-widest">Command Message Center</h2>
         </div>
-        <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-lg text-slate-500 transition-colors">
+        <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-lg text-slate-600 transition-colors">
            <X size={20} />
         </button>
       </div>
@@ -77,7 +77,7 @@ export function MessagingCenter({
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {messages.filter(m => m.from === currentUser.id || m.to === currentUser.id).map(msg => (
           <div key={msg.id} className={`flex flex-col ${msg.from === currentUser.id ? 'items-end' : 'items-start'}`}>
-            <div className={`max-w-[80%] p-4 rounded-2xl text-[12px] ${msg.from === currentUser.id ? 'bg-rose-600 text-white rounded-tr-none' : 'bg-slate-900 text-slate-300 rounded-tl-none border border-slate-800'}`}>
+            <div className={`max-w-[80%] p-4 rounded-2xl text-[12px] ${msg.from === currentUser.id ? 'bg-rose-600 text-white rounded-tr-none' : 'bg-slate-900 text-slate-700 rounded-tl-none border border-slate-800'}`}>
               <p className="font-medium leading-relaxed">{msg.text}</p>
             </div>
             <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest mt-2">
@@ -89,11 +89,11 @@ export function MessagingCenter({
 
       <div className="p-6 bg-slate-900/30 border-t border-slate-800 space-y-4">
         <div>
-           <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-2">To Specialist/Station</label>
+           <label className="text-[9px] font-black text-slate-600 uppercase tracking-widest block mb-2">To Specialist/Station</label>
            <select 
              value={selectedRecipient} 
              onChange={e => setSelectedRecipient(e.target.value)}
-             className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-[11px] font-black uppercase text-slate-400 outline-none focus:border-rose-500 transition-all"
+             className="w-full bg-slate-50 border border-slate-800 rounded-xl p-3 text-[11px] font-black uppercase text-slate-600 outline-none focus:border-rose-500 transition-all"
            >
              {users.map(u => (
                <option key={u.id} value={u.id}>{u.username} ({u.role})</option>
@@ -107,7 +107,7 @@ export function MessagingCenter({
              onChange={e => setInputText(e.target.value)}
              onKeyPress={e => e.key === 'Enter' && handleSend()}
              placeholder="Enter tactical message..."
-             className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-700 outline-none focus:border-rose-500 transition-all"
+             className="flex-1 bg-slate-50 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-800 placeholder-slate-700 outline-none focus:border-rose-500 transition-all"
            />
            <button 
              onClick={handleSend}

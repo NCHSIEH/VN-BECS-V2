@@ -70,7 +70,7 @@ export function SystemDiagnosticView({ onClose }: { onClose: () => void }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="absolute inset-0 bg-slate-950/80 backdrop-blur-2xl" 
+        className="absolute inset-0 bg-slate-50/80 backdrop-blur-2xl"
         onClick={onClose} 
       />
       
@@ -90,12 +90,12 @@ export function SystemDiagnosticView({ onClose }: { onClose: () => void }) {
         <div className="flex justify-between items-start mb-12">
            <div>
               <div className="flex items-center gap-3 mb-2">
-                 <ShieldCheck size={20} className={checking ? 'text-slate-500' : (health?.status === 'healthy' ? 'text-emerald-500' : 'text-rose-500')} />
-                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic">Strategic Integrity Protocol</p>
+                 <ShieldCheck size={20} className={checking ? 'text-slate-600' : (health?.status === 'healthy' ? 'text-emerald-500' : 'text-rose-500')} />
+                 <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.4em] italic">Strategic Integrity Protocol</p>
               </div>
-              <h2 className="text-4xl font-black text-white uppercase italic tracking-tighter">System Diagnostic</h2>
+              <h2 className="text-4xl font-black text-slate-800 uppercase italic tracking-tighter">System Diagnostic</h2>
            </div>
-           <button onClick={onClose} className="p-4 bg-slate-950 rounded-full text-slate-500 hover:text-white transition-all"><X size={24} /></button>
+           <button onClick={onClose} className="p-4 bg-slate-50 rounded-full text-slate-600 hover:text-slate-800 transition-all"><X size={24} /></button>
         </div>
 
         <div className="space-y-10">
@@ -116,8 +116,8 @@ export function SystemDiagnosticView({ onClose }: { onClose: () => void }) {
                  <div className="absolute inset-0 flex flex-col items-center justify-center">
                     {checking ? (
                       <div className="flex flex-col items-center">
-                         <span className="text-3xl font-black text-white italic">{progress}%</span>
-                         <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-1">Analyzing</span>
+                         <span className="text-3xl font-black text-slate-800 italic">{progress}%</span>
+                         <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest mt-1">Analyzing</span>
                       </div>
                     ) : (
                       <div className="flex flex-col items-center">
@@ -161,18 +161,18 @@ export function SystemDiagnosticView({ onClose }: { onClose: () => void }) {
            </div>
 
            {/* Logs / Details */}
-           <div className="bg-slate-950/50 rounded-3xl p-6 border border-slate-800 space-y-3">
+           <div className="bg-slate-50/50 rounded-3xl p-6 border border-slate-800 space-y-3">
               <div className="flex items-center gap-3 text-[9px] font-black text-slate-600 uppercase tracking-widest">
                  <Cpu size={12} /> Resource Trace
               </div>
               <div className="space-y-2 font-mono text-[10px]">
-                 <p className={checking ? 'text-slate-600' : 'text-slate-400'}>
+                 <p className={checking ? 'text-slate-600' : 'text-slate-600'}>
                    [INFO] Initializing handshake with edge-cluster-vn-north... {progress > 20 ? 'OK' : ''}
                  </p>
-                 <p className={progress < 50 ? 'text-slate-700' : 'text-slate-400'}>
+                 <p className={progress < 50 ? 'text-slate-700' : 'text-slate-600'}>
                    [SEC] Validating sovereignty-level cryptographic certificates... {progress > 60 ? 'VALID' : ''}
                  </p>
-                 <p className={progress < 80 ? 'text-slate-700' : 'text-slate-400'}>
+                 <p className={progress < 80 ? 'text-slate-700' : 'text-slate-600'}>
                    [DATA] Cross-referencing MDM sync status with national nodes... {progress > 90 ? 'IN SYNC' : ''}
                  </p>
               </div>
@@ -194,20 +194,20 @@ export function SystemDiagnosticView({ onClose }: { onClose: () => void }) {
 
 function DiagnosticCard({ icon, label, status, value }: { icon: any, label: string, status: 'online' | 'offline' | 'scanning' | 'info', value?: string }) {
   return (
-    <div className="bg-slate-950/30 border border-slate-800 p-5 rounded-[24px] flex flex-col items-center gap-3 transition-all hover:bg-slate-800/50">
+    <div className="bg-slate-50/30 border border-slate-800 p-5 rounded-[24px] flex flex-col items-center gap-3 transition-all hover:bg-slate-800/50">
        <div className={`p-2.5 rounded-xl ${
          status === 'online' ? 'bg-emerald-500/10 text-emerald-500' : 
          status === 'offline' ? 'bg-rose-500/10 text-rose-500' : 
-         'bg-slate-800 text-slate-500'
+         'bg-slate-800 text-slate-600'
        }`}>
           {icon}
        </div>
        <div className="text-center">
-          <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">{label}</p>
+          <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest leading-none mb-1">{label}</p>
           <p className={`text-[10px] font-black uppercase ${
             status === 'online' ? 'text-emerald-500' : 
             status === 'offline' ? 'text-rose-500' : 
-            'text-white'
+            'text-slate-800'
           }`}>
             {status === 'scanning' ? 'Scanning...' : (value || status.toUpperCase())}
           </p>

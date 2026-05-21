@@ -41,7 +41,7 @@ export function RareDonorView() {
   );
 
    if (loading) return (
-      <div className="flex-1 flex items-center justify-center text-slate-500 font-black uppercase tracking-widest animate-pulse">
+      <div className="flex-1 flex items-center justify-center text-slate-600 font-black uppercase tracking-widest animate-pulse">
          {t('national_all_live')}...
       </div>
    );
@@ -51,14 +51,14 @@ export function RareDonorView() {
        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
          <div>
            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-sky-500 rounded-xl flex items-center justify-center text-white shadow-lg">
+              <div className="w-10 h-10 bg-sky-500 rounded-xl flex items-center justify-center text-slate-800 shadow-lg">
                  <Users size={20} />
               </div>
-              <h2 className="text-3xl font-black text-white tracking-tighter uppercase italic italic">
+              <h2 className="text-3xl font-black text-slate-800 tracking-tighter uppercase italic italic">
                 {t('rare_title')}
               </h2>
            </div>
-           <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.3em] ml-13 italic">{t('rare_subtitle')}</p>
+           <p className="text-slate-600 text-[10px] font-black uppercase tracking-[0.3em] ml-13 italic">{t('rare_subtitle')}</p>
          </div>
          <button 
            onClick={() => setShowAddForm(true)}
@@ -71,7 +71,7 @@ export function RareDonorView() {
        <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
          <div className="xl:col-span-1 space-y-6">
            <div className="clinical-card p-6 bg-slate-900/20 border-slate-800">
-             <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-3">
+             <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-4 flex items-center gap-3">
                <Search size={16} /> {t('rare_registry_search')}
              </h3>
              <input 
@@ -89,15 +89,15 @@ export function RareDonorView() {
              </h3>
              <div className="space-y-6">
                <div className="flex justify-between items-center">
-                 <span className="text-slate-500 text-[10px] font-black uppercase tracking-widest">{t('rare_active_count')}</span>
-                 <span className="text-xl font-black text-white italic tracking-tighter">{donors.length}</span>
+                 <span className="text-slate-600 text-[10px] font-black uppercase tracking-widest">{t('rare_active_count')}</span>
+                 <span className="text-xl font-black text-slate-800 italic tracking-tighter">{donors.length}</span>
                </div>
                <div className="flex justify-between items-center">
-                 <span className="text-slate-500 text-[10px] font-black uppercase tracking-widest">{t('rare_available_nodes')}</span>
+                 <span className="text-slate-600 text-[10px] font-black uppercase tracking-widest">{t('rare_available_nodes')}</span>
                  <span className="text-xl font-black text-emerald-500 italic tracking-tighter">{donors.filter(d => d.status === 'Available').length}</span>
                </div>
                <div className="pt-4 border-t border-slate-800">
-                  <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 text-[9px] text-slate-500 font-bold uppercase tracking-widest leading-relaxed italic">
+                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-800 text-[9px] text-slate-600 font-bold uppercase tracking-widest leading-relaxed italic">
                      {t('rare_monitor_msg')}
                   </div>
                </div>
@@ -106,16 +106,16 @@ export function RareDonorView() {
          </div>
 
          <div className="xl:col-span-3">
-           <div className="clinical-card p-0 bg-slate-950/20 border-slate-800 overflow-hidden shadow-2xl">
+           <div className="clinical-card p-0 bg-slate-50/20 border-slate-800 overflow-hidden shadow-2xl">
              <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
                     <tr className="bg-slate-900/40 border-b border-slate-800">
-                      <th className="px-8 py-5 text-slate-500 font-black text-[9px] uppercase tracking-[0.2em]">{t('lims_tab_donor')}</th>
-                      <th className="px-8 py-5 text-slate-500 font-black text-[9px] uppercase tracking-[0.2em]">{t('rare_col_phenotype')}</th>
-                      <th className="px-8 py-5 text-slate-500 font-black text-[9px] uppercase tracking-[0.2em]">{t('rare_col_typing')}</th>
-                      <th className="px-8 py-5 text-slate-500 font-black text-[9px] uppercase tracking-[0.2em]">{t('lims_col_status')}</th>
-                      <th className="px-8 py-5 text-slate-500 font-black text-[9px] uppercase tracking-[0.2em] text-right">{t('rare_col_emergency')}</th>
+                      <th className="px-8 py-5 text-slate-600 font-black text-[9px] uppercase tracking-[0.2em]">{t('lims_tab_donor')}</th>
+                      <th className="px-8 py-5 text-slate-600 font-black text-[9px] uppercase tracking-[0.2em]">{t('rare_col_phenotype')}</th>
+                      <th className="px-8 py-5 text-slate-600 font-black text-[9px] uppercase tracking-[0.2em]">{t('rare_col_typing')}</th>
+                      <th className="px-8 py-5 text-slate-600 font-black text-[9px] uppercase tracking-[0.2em]">{t('lims_col_status')}</th>
+                      <th className="px-8 py-5 text-slate-600 font-black text-[9px] uppercase tracking-[0.2em] text-right">{t('rare_col_emergency')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-900">
@@ -123,7 +123,7 @@ export function RareDonorView() {
                       <tr key={donor.id} className="hover:bg-slate-900/20 transition-all group">
                         <td className="px-8 py-6">
                           <div className="flex flex-col">
-                            <span className="text-sm font-black text-white uppercase italic tracking-tight">{donor.name}</span>
+                            <span className="text-sm font-black text-slate-800 uppercase italic tracking-tight">{donor.name}</span>
                             <span className="text-[9px] font-mono font-black text-slate-600 tracking-widest mt-1">{donor.id} • {donor.location}</span>
                             <div className="flex items-center gap-2 mt-2">
                                <span className="text-[10px] font-black text-sky-500">{donor.bloodType} {donor.rhd}</span>
@@ -139,11 +139,11 @@ export function RareDonorView() {
                            <div className="space-y-1">
                               <div className="flex items-center gap-2">
                                  <span className="text-[8px] font-black text-slate-600 uppercase w-8">HLA:</span>
-                                 <span className="text-[9px] font-mono text-slate-400">A*02,03; B*07,08</span>
+                                 <span className="text-[9px] font-mono text-slate-600">A*02,03; B*07,08</span>
                               </div>
                               <div className="flex items-center gap-2">
                                  <span className="text-[8px] font-black text-slate-600 uppercase w-8">HPA:</span>
-                                 <span className="text-[9px] font-mono text-slate-400">1a Positive</span>
+                                 <span className="text-[9px] font-mono text-slate-600">1a Positive</span>
                               </div>
                            </div>
                         </td>
@@ -183,10 +183,10 @@ export function RareDonorView() {
            <div className="clinical-card bg-slate-900 border-slate-800 w-full max-w-2xl p-10 shadow-[0_0_150px_rgba(14,165,233,0.1)] rounded-[40px]">
              <div className="flex justify-between items-center mb-10">
                 <div>
-                   <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">{t('rare_form_title')}</h3>
-                   <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-1">SOP 11 · Clinical Registry Entry</p>
+                   <h3 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter">{t('rare_form_title')}</h3>
+                   <p className="text-slate-600 text-[10px] font-black uppercase tracking-widest mt-1">SOP 11 · Clinical Registry Entry</p>
                 </div>
-                <button onClick={() => setShowAddForm(false)} className="text-slate-500 hover:text-white uppercase text-[10px] font-black tracking-widest">{t('lims_form_cancel')}</button>
+                <button onClick={() => setShowAddForm(false)} className="text-slate-600 hover:text-slate-800 uppercase text-[10px] font-black tracking-widest">{t('lims_form_cancel')}</button>
              </div>
              
              <div className="grid grid-cols-2 gap-8">

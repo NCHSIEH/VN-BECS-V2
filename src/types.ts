@@ -1,32 +1,28 @@
 /**
- * @fileoverview NBMS Unified Type Definitions (v3.1)
+ * @fileoverview Domain Types & Interfaces (Data Dictionary)
  *
- * Central type definitions shared between frontend and backend.
- * Covers all 18+ Firestore Collections across SOP 1-10.
- *
- * @see implementation_plan.md §5 (Firestore Schema)
+ * This module exports all TypeScript definitions for the VN-BBMS system,
+ * replacing the disjointed type definitions from previous iterations.
  */
 
-// ─── Enums ───────────────────────────────────────────────────────────────────
+// ─── Base Enums ─────────────────────────────────────────────────────────────
 
-/** All user roles in the system. Maps to RBAC matrix (§6). */
+/** Validation Result */
+export interface ValidationResult {
+  valid: boolean;
+  errors: string[];
+}
+
+/** User roles. */
 export type Role =
-  | 'HospitalOperator'
-  | 'Dispatcher'
-  | 'WarehouseIssuer'
-  | 'Warehouse_IssueReturn'
-  | 'Auditor'
-  | 'MedicalReviewer'
-  | 'Manager'
-  | 'Courier'
-  | 'Nurse'
-  | 'Nurse_Hemovigilance'
-  | 'Nurse_MTP'
-  | 'LabTech_Crossmatch'
-  | 'SOP11_RareDonor'
+  | 'DonorScreener'
   | 'LIMS_Simulator'
-  | 'NationalCommander'
-  | 'Resource'
+  | 'WarehouseIssuer'
+  | 'Dispatcher'
+  | 'Courier'
+  | 'HospitalOperator'
+  | 'Nurse'
+  | 'QA_Officer'
   | 'Admin';
 
 /** Subsystems the user can access from the Portal. */

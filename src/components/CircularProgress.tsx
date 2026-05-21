@@ -46,12 +46,12 @@ export function CircularProgress({ value, max, size = 120, strokeWidth = 10, col
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-2xl font-black text-clinical-text">{value}</span>
-          <span className="text-[10px] text-slate-400 font-bold uppercase">Units</span>
+          <span className="text-[10px] text-slate-600 font-bold uppercase">Units</span>
         </div>
       </div>
       <div className="text-center">
         <div className="text-xs font-black text-clinical-text uppercase tracking-widest">{label}</div>
-        <div className="text-[10px] text-slate-400 font-medium">{subLabel}</div>
+        <div className="text-[10px] text-slate-600 font-medium">{subLabel}</div>
       </div>
     </div>
   );
