@@ -17,7 +17,7 @@ export function CircularProgress({ value, max, size = 120, strokeWidth = 10, col
   const offset = circumference - (percentage / 100) * circumference;
 
   return (
-    <div className="flex flex-col items-center gap-3 p-4 bg-white rounded-3xl transition-all hover:shadow-lg border border-slate-50">
+    <div className="flex flex-col items-center gap-3 p-4 bg-clinical-card rounded-3xl transition-all hover:shadow-lg border border-slate-50">
       <div className="relative" style={{ width: size, height: size }}>
         {/* Background Circle */}
         <svg className="transform -rotate-90 w-full h-full">
@@ -46,12 +46,12 @@ export function CircularProgress({ value, max, size = 120, strokeWidth = 10, col
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-2xl font-black text-clinical-text">{value}</span>
-          <span className="text-[10px] text-slate-600 font-bold uppercase">Units</span>
+          <span className="text-[10px] text-clinical-muted font-bold uppercase">Units</span>
         </div>
       </div>
       <div className="text-center">
         <div className="text-xs font-black text-clinical-text uppercase tracking-widest">{label}</div>
-        <div className="text-[10px] text-slate-600 font-medium">{subLabel}</div>
+        <div className="text-[10px] text-clinical-muted font-medium">{subLabel}</div>
       </div>
     </div>
   );

@@ -26,7 +26,7 @@ export type Role =
   | 'Admin';
 
 /** Subsystems the user can access from the Portal. */
-export type SystemType = 'HUB' | 'LIMS' | 'MDM' | 'HOSPITAL' | 'NATIONAL';
+export type SystemType = 'HUB' | 'LIMS' | 'MDM' | 'HOSPITAL' | 'NATIONAL' | 'IAM' | 'DASHBOARD';
 
 /** Organization classification. */
 export type OrgType = 'BloodCenter' | 'Hub' | 'Hospital';

@@ -29,9 +29,9 @@ export function MedicalReviewerView() {
 
   return (
     <div className="flex flex-col h-full gap-4 max-w-7xl mx-auto w-full">
-      <div className="bg-[#020617] border border-slate-700 rounded-xl p-4 flex flex-col h-full">
-        <div className="flex justify-between items-center border-b border-slate-700 pb-4 mb-4">
-          <h2 className="text-sm font-bold text-slate-600 uppercase tracking-widest flex items-center gap-2">
+      <div className="bg-clinical-bg border border-clinical-border rounded-xl p-4 flex flex-col h-full">
+        <div className="flex justify-between items-center border-b border-clinical-border pb-4 mb-4">
+          <h2 className="text-sm font-bold text-clinical-muted uppercase tracking-widest flex items-center gap-2">
             <Stethoscope size={18} className="text-purple-500" />
             Medical Review Board (Dual Review)
           </h2>
@@ -41,27 +41,27 @@ export function MedicalReviewerView() {
         </div>
 
         {orders.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-slate-600">
+          <div className="flex-1 flex flex-col items-center justify-center text-clinical-muted">
              <CheckCircle2 size={48} className="mb-4 text-lime-900" />
              <p>No escalated orders pending review.</p>
           </div>
         ) : (
           <div className="flex-1 overflow-auto space-y-4 pr-2 custom-scrollbar">
             {orders.map(order => (
-              <div key={order.id} className="bg-[#020617] border border-purple-900/40 rounded-lg p-5 relative overflow-hidden">
+              <div key={order.id} className="bg-clinical-bg border border-purple-900/40 rounded-lg p-5 relative overflow-hidden">
                  <div className="absolute top-0 left-0 w-1 h-full bg-purple-500"></div>
                  <div className="flex justify-between items-start mb-4">
                    <div>
                      <div className="flex gap-2 items-center mb-1">
-                        <span className="text-xs font-mono font-bold text-slate-600">{order.id}</span>
+                        <span className="text-xs font-mono font-bold text-clinical-muted">{order.id}</span>
                         <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-600 border border-orange-500/30">
                           {order.priority}
                         </span>
                      </div>
-                     <h3 className="text-lg font-bold text-slate-700">{order.hospital}</h3>
+                     <h3 className="text-lg font-bold text-clinical-text">{order.hospital}</h3>
                    </div>
                    <div className="text-right">
-                      <div className="text-xs text-slate-600 mb-1">Requested Items</div>
+                      <div className="text-xs text-clinical-muted mb-1">Requested Items</div>
                       {order.items.map(item => (
                         <div key={item.id} className="text-sm font-mono text-lime-400">
                           {item.qty}x {item.product}
@@ -78,13 +78,13 @@ export function MedicalReviewerView() {
                     </div>
                  </div>
 
-                 <div className="flex gap-3 justify-end border-t border-slate-700 pt-4 mt-2">
+                 <div className="flex gap-3 justify-end border-t border-clinical-border pt-4 mt-2">
                     <button className="px-4 py-2 border border-rose-900 text-rose-600 hover:bg-rose-950/30 rounded text-sm font-semibold transition">
                        Reject
                     </button>
                     <button 
                        onClick={() => handleApprove(order.id)}
-                       className="px-6 py-2 bg-purple-600 hover:bg-purple-500 text-slate-800 rounded shadow-lg text-sm font-bold transition"
+                       className="px-6 py-2 bg-purple-600 hover:bg-purple-500 text-clinical-text rounded shadow-lg text-sm font-bold transition"
                     >
                        Approve Exception
                     </button>

@@ -78,7 +78,7 @@ export function DispatcherView() {
 
   /** SLA countdown: minutes remaining before SLA breach (T-206) */
   function getSlaInfo(order: Order) {
-    if (!order.submittedAt) return { remaining: 0, color: 'text-slate-600', label: '--' };
+    if (!order.submittedAt) return { remaining: 0, color: 'text-clinical-muted', label: '--' };
     const slaMinutes: Record<string, number> = { Routine: 240, ASAP: 60, STAT: 30, MTP: 10 };
     const elapsed = (Date.now() - new Date(order.submittedAt).getTime()) / 60000;
     const remaining = Math.max(0, (slaMinutes[order.priority] || 240) - elapsed);
@@ -139,19 +139,19 @@ export function DispatcherView() {
     <div className="flex flex-col h-full gap-6 w-full max-w-[1600px] mx-auto p-4 lg:p-0 overflow-y-auto lg:overflow-hidden">
       {/* Efficiency Stats Bar (T-209) */}
       <div className="flex gap-3 flex-wrap">
-        <div className="flex items-center gap-2 bg-[#020617] border border-slate-700 px-3 py-2 rounded-lg">
+        <div className="flex items-center gap-2 bg-clinical-bg border border-clinical-border px-3 py-2 rounded-lg">
           <TrendingUp size={14} className="text-lime-400" />
-          <span className="text-xs text-slate-600">Processed</span>
+          <span className="text-xs text-clinical-muted">Processed</span>
           <span className="text-sm font-bold text-lime-400">{stats.approved}/{stats.total}</span>
         </div>
-        <div className="flex items-center gap-2 bg-[#020617] border border-slate-700 px-3 py-2 rounded-lg">
+        <div className="flex items-center gap-2 bg-clinical-bg border border-clinical-border px-3 py-2 rounded-lg">
           <Timer size={14} className="text-amber-400" />
-          <span className="text-xs text-slate-600">Pending</span>
+          <span className="text-xs text-clinical-muted">Pending</span>
           <span className={`text-sm font-bold ${stats.submitted > 3 ? 'text-rose-500' : 'text-amber-400'}`}>{stats.submitted}</span>
         </div>
-        <div className="flex items-center gap-2 bg-[#020617] border border-slate-700 px-3 py-2 rounded-lg">
+        <div className="flex items-center gap-2 bg-clinical-bg border border-clinical-border px-3 py-2 rounded-lg">
           <Activity size={14} className="text-cyan-400" />
-          <span className="text-xs text-slate-600">Completion</span>
+          <span className="text-xs text-clinical-muted">Completion</span>
           <span className="text-sm font-bold text-cyan-400">{stats.rate}%</span>
         </div>
       </div>
@@ -171,11 +171,11 @@ export function DispatcherView() {
       )}
       <div className="grid grid-cols-12 gap-4 h-full">
         {/* Order Queue */}
-        <div className="col-span-12 lg:col-span-4 bg-[#020617] border border-slate-700 rounded-xl p-4 flex flex-col gap-3 min-h-[500px]">
-          <h2 className="text-sm font-bold text-slate-600 uppercase tracking-widest border-b border-slate-700 pb-2 flex justify-between items-center">
+        <div className="col-span-12 lg:col-span-4 bg-clinical-bg border border-clinical-border rounded-xl p-4 flex flex-col gap-3 min-h-[500px]">
+          <h2 className="text-sm font-bold text-clinical-muted uppercase tracking-widest border-b border-clinical-border pb-2 flex justify-between items-center">
             <span>Triage Queue</span>
             <div className="flex gap-3 items-center">
-              <button onClick={fetchOrders} className={`text-slate-600 hover:text-lime-400 transition ${isRefreshing ? 'animate-spin' : ''}`}>
+              <button onClick={fetchOrders} className={`text-clinical-muted hover:text-lime-400 transition ${isRefreshing ? 'animate-spin' : ''}`}>
                 <RefreshCw size={14} />
               </button>
               <span className="text-lime-400 bg-lime-950/50 px-2 rounded-full text-xs flex items-center">{orders.filter(o => o.status === 'SUBMITTED').length} Active</span>
@@ -187,7 +187,7 @@ export function DispatcherView() {
                 key={order.id} 
                 onClick={() => setSelectedOrder(order)}
                 className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                  selectedOrder?.id === order.id ? 'bg-[#0b1120] border-lime-400/50' : 'bg-[#020617] border-slate-700 hover:border-slate-500'
+                  selectedOrder?.id === order.id ? 'bg-clinical-bg border-lime-400/50' : 'bg-clinical-bg border-clinical-border hover:border-slate-500'
                 }`}
               >
                 <div className="flex justify-between items-start mb-2">
@@ -195,19 +195,19 @@ export function DispatcherView() {
                     <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded
                       ${order.priority === 'STAT' ? 'bg-orange-500/20 text-orange-600 border border-orange-500/30' :
                         order.priority === 'MTP' ? 'bg-rose-500/20 text-rose-600 border border-rose-500/30' : 
-                        'bg-slate-900/80 text-slate-600'}`}
+                        'bg-clinical-card/80 text-clinical-muted'}`}
                     >
                       {order.priority}
                     </span>
                     <span className={`text-xs font-mono font-bold px-1.5 rounded ${order.hiciScore >= 80 ? 'text-rose-600 bg-rose-950/50' : 'text-lime-400 bg-lime-950/50'}`}>HICI: {order.hiciScore}</span>
                   </div>
-                  <span className="text-xs text-slate-600 font-mono">{order.id}</span>
+                  <span className="text-xs text-clinical-muted font-mono">{order.id}</span>
                 </div>
-                <div className="font-semibold text-slate-700 text-sm flex justify-between">
+                <div className="font-semibold text-clinical-text text-sm flex justify-between">
                   <span>{order.hospital}</span>
                   {order.status === 'APPROVED' && <span className="text-lime-400 flex items-center gap-1 text-xs"><CheckCircle2 size={12}/> Approved</span>}
                 </div>
-                <div className="text-slate-600 text-xs mt-1 truncate">
+                <div className="text-clinical-muted text-xs mt-1 truncate">
                   {order.items.map(i => `${i.qty}x ${i.product}`).join(', ')}
                 </div>
                 {/* SLA Countdown (T-206) */}
@@ -221,34 +221,34 @@ export function DispatcherView() {
                 })()}
               </div>
             ))}
-            {orders.length === 0 && <div className="text-slate-600 text-sm italic text-center py-8">Queue empty.</div>}
+            {orders.length === 0 && <div className="text-clinical-muted text-sm italic text-center py-8">Queue empty.</div>}
           </div>
         </div>
 
         {/* Workspace / HITL */}
-        <div className="col-span-12 lg:col-span-5 bg-[#020617] border border-slate-700 rounded-xl p-4 flex flex-col">
-          <h2 className="text-sm font-bold text-slate-600 uppercase tracking-widest border-b border-slate-700 pb-2 mb-4 flex gap-2">
+        <div className="col-span-12 lg:col-span-5 bg-clinical-bg border border-clinical-border rounded-xl p-4 flex flex-col">
+          <h2 className="text-sm font-bold text-clinical-muted uppercase tracking-widest border-b border-clinical-border pb-2 mb-4 flex gap-2">
             <Activity size={16}/> HITL Review Workspace
           </h2>
           
           {!selectedOrder ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 border border-slate-700 border-dashed rounded-lg bg-[#020617]/50">
-               <GitCommitHorizontal size={32} className="text-slate-600 mb-3"/>
-               <p className="text-slate-600 text-sm">Select an order from the triage queue to review AI allocation proposals and authorize dispatch.</p>
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 border border-clinical-border border-dashed rounded-lg bg-clinical-bg/50">
+               <GitCommitHorizontal size={32} className="text-clinical-muted mb-3"/>
+               <p className="text-clinical-muted text-sm">Select an order from the triage queue to review AI allocation proposals and authorize dispatch.</p>
             </div>
           ) : (
             <div className="flex-1 flex flex-col gap-4">
-              <div className="bg-[#020617] p-3 rounded-lg border border-slate-700">
-                <div className="flex justify-between text-sm text-slate-600 mb-1">
+              <div className="bg-clinical-bg p-3 rounded-lg border border-clinical-border">
+                <div className="flex justify-between text-sm text-clinical-muted mb-1">
                   <span>Reference: {selectedOrder.id}</span>
                   <span>{new Date(selectedOrder.submittedAt || '').toLocaleTimeString()}</span>
                 </div>
-                <h3 className="text-lg font-bold text-slate-700 mb-2">{selectedOrder.hospital}</h3>
+                <h3 className="text-lg font-bold text-clinical-text mb-2">{selectedOrder.hospital}</h3>
                 <div className="space-y-1">
                   {selectedOrder.items.map(item => (
-                    <div key={item.id} className="flex justify-between items-center text-sm bg-[#0b1120] p-2 rounded">
+                    <div key={item.id} className="flex justify-between items-center text-sm bg-clinical-bg p-2 rounded">
                        <span className="text-lime-400 font-semibold">{item.product}</span>
-                       <span className="text-slate-600">Requested: {item.qty} units</span>
+                       <span className="text-clinical-muted">Requested: {item.qty} units</span>
                     </div>
                   ))}
                 </div>
@@ -259,29 +259,29 @@ export function DispatcherView() {
                 <h4 className="text-xs font-bold text-lime-400 uppercase tracking-wider mb-2 flex items-center gap-1">
                   <Activity size={12}/> AI Allocation Proposal (HICI {selectedOrder.hiciScore})
                 </h4>
-                <div className="grid grid-cols-2 gap-2 mb-3 bg-[#020617]/50 p-2 rounded border border-lime-900/30">
-                  <div className="text-xs text-slate-600">Demand Risk: <span className="text-slate-700">{selectedOrder.rationale?.demandRisk || 'N/A'}</span></div>
-                  <div className="text-xs text-slate-600">Regional Scarcity: <span className="text-slate-700">{selectedOrder.rationale?.regionalScarcityRisk || 'N/A'}</span></div>
-                  <div className="text-xs text-slate-600">Lead Time Risk: <span className="text-slate-700">{selectedOrder.rationale?.leadTimeRisk || 'N/A'}</span></div>
-                  <div className="text-xs text-slate-600">Model Confidence: <span className="text-lime-400">{selectedOrder.rationale?.confidence || 'High'}</span></div>
+                <div className="grid grid-cols-2 gap-2 mb-3 bg-clinical-bg/50 p-2 rounded border border-lime-900/30">
+                  <div className="text-xs text-clinical-muted">Demand Risk: <span className="text-clinical-text">{selectedOrder.rationale?.demandRisk || 'N/A'}</span></div>
+                  <div className="text-xs text-clinical-muted">Regional Scarcity: <span className="text-clinical-text">{selectedOrder.rationale?.regionalScarcityRisk || 'N/A'}</span></div>
+                  <div className="text-xs text-clinical-muted">Lead Time Risk: <span className="text-clinical-text">{selectedOrder.rationale?.leadTimeRisk || 'N/A'}</span></div>
+                  <div className="text-xs text-clinical-muted">Model Confidence: <span className="text-lime-400">{selectedOrder.rationale?.confidence || 'High'}</span></div>
                 </div>
                 <div className="flex items-center gap-3 mb-3">
-                   <div className={`h-1.5 flex-1 rounded-full bg-slate-900 overflow-hidden`}>
+                   <div className={`h-1.5 flex-1 rounded-full bg-clinical-card overflow-hidden`}>
                       <div className={`h-full bg-lime-500`} style={{ width: '100%' }}></div>
                    </div>
                    <span className="text-[10px] font-black text-lime-400 uppercase tracking-widest">FEFO Match</span>
                 </div>
-                <p className="text-slate-600 text-sm mb-3">
+                <p className="text-clinical-muted text-sm mb-3">
                    {selectedOrder.hiciScore >= 70 ? 'Critical priority detected. ' : ''}
                    Suggested fulfilling <strong>100%</strong> of requested amount from Central Hub reserve.
                    <span className="text-rose-600 text-[10px] block mt-1 font-bold uppercase tracking-widest">⚠️ LOW EXPIRY RISK DETECTED IN ALLOCATED UNITS</span>
                 </p>
                 <div className="flex justify-between items-center border-t border-lime-900/40 pt-2 flex-wrap gap-2">
-                  <span className="text-xs text-slate-600 hidden sm:inline-block">Approval Required</span>
+                  <span className="text-xs text-clinical-muted hidden sm:inline-block">Approval Required</span>
                   {selectedOrder.status !== 'APPROVED' && selectedOrder.status !== 'DISPATCHED' ? (
                     <div className="flex gap-2">
-                      <button className="px-3 py-1 bg-[#0b1120] text-slate-600 rounded text-xs hover:bg-slate-900/80 transition">Partial...</button>
-                      <button onClick={handleApprove} className="px-3 py-1 bg-lime-400 hover:bg-lime-400 text-slate-800 rounded font-bold text-xs shadow transition">Approve Suggestion</button>
+                      <button className="px-3 py-1 bg-clinical-bg text-clinical-muted rounded text-xs hover:bg-clinical-card/80 transition">Partial...</button>
+                      <button onClick={handleApprove} className="px-3 py-1 bg-lime-400 hover:bg-lime-400 text-clinical-text rounded font-bold text-xs shadow transition">Approve Suggestion</button>
                     </div>
                   ) : (
                     <div className="flex items-center gap-3">
@@ -289,7 +289,7 @@ export function DispatcherView() {
                       {selectedOrder.status === 'APPROVED' && (
                         <button 
                           onClick={handleRevert}
-                          className="px-2 py-1 bg-rose-950/30 text-rose-500 border border-rose-900/50 rounded text-[10px] font-black uppercase tracking-widest hover:bg-rose-900 hover:text-slate-800 transition-all"
+                          className="px-2 py-1 bg-rose-950/30 text-rose-500 border border-rose-900/50 rounded text-[10px] font-black uppercase tracking-widest hover:bg-rose-900 hover:text-clinical-text transition-all"
                         >
                           Undo Approval
                         </button>
@@ -327,8 +327,8 @@ export function DispatcherView() {
         </div>
 
         {/* Regional Overview */}
-        <div className="col-span-12 lg:col-span-3 bg-[#020617] border border-slate-700 rounded-xl p-4 flex flex-col">
-          <h2 className="text-sm font-bold text-slate-600 uppercase tracking-widest border-b border-slate-700 pb-2 mb-4">
+        <div className="col-span-12 lg:col-span-3 bg-clinical-bg border border-clinical-border rounded-xl p-4 flex flex-col">
+          <h2 className="text-sm font-bold text-clinical-muted uppercase tracking-widest border-b border-clinical-border pb-2 mb-4">
             ABO×Rh Heatmap
           </h2>
           <div className="grid grid-cols-2 gap-2">
@@ -339,7 +339,7 @@ export function DispatcherView() {
                   <div className={`${cls.text} font-bold text-sm`}>{item.abo} {item.rhd === 'Positive' ? '+' : '-'}</div>
                   <div className={`${cls.text} font-mono text-lg font-bold`}>{item.count}</div>
                   <div className="flex justify-between items-center mt-1">
-                     <span className="text-[8px] text-slate-600 uppercase font-black">{item.dos.toFixed(1)} DOS</span>
+                     <span className="text-[8px] text-clinical-muted uppercase font-black">{item.dos.toFixed(1)} DOS</span>
                      {item.expiryRisk > 20 && <span className="text-[8px] text-rose-500 font-black animate-pulse">EXP!</span>}
                   </div>
                 </div>

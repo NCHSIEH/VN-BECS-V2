@@ -56,6 +56,7 @@ import { NationalDashboardView } from './components/NationalDashboardView';
 import { Sidebar } from './components/Sidebar';
 import { TaskQueue } from './components/TaskQueue';
 import { offlineStore } from './lib/offlineStore';
+import { ThemeSwitcher, ThemeType } from './components/ThemeSwitcher';
 
 function getSubRoles(mainRole: string): Role[] {
   if (mainRole === 'Admin') return ['HospitalOperator', 'Nurse', 'WarehouseIssuer', 'Dispatcher', 'Courier', 'Admin'];
@@ -71,6 +72,7 @@ function AppContent() {
     const saved = localStorage.getItem('vnbbms_role');
     return saved ? saved as Role : 'Admin';
   });
+  const [limsTab, setLimsTab] = useState<'DONOR' | 'LAB' | 'PROCESS' | 'RELEASE'>('DONOR');
   const [isOffline, setIsOffline] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [showConfirmReset, setShowConfirmReset] = useState(false);
@@ -82,6 +84,27 @@ function AppContent() {
   const [showSwitcher, setShowSwitcher] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
   const [unreadCount, setUnreadCount] = useState(3);
+  const [theme, setTheme] = useState<ThemeType>(() => {
+    const saved = localStorage.getItem('vnbbms_theme');
+    return (saved as ThemeType) || 'classic-medical-blue';
+  });
+  const [showThemeSwitcher, setShowThemeSwitcher] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('vnbbms_theme', theme);
+  }, [theme]);
+
+  useEffect(() => {
+    if (currentSystem === 'LIMS' && user) {
+      // Auto-select first permitted LIMS stage based on user role
+      const role = user.role;
+      if (role === 'DonorScreener') setLimsTab('DONOR');
+      else if (role === 'Nurse') setLimsTab('LAB');
+      else if (role === 'LIMS_Simulator') setLimsTab('RELEASE');
+      else setLimsTab('DONOR'); // Admin/Manager: start at DONOR
+    }
+  }, [currentSystem, user]);
 
   const fetchInventory = async () => {
     try {
@@ -137,22 +160,23 @@ function AppContent() {
 
   const renderSystemView = () => {
     if (currentSystem === 'MDM') return <AdminMDMView onBack={() => setCurrentSystem(null)} />;
+    if (currentSystem === 'IAM') return <AdminMDMView onBack={() => setCurrentSystem(null)} initialTab="MSD" />;
     
     if (currentSystem === 'NATIONAL') {
        return (
          <div className="flex-1 flex overflow-hidden">
-            <aside className="hidden md:flex w-20 xl:w-24 border-r border-slate-800/30 bg-slate-950/80 backdrop-blur-3xl flex-col p-4 xl:p-6 z-10 transition-all duration-500 shadow-2xl">
+           <aside className="hidden md:flex w-20 xl:w-24 border-r border-clinical-border bg-white/80 backdrop-blur-3xl flex-col p-4 xl:p-6 z-10 transition-all duration-500 shadow-2xl">
                <nav className="flex-1 flex flex-col items-center gap-6">
                   <CompactSidebarItem icon={<Activity size={24} />} active={nationalTab === 'overview'} onClick={() => setNationalTab('overview')} />
                   <CompactSidebarItem icon={<Database size={24} />} active={nationalTab === 'inventory'} onClick={() => setNationalTab('inventory')} />
                   <CompactSidebarItem icon={<Truck size={24} />} active={nationalTab === 'logistics'} onClick={() => setNationalTab('logistics')} />
                   <CompactSidebarItem icon={<ShieldCheck size={24} />} active={nationalTab === 'surveillance'} onClick={() => setNationalTab('surveillance')} />
                   <CompactSidebarItem icon={<Zap size={24} />} active={nationalTab === 'war_games'} onClick={() => setNationalTab('war_games')} />
-                  <div className="w-8 h-px bg-slate-800 my-4"></div>
+                  <div className="w-8 h-px bg-slate-100 my-4"></div>
                   <button onClick={() => setCurrentSystem(null)} className="p-3 text-slate-500 hover:text-rose-500 transition-all"><ArrowLeft size={24} /></button>
                </nav>
             </aside>
-            <main className="flex-1 overflow-y-auto bg-[#020617] relative">
+            <main className="flex-1 overflow-y-auto bg-clinical-bg relative">
                {nationalTab === 'overview' && <NationalDashboardView />}
                {nationalTab === 'inventory' && <HospitalInventoryView />}
                {nationalTab === 'logistics' && <ResourceManagementView />}
@@ -167,16 +191,27 @@ function AppContent() {
        );
     }
 
-    if (currentSystem === 'LIMS') return <DonorCenterSimulatorView initialTab={role === 'LIMS_Simulator' ? 'LAB' : 'DONOR'} />;
+    if (currentSystem === 'LIMS') {
+      return (
+        <DonorCenterSimulatorView 
+          activeTab={limsTab} 
+          onTabChange={setLimsTab} 
+        />
+      );
+    }
     
     if (currentSystem === 'HOSPITAL') {
        return (
-         <div className="flex-1 p-4 lg:p-6 overflow-y-auto bg-[#0b1120]">
-            <HospitalOperatorView 
-               user={user!} inventory={inventory} isOffline={isOffline} 
-               localEventsCount={localEventsCount} onSync={fetchInventory} onLogout={handleLogout} 
-               onOfflineRelease={handleOfflineRelease} 
-            />
+         <div className="flex-1 p-4 lg:p-6 overflow-y-auto bg-clinical-bg">
+            {(role === ('Dashboard' as Role) || role === 'HospitalOperator') && (
+              <HospitalOperatorView 
+                 user={user!} inventory={inventory} isOffline={isOffline} 
+                 localEventsCount={localEventsCount} onSync={fetchInventory} onLogout={handleLogout} 
+                 onOfflineRelease={handleOfflineRelease} 
+              />
+            )}
+            {role === 'Nurse' && <BedsideVerificationView />}
+            {role === ('Nurse_MTP' as Role) && <MtpEmergencyView />}
          </div>
        );
     }
@@ -185,7 +220,7 @@ function AppContent() {
        return (
          <div className="flex-1 flex flex-col overflow-hidden">
             <FlowIndicator role={role} />
-            <main className="flex-1 p-4 lg:p-6 overflow-y-auto bg-[#0b1120]">
+            <main className="flex-1 p-4 lg:p-6 overflow-y-auto bg-clinical-bg">
                {role === ('Dashboard' as Role) && <TaskQueue role={user!.role} onNavigate={setRole} />}
                {role === 'HospitalOperator' && (
                 <HospitalOperatorView 
@@ -213,31 +248,44 @@ function AppContent() {
        );
     }
 
-    return <PortalView user={user!} onSelectSystem={setCurrentSystem} onSelectRole={setRole} onLogout={handleLogout} onOpenDocs={() => setShowDocs(true)} onOpenSwitcher={() => setShowSwitcher(true)} />;
+    return <PortalView 
+      user={user!} 
+      onSelectSystem={setCurrentSystem} 
+      onSelectRole={setRole} 
+      onLogout={handleLogout} 
+      onOpenDocs={() => setShowDocs(true)} 
+      onOpenSwitcher={() => setShowSwitcher(true)} 
+      onOpenThemeSwitcher={() => setShowThemeSwitcher(true)} 
+    />;
   };
 
   if (showDocs) return <DocsView onBack={() => setShowDocs(false)} />;
   if (!user) return <LoginView onLogin={handleLogin} onOpenDocs={() => setShowDocs(true)} />;
 
   return (
-    <div className="flex flex-col h-screen bg-[#020617] text-slate-200 overflow-hidden font-inter selection:bg-rose-500/30">
+    <div className="flex flex-col h-screen bg-clinical-bg text-clinical-text overflow-hidden font-sans selection:bg-rose-500/30">
       <GlobalHeader 
         user={user} 
         isOffline={isOffline} 
         onLogout={handleLogout} 
         onOpenMessages={() => { setShowMessages(true); setUnreadCount(0); }}
         onOpenSwitcher={() => setShowSwitcher(true)}
+        onOpenThemeSwitcher={() => setShowThemeSwitcher(true)}
         unreadMessages={unreadCount}
         systemName={currentSystem ? `VN-BECS V1.0 ${currentSystem} COMMAND` : "VN-BECS V1.0 ENTERPRISE COMMAND"}
       />
       
       <div className="flex flex-1 overflow-hidden relative">
-        {currentSystem && currentSystem !== 'NATIONAL' && currentSystem !== 'MDM' && (
+        {currentSystem && ['LIMS', 'HOSPITAL', 'HUB'].includes(currentSystem) && (
           <Sidebar 
             currentRole={role} 
             setRole={setRole} 
             allowedRoles={getSubRoles(user.role)} 
+            currentSystem={currentSystem}
+            limsTab={limsTab}
+            setLimsTab={setLimsTab}
             onReturnToPortal={() => setCurrentSystem(null)}
+            user={user}
           />
         )}
         <main className="flex-1 relative overflow-hidden flex flex-col">
@@ -249,17 +297,18 @@ function AppContent() {
 
       <MessagingCenter currentUser={user} isOpen={showMessages} onClose={() => setShowMessages(false)} />
       <SystemSwitcher isOpen={showSwitcher} onClose={() => setShowSwitcher(false)} onSelect={setCurrentSystem} currentSystem={currentSystem} />
+      <ThemeSwitcher isOpen={showThemeSwitcher} onClose={() => setShowThemeSwitcher(false)} currentTheme={theme} onSelectTheme={setTheme} />
       {showDocs && <DocsView onBack={() => setShowDocs(false)} />}
       {showDiagnostic && <SystemDiagnosticView onClose={() => setShowDiagnostic(false)} />}
 
       {showConfirmReset && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
-          <div className="clinical-card max-w-sm w-full bg-slate-900 border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
-             <div className="p-6 border-b border-slate-800 bg-slate-950"><h3 className="text-sm font-black text-white uppercase italic tracking-widest">Confirm System Reset</h3></div>
-             <div className="p-8"><p className="text-slate-400 text-[11px] font-black uppercase tracking-widest leading-relaxed">Execute full command reset? All data will be baseline initialized.</p></div>
-             <div className="p-6 bg-slate-950/50 border-t border-slate-800 flex justify-end gap-3">
-               <button onClick={() => setShowConfirmReset(false)} className="px-6 py-2 text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-widest">Cancel</button>
-               <button onClick={handleResetSystem} className="px-8 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-900/40">Reset</button>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-100 backdrop-blur-md p-4">
+          <div className="clinical-card max-w-sm w-full bg-white border-clinical-border rounded-3xl overflow-hidden shadow-2xl">
+             <div className="p-6 border-b border-clinical-border bg-slate-50"><h3 className="text-sm font-black text-clinical-text uppercase italic tracking-widest">Confirm System Reset</h3></div>
+             <div className="p-8"><p className="text-slate-600 text-[11px] font-black uppercase tracking-widest leading-relaxed">Execute full command reset? All data will be baseline initialized.</p></div>
+             <div className="p-6 bg-slate-50/50 border-t border-clinical-border flex justify-end gap-3">
+               <button onClick={() => setShowConfirmReset(false)} className="px-6 py-2 text-[10px] font-black text-slate-500 hover:text-slate-800 uppercase tracking-widest">Cancel</button>
+               <button onClick={handleResetSystem} className="px-8 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-600/40">Reset</button>
              </div>
           </div>
         </div>
@@ -270,7 +319,7 @@ function AppContent() {
 
 function CompactSidebarItem({ icon, active = false, onClick }: any) {
   return (
-    <button onClick={onClick} className={`w-14 h-14 flex items-center justify-center rounded-[18px] transition-all group ${active ? 'bg-rose-600 text-white shadow-xl shadow-rose-900/40' : 'text-slate-500 hover:bg-slate-900/50 hover:text-slate-300'}`}>
+    <button onClick={onClick} className={`w-14 h-14 flex items-center justify-center rounded-[18px] transition-all group ${active ? 'bg-rose-600 text-white shadow-xl shadow-rose-900/40' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-600'}`}>
       <div className="transition-transform group-hover:scale-110">{icon}</div>
     </button>
   );

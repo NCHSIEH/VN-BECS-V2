@@ -73,7 +73,7 @@ export function WarehouseView() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#0b1120] overflow-hidden">
+    <div className="flex flex-col h-full bg-clinical-bg overflow-hidden">
       {/* Top Decorative Bar */}
       <div className="h-1.5 w-full bg-gradient-to-r from-emerald-600 via-sky-500 to-amber-500 shrink-0" />
 
@@ -83,17 +83,17 @@ export function WarehouseView() {
             <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.8)]" />
             <div className="flex flex-col">
                <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.4em] italic">Logistics Command</span>
-               <span className="text-sm font-black text-slate-800 uppercase italic tracking-tighter">Central Hub Inventory Dispatch</span>
+               <span className="text-sm font-black text-clinical-text uppercase italic tracking-tighter">Central Hub Inventory Dispatch</span>
             </div>
          </div>
          <div className="flex items-center gap-6">
             <div className="flex flex-col items-end">
-               <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Cold Chain Integrity</span>
+               <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">Cold Chain Integrity</span>
                <div className="flex items-center gap-3 mt-1">
-                  <div className="h-1.5 w-48 bg-slate-900 rounded-full overflow-hidden p-0.5 border border-slate-800 shadow-inner">
+                  <div className="h-1.5 w-48 bg-clinical-card rounded-full overflow-hidden p-0.5 border border-clinical-border shadow-inner">
                      <div className="h-full bg-emerald-500 w-[94%] shadow-[0_0_10px_rgba(16,185,129,0.6)] rounded-full transition-all duration-1000" />
                   </div>
-                  <span className="text-[10px] font-black text-slate-800">94%</span>
+                  <span className="text-[10px] font-black text-clinical-text">94%</span>
                </div>
             </div>
          </div>
@@ -101,9 +101,9 @@ export function WarehouseView() {
 
       <div className="flex-1 flex overflow-hidden">
         {/* Workflow Sidebar */}
-        <div className="w-96 bg-slate-50/50 border-r border-slate-900 flex flex-col shrink-0 p-8 gap-8 overflow-y-auto custom-scrollbar">
+        <div className="w-96 bg-clinical-bg/50 border-r border-clinical-border flex flex-col shrink-0 p-8 gap-8 overflow-y-auto custom-scrollbar">
            <div className="space-y-2">
-              <h2 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] mb-6">Fulfillment Hub</h2>
+              <h2 className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] mb-6">Fulfillment Hub</h2>
               {[
                 { id: 'DISPATCH', label: '1. Picking Queue', icon: <PackageCheck size={20} />, color: 'emerald' },
                 { id: 'INVENTORY', label: '2. Hub Directory', icon: <Database size={20} />, color: 'sky' },
@@ -114,12 +114,12 @@ export function WarehouseView() {
                   onClick={() => setActiveTab(stage.id as any)}
                   className={`w-full flex items-center justify-between p-6 rounded-[28px] transition-all group relative overflow-hidden ${
                     activeTab === stage.id 
-                      ? 'bg-slate-900 text-slate-800 border border-slate-800 shadow-2xl scale-[1.02]'
-                      : 'text-slate-600 hover:text-slate-600 hover:bg-slate-900/30'
+                      ? 'bg-clinical-card text-clinical-text border border-clinical-border shadow-2xl scale-[1.02]'
+                      : 'text-clinical-muted hover:text-clinical-muted hover:bg-clinical-card/30'
                   }`}
                 >
                   <div className="flex items-center gap-5 relative z-10">
-                     <div className={`transition-colors ${activeTab === stage.id ? 'text-emerald-500' : 'text-slate-700'}`}>
+                     <div className={`transition-colors ${activeTab === stage.id ? 'text-emerald-500' : 'text-clinical-text'}`}>
                         {stage.icon}
                      </div>
                      <span className="text-[14px] font-black uppercase italic tracking-tight">{stage.label}</span>
@@ -130,16 +130,16 @@ export function WarehouseView() {
            </div>
 
            <div className="mt-auto space-y-6">
-              <div className="bg-slate-900/50 p-6 rounded-[32px] border border-slate-800 shadow-inner">
-                 <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-4">Network Health</p>
+              <div className="bg-clinical-bg p-6 rounded-[32px] border border-clinical-border shadow-inner">
+                 <p className="text-[10px] font-black text-clinical-muted uppercase tracking-widest mb-4">Network Health</p>
                  <div className="flex gap-4">
                     <div className="flex flex-col">
-                       <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Units Ready</span>
+                       <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">Units Ready</span>
                        <span className="text-xl font-black text-emerald-500">{inventory.length}</span>
                     </div>
-                    <div className="w-px h-8 bg-slate-800 mt-2" />
+                    <div className="w-px h-8 bg-clinical-bg mt-2" />
                     <div className="flex flex-col">
-                       <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Pending Orders</span>
+                       <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">Pending Orders</span>
                        <span className="text-xl font-black text-sky-500">{orders.filter(o => o.status === 'APPROVED').length}</span>
                     </div>
                  </div>
@@ -148,15 +148,15 @@ export function WarehouseView() {
         </div>
 
         {/* Operational Viewport */}
-        <div className="flex-1 overflow-y-auto p-12 custom-scrollbar bg-slate-50/20">
+        <div className="flex-1 overflow-y-auto p-12 custom-scrollbar bg-clinical-bg/20">
           <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in slide-in-from-right-12 duration-1000">
             
             {/* Contextual Header */}
-            <div className="flex justify-between items-end border-b border-slate-900 pb-12">
+            <div className="flex justify-between items-end border-b border-clinical-border pb-12">
                <div className="space-y-4">
                   <div className="flex items-center gap-4">
                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 shadow-[0_0_10px_rgba(16,185,129,0.6)]" />
-                     <p className="text-slate-600 text-[11px] font-black uppercase tracking-[0.5em]">VN-HUB-NODE-01</p>
+                     <p className="text-clinical-muted text-[11px] font-black uppercase tracking-[0.5em]">VN-HUB-NODE-01</p>
                   </div>
                   <h1 className="premium-heading">
                     {activeTab === 'DISPATCH' && 'Picking & Verification'}
@@ -165,7 +165,7 @@ export function WarehouseView() {
                   </h1>
                </div>
                <div className="flex gap-4">
-                  <button onClick={fetchData} className="p-4 bg-slate-900 border border-slate-800 text-slate-600 hover:text-slate-800 rounded-[20px] transition-all">
+                  <button onClick={fetchData} className="p-4 bg-clinical-card border border-clinical-border text-clinical-muted hover:text-clinical-text rounded-[20px] transition-all">
                      <RefreshCcw size={20} />
                   </button>
                </div>
@@ -177,28 +177,28 @@ export function WarehouseView() {
                 <div className="flex flex-col lg:flex-row gap-12">
                    {/* Left: Queue */}
                    <div className="w-full lg:w-1/3 space-y-6">
-                      <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] mb-4">Pending Requests</h3>
+                      <h3 className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] mb-4">Pending Requests</h3>
                       <div className="space-y-4">
                         {orders.map(order => (
                           <button 
                             key={order.id} 
                             onClick={() => {setSelectedOrder(order); setScanResult(null); setScannedCode("");}}
                             className={`w-full p-6 rounded-[32px] border text-left transition-all ${
-                              selectedOrder?.id === order.id ? 'bg-slate-900 border-emerald-500 shadow-2xl scale-[1.02]' : 'bg-slate-50/30 border-slate-900 hover:border-slate-700'
+                              selectedOrder?.id === order.id ? 'bg-clinical-card border-emerald-500 shadow-2xl scale-[1.02]' : 'bg-clinical-bg/30 border-clinical-border hover:border-clinical-border'
                             }`}
                           >
                              <div className="flex justify-between items-start mb-4">
-                                <span className="font-mono font-black text-slate-600 text-sm italic">{order.id}</span>
+                                <span className="font-mono font-black text-clinical-muted text-sm italic">{order.id}</span>
                                 <span className={`text-[8px] font-black uppercase px-2 py-1 rounded-lg border ${
                                   order.status === 'DISPATCHED' ? 'bg-sky-950/30 text-sky-500 border-sky-900/30' : 'bg-emerald-950/30 text-emerald-500 border-emerald-900/30'
                                 }`}>{order.status}</span>
                              </div>
-                             <p className="text-slate-800 font-black uppercase italic tracking-tight text-lg mb-1">{order.hospital}</p>
-                             <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest">{order.priority} PRIORITY</p>
+                             <p className="text-clinical-text font-black uppercase italic tracking-tight text-lg mb-1">{order.hospital}</p>
+                             <p className="text-[10px] text-clinical-muted font-bold uppercase tracking-widest">{order.priority} PRIORITY</p>
                           </button>
                         ))}
                         {orders.length === 0 && (
-                          <div className="p-20 text-center border-2 border-dashed border-slate-900 rounded-[40px] text-slate-700 uppercase font-black text-[10px] tracking-widest italic">Queue Empty</div>
+                          <div className="p-20 text-center border-2 border-dashed border-clinical-border rounded-[40px] text-clinical-text uppercase font-black text-[10px] tracking-widest italic">Queue Empty</div>
                         )}
                       </div>
                    </div>
@@ -206,7 +206,7 @@ export function WarehouseView() {
                    {/* Right: Verification Station */}
                    <div className="flex-1">
                       {!selectedOrder ? (
-                        <div className="h-full flex flex-col items-center justify-center border-2 border-dashed border-slate-900 rounded-[48px] p-20 text-slate-700 group">
+                        <div className="h-full flex flex-col items-center justify-center border-2 border-dashed border-clinical-border rounded-[48px] p-20 text-clinical-text group">
                            <PackageCheck size={64} className="mb-6 opacity-20 group-hover:opacity-40 transition-opacity" />
                            <p className="font-black uppercase tracking-widest text-[10px] italic">Select Order for Verification</p>
                         </div>
@@ -218,21 +218,21 @@ export function WarehouseView() {
                         >
                            <div className="flex justify-between items-start">
                               <div>
-                                 <h2 className="text-3xl font-black text-slate-800 italic uppercase tracking-tight">{selectedOrder.id}</h2>
+                                 <h2 className="text-3xl font-black text-clinical-text italic uppercase tracking-tight">{selectedOrder.id}</h2>
                                  <p className="text-emerald-500 text-[10px] font-black uppercase tracking-[0.4em] mt-2 italic">Scanning Unit Handover</p>
                               </div>
-                              <div className="w-16 h-16 rounded-[24px] bg-slate-50 border border-slate-800 flex items-center justify-center text-slate-600">
+                              <div className="w-16 h-16 rounded-[24px] bg-clinical-bg border border-clinical-border flex items-center justify-center text-clinical-muted">
                                  <ScanBarcode size={32} />
                               </div>
                            </div>
 
-                           <div className="bg-slate-50/50 border border-slate-900 p-8 rounded-[32px] space-y-6">
-                              <h4 className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Required Components</h4>
+                           <div className="bg-clinical-bg/50 border border-clinical-border p-8 rounded-[32px] space-y-6">
+                              <h4 className="text-[10px] font-black text-clinical-muted uppercase tracking-widest">Required Components</h4>
                               {selectedOrder.items.map(item => (
                                 <div key={item.id} className="flex flex-col gap-4">
                                    <div className="flex justify-between items-end">
-                                      <span className="text-2xl font-black text-slate-800 italic">{item.qty}x {item.product}</span>
-                                      <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{item.abo} {item.rhd}</span>
+                                      <span className="text-2xl font-black text-clinical-text italic">{item.qty}x {item.product}</span>
+                                      <span className="text-[10px] font-black text-clinical-muted uppercase tracking-widest">{item.abo} {item.rhd}</span>
                                    </div>
                                    {selectedOrder.allocatedUnits && (
                                      <div className="bg-emerald-500/5 border border-emerald-500/20 p-4 rounded-2xl flex items-center justify-between">
@@ -256,14 +256,14 @@ export function WarehouseView() {
                              <div className="bg-emerald-500/10 border border-emerald-500/30 p-10 rounded-[32px] flex flex-col items-center gap-6">
                                 <CheckCircle size={48} className="text-emerald-500" />
                                 <div className="text-center">
-                                   <h3 className="text-2xl font-black text-slate-800 uppercase italic italic">Handover Complete</h3>
+                                   <h3 className="text-2xl font-black text-clinical-text uppercase italic italic">Handover Complete</h3>
                                    <p className="text-[10px] text-emerald-500 font-black uppercase tracking-widest mt-2">Transitioning to cold-chain logistics</p>
                                 </div>
                              </div>
                            ) : (
                              <form onSubmit={handleScan} className="space-y-6">
                                 <div className="relative">
-                                   <ScanBarcode className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-600" size={28} />
+                                   <ScanBarcode className="absolute left-6 top-1/2 -translate-y-1/2 text-clinical-muted" size={28} />
                                    <input
                                      autoFocus
                                      type="text"
@@ -295,9 +295,9 @@ export function WarehouseView() {
 
               {activeTab === 'INVENTORY' && (
                 <div className="space-y-8 animate-in fade-in duration-700">
-                   <div className="overflow-hidden rounded-[40px] border border-slate-900 bg-slate-900/10 shadow-2xl">
+                   <div className="overflow-hidden rounded-[40px] border border-clinical-border bg-clinical-card/10 shadow-2xl">
                      <table className="w-full text-left text-sm">
-                       <thead className="bg-slate-50/50 text-slate-600 text-[10px] font-black uppercase tracking-[0.3em] border-b border-slate-900">
+                       <thead className="bg-clinical-bg/50 text-clinical-muted text-[10px] font-black uppercase tracking-[0.3em] border-b border-clinical-border">
                          <tr>
                            <th className="p-8">ISBT Barcode</th>
                            <th className="p-8">Blood Type</th>
@@ -306,31 +306,31 @@ export function WarehouseView() {
                            <th className="p-8 text-right">Expiry</th>
                          </tr>
                        </thead>
-                       <tbody className="divide-y divide-slate-900/50">
+                       <tbody className="divide-y divide-clinical-border">
                          {inventory.map(inv => {
                            const isExpired = new Date(inv.expiryDate) < new Date();
                            return (
-                             <tr key={inv.unitId} className="hover:bg-slate-900/40 transition-all group">
+                             <tr key={inv.unitId} className="hover:bg-clinical-bg transition-all group">
                                <td className="p-8">
                                   <div className="flex items-center gap-4">
-                                     <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-sky-500 border border-slate-800">
+                                     <div className="w-10 h-10 rounded-xl bg-clinical-bg flex items-center justify-center text-sky-500 border border-clinical-border">
                                         <Database size={16} />
                                      </div>
-                                     <span className="font-mono font-black text-slate-700 text-lg italic tracking-tighter">{inv.unitId}</span>
+                                     <span className="font-mono font-black text-clinical-text text-lg italic tracking-tighter">{inv.unitId}</span>
                                   </div>
                                </td>
                                <td className="p-8">
-                                  <span className="bg-slate-50 text-slate-800 px-4 py-2 rounded-2xl text-[11px] font-black tracking-widest border border-slate-800">
+                                  <span className="bg-clinical-bg text-clinical-text px-4 py-2 rounded-2xl text-[11px] font-black tracking-widest border border-clinical-border">
                                     {inv.abo} {inv.rhd === 'Positive' ? '+' : '-'}
                                   </span>
                                </td>
-                               <td className="p-8 text-slate-600 font-bold uppercase text-[11px] tracking-widest">{inv.productCode}</td>
+                               <td className="p-8 text-clinical-muted font-bold uppercase text-[11px] tracking-widest">{inv.productCode}</td>
                                <td className="p-8">
                                   <span className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                                    inv.status === 'AVAILABLE' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-slate-900 text-slate-600 border-slate-800'
+                                    inv.status === 'AVAILABLE' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-clinical-card text-clinical-muted border-clinical-border'
                                   }`}>{inv.status}</span>
                                </td>
-                               <td className="p-8 text-right font-mono text-slate-600 text-[13px]">{new Date(inv.expiryDate).toLocaleDateString()}</td>
+                               <td className="p-8 text-right font-mono text-clinical-muted text-[13px]">{new Date(inv.expiryDate).toLocaleDateString()}</td>
                              </tr>
                            );
                          })}
@@ -352,7 +352,7 @@ export function WarehouseView() {
                    ].map((res, i) => (
                      <div key={i} className="clinical-card p-10 group hover:border-amber-500/30 transition-all">
                         <div className="flex justify-between items-start mb-8">
-                           <div className="w-16 h-16 rounded-[24px] bg-slate-50 border border-slate-800 flex items-center justify-center text-slate-600 group-hover:text-amber-500 transition-all">
+                           <div className="w-16 h-16 rounded-[24px] bg-clinical-bg border border-clinical-border flex items-center justify-center text-clinical-muted group-hover:text-amber-500 transition-all">
                               <Package size={32} />
                            </div>
                            <span className={`text-[9px] font-black uppercase px-3 py-1.5 rounded-xl border ${
@@ -360,12 +360,12 @@ export function WarehouseView() {
                              res.status === 'Low Stock' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-rose-500/10 text-rose-500 border-rose-500/20'
                            }`}>{res.status}</span>
                         </div>
-                        <h3 className="text-xl font-black text-slate-800 italic uppercase tracking-tight mb-2">{res.name}</h3>
+                        <h3 className="text-xl font-black text-clinical-text italic uppercase tracking-tight mb-2">{res.name}</h3>
                         <div className="flex items-baseline gap-3 mt-6">
-                           <span className="text-5xl font-black italic tracking-tighter text-slate-800">{res.stock}</span>
-                           <span className="text-[11px] font-black text-slate-600 uppercase tracking-widest">{res.unit}</span>
+                           <span className="text-5xl font-black italic tracking-tighter text-clinical-text">{res.stock}</span>
+                           <span className="text-[11px] font-black text-clinical-muted uppercase tracking-widest">{res.unit}</span>
                         </div>
-                        <div className="mt-8 h-2 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-900 shadow-inner">
+                        <div className="mt-8 h-2 w-full bg-clinical-bg rounded-full overflow-hidden border border-clinical-border shadow-inner">
                            <div className={`h-full ${res.stock < res.min ? 'bg-rose-600' : 'bg-emerald-600'} transition-all duration-1000`} style={{ width: `${Math.min(100, (res.stock / (res.min * 2)) * 100)}%` }} />
                         </div>
                      </div>

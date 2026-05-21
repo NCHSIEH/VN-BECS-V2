@@ -13,7 +13,7 @@ export function VietnamMap({ activeNode, onSelectNode, scenarios }: VietnamMapPr
   // Simplified clickable regions for Vietnam
   // North (Hanoi), Central (Da Nang), South (HCMC), Mekong (Can Tho)
   return (
-    <div className="relative w-full h-[500px] flex items-center justify-center bg-slate-900/10 rounded-[40px] border border-slate-800/30 overflow-hidden group">
+    <div className="relative w-full h-[500px] flex items-center justify-center bg-clinical-card/10 rounded-[40px] border border-clinical-border overflow-hidden group">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(225,29,72,0.05),transparent)] opacity-50" />
       
       {/* Background Grid Pattern */}
@@ -62,19 +62,19 @@ export function VietnamMap({ activeNode, onSelectNode, scenarios }: VietnamMapPr
       </svg>
 
       <div className="absolute bottom-8 left-8 right-8 flex justify-between items-end">
-         <div className="bg-slate-50/80 backdrop-blur-xl border border-slate-800 p-4 rounded-2xl space-y-2">
+         <div className="bg-clinical-bg/80 backdrop-blur-xl border border-clinical-border p-4 rounded-2xl space-y-2">
             <div className="flex items-center gap-2">
                <div className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(225,29,72,0.5)]" />
-               <span className="text-[8px] font-black text-slate-800 uppercase tracking-widest">{t('national_status_critical')}</span>
+               <span className="text-[8px] font-black text-clinical-text uppercase tracking-widest">{t('national_status_critical')}</span>
             </div>
             <div className="flex items-center gap-2">
                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-               <span className="text-[8px] font-black text-slate-800 uppercase tracking-widest">{t('national_status_safe')}</span>
+               <span className="text-[8px] font-black text-clinical-text uppercase tracking-widest">{t('national_status_safe')}</span>
             </div>
          </div>
          <div className="text-right">
-            <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">{t('national_all_live')}</p>
-            <p className="text-[8px] font-black text-slate-700 uppercase tracking-[0.3em] mt-1">v3.0.0-PROD</p>
+            <p className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.2em]">{t('national_all_live')}</p>
+            <p className="text-[8px] font-black text-clinical-text uppercase tracking-[0.3em] mt-1">v3.0.0-PROD</p>
          </div>
       </div>
     </div>

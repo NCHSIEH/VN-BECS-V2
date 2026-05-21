@@ -106,38 +106,38 @@ export const TaskQueue: React.FC<TaskQueueProps> = ({ role, onNavigate }) => {
     switch (p) {
       case 'Urgent': return 'from-rose-500 to-rose-700 border-rose-400/50 shadow-rose-900/40';
       case 'High': return 'from-amber-500 to-orange-600 border-amber-400/50 shadow-amber-900/40';
-      default: return 'from-slate-800 to-slate-900 border-slate-700 shadow-black/40';
+      default: return 'from-slate-800 to-slate-900 border-clinical-border shadow-sm';
     }
   };
 
   return (
     <div className="flex-1 flex flex-col gap-12 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 border-b border-slate-800 pb-12">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 border-b border-clinical-border pb-12">
         <div>
           <div className="flex items-center gap-3 mb-4">
              <div className="w-2 h-2 rounded-full bg-rose-600 animate-ping" />
              <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.4em]">Operational Intelligence</span>
           </div>
-          <h1 className="text-5xl font-black text-slate-800 italic tracking-tighter uppercase leading-none">Mission Control</h1>
-          <p className="text-slate-600 text-[11px] font-black uppercase tracking-[0.3em] mt-4">Active Command Stream | <span className="text-rose-500">{role}</span></p>
+          <h1 className="text-5xl font-black text-clinical-text italic tracking-tighter uppercase leading-none">Mission Control</h1>
+          <p className="text-clinical-muted text-[11px] font-black uppercase tracking-[0.3em] mt-4">Active Command Stream | <span className="text-rose-500">{role}</span></p>
         </div>
         
         <div className="flex gap-4">
-           <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800 p-5 rounded-[24px] min-w-[140px] text-center">
-              <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">Efficiency</p>
+           <div className="bg-clinical-bg backdrop-blur-xl border border-clinical-border p-5 rounded-[24px] min-w-[140px] text-center">
+              <p className="text-[9px] font-black text-clinical-muted uppercase tracking-widest mb-1">Efficiency</p>
               <p className="text-3xl font-black text-emerald-500 tracking-tighter italic">94.2%</p>
            </div>
-           <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800 p-5 rounded-[24px] min-w-[140px] text-center">
-              <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">Active</p>
+           <div className="bg-clinical-bg backdrop-blur-xl border border-clinical-border p-5 rounded-[24px] min-w-[140px] text-center">
+              <p className="text-[9px] font-black text-clinical-muted uppercase tracking-widest mb-1">Active</p>
               <p className="text-3xl font-black text-rose-500 tracking-tighter italic">{missions.length}</p>
            </div>
         </div>
       </div>
 
       {missions.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center py-24 bg-slate-900/20 rounded-[40px] border border-dashed border-slate-800">
-           <Activity size={48} className="text-slate-800 mb-6" />
-           <p className="text-slate-600 font-black uppercase tracking-[0.3em] text-xs text-center leading-relaxed">
+        <div className="flex-1 flex flex-col items-center justify-center py-24 bg-clinical-card/20 rounded-[40px] border border-dashed border-clinical-border">
+           <Activity size={48} className="text-clinical-text mb-6" />
+           <p className="text-clinical-muted font-black uppercase tracking-[0.3em] text-xs text-center leading-relaxed">
              No High-Priority Missions Detected<br/>
              <span className="opacity-50">Monitoring global data streams...</span>
            </p>
@@ -147,31 +147,31 @@ export const TaskQueue: React.FC<TaskQueueProps> = ({ role, onNavigate }) => {
           {missions.map(mission => (
             <div 
               key={mission.id}
-              className={`group relative flex flex-col p-8 rounded-[40px] border transition-all hover:scale-[1.02] hover:shadow-[0_20px_60px_rgba(0,0,0,0.6)] bg-gradient-to-br ${getPriorityStyles(mission.priority)}`}
+              className={`group relative flex flex-col p-8 rounded-[40px] border transition-all hover:scale-[1.02] hover:shadow-xl bg-gradient-to-br ${getPriorityStyles(mission.priority)}`}
             >
               <div className="flex justify-between items-start mb-8">
-                 <div className="p-4 rounded-2xl bg-black/30 backdrop-blur-xl border border-white/10 shadow-lg group-hover:rotate-6 transition-transform">
+                 <div className="p-4 rounded-2xl bg-clinical-bg backdrop-blur-xl border border-clinical-border shadow-lg group-hover:rotate-6 transition-transform">
                     {mission.icon}
                  </div>
-                 <div className="px-4 py-2 rounded-full bg-black/30 backdrop-blur-xl border border-white/10 text-[10px] font-black uppercase tracking-[0.2em]">
+                 <div className="px-4 py-2 rounded-full bg-clinical-bg backdrop-blur-xl border border-clinical-border text-[10px] font-black uppercase tracking-[0.2em]">
                     {mission.deadline}
                  </div>
               </div>
 
-              <h3 className="text-2xl font-black italic tracking-tight mb-3 uppercase leading-tight text-slate-800">{mission.title}</h3>
-              <p className="text-[12px] font-bold text-slate-800/70 mb-10 leading-relaxed uppercase tracking-wide">
+              <h3 className="text-2xl font-black italic tracking-tight mb-3 uppercase leading-tight text-clinical-text">{mission.title}</h3>
+              <p className="text-[12px] font-bold text-clinical-text/70 mb-10 leading-relaxed uppercase tracking-wide">
                 {mission.description}
               </p>
 
               <div className="mt-auto space-y-8">
                  <div className="space-y-3">
-                    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-800/50">
+                    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-clinical-text/50">
                        <span>Readiness</span>
                        <span>{mission.progress}%</span>
                     </div>
-                    <div className="h-2.5 w-full bg-black/30 rounded-full overflow-hidden p-0.5 border border-white/5">
+                    <div className="h-2.5 w-full bg-clinical-bg rounded-full overflow-hidden p-0.5 border border-clinical-border">
                        <div 
-                         className="h-full bg-white rounded-full shadow-[0_0_15px_rgba(255,255,255,0.6)] transition-all duration-1000 ease-out"
+                         className="h-full bg-clinical-card rounded-full shadow-[0_0_15px_rgba(255,255,255,0.6)] transition-all duration-1000 ease-out"
                          style={{ width: `${mission.progress}%` }}
                        />
                     </div>
@@ -179,14 +179,14 @@ export const TaskQueue: React.FC<TaskQueueProps> = ({ role, onNavigate }) => {
 
                  <button 
                    onClick={() => onNavigate?.(mission.roleTarget)}
-                   className="w-full py-5 rounded-[24px] bg-white text-black font-black uppercase italic tracking-tighter hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center gap-3 shadow-2xl"
+                   className="w-full py-5 rounded-[24px] bg-clinical-card text-black font-black uppercase italic tracking-tighter hover:bg-clinical-bg active:scale-95 transition-all flex items-center justify-center gap-3 shadow-2xl"
                  >
                    Launch Mission <ArrowRight size={20} />
                  </button>
               </div>
 
               {/* Priority Tag */}
-              <div className="absolute -top-3 -right-3 px-4 py-2 rounded-xl bg-slate-50 border border-slate-800 text-[10px] font-black text-slate-800 uppercase tracking-widest shadow-2xl group-hover:-translate-y-1 transition-transform">
+              <div className="absolute -top-3 -right-3 px-4 py-2 rounded-xl bg-clinical-bg border border-clinical-border text-[10px] font-black text-clinical-text uppercase tracking-widest shadow-2xl group-hover:-translate-y-1 transition-transform">
                  {mission.priority}
               </div>
             </div>

@@ -1,32 +1,196 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
+:root {
+  /* Default Theme: Classic Medical Blue */
+  --clinical-font: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --clinical-bg: #f0f7ff;
+  --clinical-card: #ffffff;
+  --clinical-primary: #2563eb;
+  --clinical-secondary: #0ea5e9;
+  --clinical-success: #10b981;
+  --clinical-text: #0f172a;
+  --clinical-muted: #64748b;
+  --clinical-border: #e2e8f0;
+  --clinical-backdrop: none;
+}
+
+[data-theme="classic-medical-blue"] {
+  --clinical-font: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --clinical-bg: #f0f6ff;
+  --clinical-card: #ffffff;
+  --clinical-primary: #1e40af;
+  --clinical-secondary: #0ea5e9;
+  --clinical-success: #10b981;
+  --clinical-text: #0f172a;
+  --clinical-muted: #64748b;
+  --clinical-border: #cbd5e1;
+  --clinical-backdrop: none;
+}
+
+[data-theme="classic-editorial"] {
+  /* McKinsey Academic/Editorial sand style */
+  --clinical-font: Georgia, Cambria, "Times New Roman", Times, serif;
+  --clinical-bg: #f4f0ea;
+  --clinical-card: #ffffff;
+  --clinical-primary: #002d72;
+  --clinical-secondary: #111111;
+  --clinical-success: #166534;
+  --clinical-text: #111111;
+  --clinical-muted: #555555;
+  --clinical-border: #111111;
+  --clinical-backdrop: none;
+}
+
+[data-theme="warm-minimalist"] {
+  /* Warm Earthy Oatmeal */
+  --clinical-font: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --clinical-bg: #efe6dc;
+  --clinical-card: #fffdfb;
+  --clinical-primary: #c2410c;
+  --clinical-secondary: #9a3412;
+  --clinical-success: #15803d;
+  --clinical-text: #3c2f2f;
+  --clinical-muted: #7c6d6d;
+  --clinical-border: #d7c9bd;
+  --clinical-backdrop: none;
+}
+
+[data-theme="nordic-crisp"] {
+  /* Fresh Nordic Spruce Mint */
+  --clinical-font: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --clinical-bg: #dbe6e1;
+  --clinical-card: #ffffff;
+  --clinical-primary: #065f46;
+  --clinical-secondary: #0f766e;
+  --clinical-success: #059669;
+  --clinical-text: #0a251c;
+  --clinical-muted: #4e6a5e;
+  --clinical-border: #bcd0c7;
+  --clinical-backdrop: none;
+}
+
+[data-theme="oceanic-healing"] {
+  /* Warm sunset coral */
+  --clinical-font: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --clinical-bg: #ffe4db;
+  --clinical-card: #ffffff;
+  --clinical-primary: #f95738;
+  --clinical-secondary: #f07167;
+  --clinical-success: #10b981;
+  --clinical-text: #3d1b13;
+  --clinical-muted: #876258;
+  --clinical-border: #ffccbc;
+  --clinical-backdrop: none;
+}
+
+[data-theme="tech-lavender"] {
+  /* Cyber Clinical Dark Mode */
+  --clinical-font: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --clinical-bg: #05060e;
+  --clinical-card: #0e1122;
+  --clinical-primary: #a78bfa;
+  --clinical-secondary: #f472b6;
+  --clinical-success: #10b981;
+  --clinical-text: #e2e8f0;
+  --clinical-muted: #94a3b8;
+  --clinical-border: #21254a;
+  --clinical-backdrop: none;
+}
+
+[data-theme="minty-aqua"] {
+  /* Matrix Retro Green Console */
+  --clinical-font: 'Courier New', Courier, monospace;
+  --clinical-bg: #000000;
+  --clinical-card: #060906;
+  --clinical-primary: #00ff00;
+  --clinical-secondary: #10b981;
+  --clinical-success: #00ff00;
+  --clinical-text: #39ff14;
+  --clinical-muted: #0b7020;
+  --clinical-border: #0b5016;
+  --clinical-backdrop: none;
+}
+
+[data-theme="slate-corporate"] {
+  /* Tactical Command Navy Dark Mode */
+  --clinical-font: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --clinical-bg: #0f172a;
+  --clinical-card: #1e293b;
+  --clinical-primary: #00f5ff;
+  --clinical-secondary: #38bdf8;
+  --clinical-success: #10b981;
+  --clinical-text: #ffffff;
+  --clinical-muted: #94a3b8;
+  --clinical-border: #334155;
+  --clinical-backdrop: none;
+}
+
+[data-theme="frosted-glacier"] {
+  /* Cool Light Frosted Glassmorphism */
+  --clinical-font: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --clinical-bg: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  --clinical-card: rgba(255, 255, 255, 0.45);
+  --clinical-primary: #0284c7;
+  --clinical-secondary: #0ea5e9;
+  --clinical-success: #059669;
+  --clinical-text: #072242;
+  --clinical-muted: #334e68;
+  --clinical-border: rgba(255, 255, 255, 0.5);
+  --clinical-backdrop: blur(30px) saturate(180%);
+}
+
+[data-theme="aurora-glow"] {
+  /* Deep Glowing Aurora Nebula dark-light glass */
+  --clinical-font: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --clinical-bg: linear-gradient(135deg, #09061c 0%, #150c2d 50%, #2b0b30 100%);
+  --clinical-card: rgba(18, 12, 45, 0.55);
+  --clinical-primary: #ec4899;
+  --clinical-secondary: #a855f7;
+  --clinical-success: #10b981;
+  --clinical-text: #fdf4ff;
+  --clinical-muted: #a78bfa;
+  --clinical-border: rgba(168, 85, 247, 0.25);
+  --clinical-backdrop: blur(30px) saturate(160%);
+}
+
 @theme {
-  --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
-  --color-clinical-bg: #f8fafc;
-  --color-clinical-card: #ffffff;
-  --color-clinical-primary: #e11d48;
-  --color-clinical-secondary: #0ea5e9;
-  --color-clinical-success: #10b981;
-  --color-clinical-text: #0f172a;
-  --color-clinical-muted: #64748b;
-  --color-clinical-border: #e2e8f0;
+  --font-sans: var(--clinical-font);
+  --color-clinical-bg: var(--clinical-bg);
+  --color-clinical-card: var(--clinical-card);
+  --color-clinical-primary: var(--clinical-primary);
+  --color-clinical-secondary: var(--clinical-secondary);
+  --color-clinical-success: var(--clinical-success);
+  --color-clinical-text: var(--clinical-text);
+  --color-clinical-muted: var(--clinical-muted);
+  --color-clinical-border: var(--clinical-border);
 }
 
 @layer base {
   body {
     @apply bg-clinical-bg text-clinical-text font-sans antialiased selection:bg-rose-500/30 selection:text-slate-900;
     font-size: 16px;
+    background: var(--clinical-bg);
+    color: var(--clinical-text);
+    transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease, font-family 0.3s ease;
   }
 }
 
 @layer components {
   .clinical-card {
-    @apply bg-white/90 backdrop-blur-3xl border border-clinical-border rounded-[24px] shadow-sm transition-all duration-300 hover:shadow-md hover:border-slate-300;
+    @apply bg-clinical-card border border-clinical-border rounded-[24px] shadow-sm transition-all duration-300 hover:shadow-md;
+    backdrop-filter: var(--clinical-backdrop);
+    -webkit-backdrop-filter: var(--clinical-backdrop);
+  }
+
+  .clinical-label {
+    @apply text-[10px] font-black text-clinical-muted uppercase tracking-[0.2em] mb-2 block;
   }
 
   .glass-station {
-    @apply bg-white/80 backdrop-blur-3xl border border-slate-200 rounded-[24px] shadow-lg transition-all duration-300;
+    @apply bg-clinical-card border border-clinical-border rounded-[24px] shadow-lg transition-all duration-300;
+    backdrop-filter: var(--clinical-backdrop);
+    -webkit-backdrop-filter: var(--clinical-backdrop);
   }
 
   .clinical-btn-primary {
@@ -34,11 +198,11 @@
   }
 
   .clinical-input {
-    @apply w-full bg-slate-50 border border-slate-200 text-clinical-text p-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-medium placeholder:text-slate-400 text-base shadow-inner;
+    @apply w-full bg-clinical-bg border border-clinical-border text-clinical-text p-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-medium placeholder:text-slate-400 text-base shadow-inner;
   }
 
   .premium-heading {
-    @apply text-4xl lg:text-5xl font-bold text-slate-800 tracking-tight leading-tight;
+    @apply text-4xl lg:text-5xl font-bold text-clinical-text tracking-tight leading-tight;
   }
 
   .premium-subtitle {

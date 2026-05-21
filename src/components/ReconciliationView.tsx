@@ -52,16 +52,16 @@ export function ReconciliationView() {
 
   return (
     <div className="flex flex-col h-full gap-4 max-w-6xl mx-auto w-full p-4 overflow-y-auto custom-scrollbar">
-      <div className="bg-[#020617] border border-slate-700 rounded-xl p-6">
-        <div className="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
-          <h2 className="text-lg font-bold text-slate-700 flex items-center gap-2">
+      <div className="bg-clinical-bg border border-clinical-border rounded-xl p-6">
+        <div className="flex justify-between items-center mb-6 border-b border-clinical-border pb-4">
+          <h2 className="text-lg font-bold text-clinical-text flex items-center gap-2">
             <FileCheck className="text-purple-600" />
             SOP 10: Daily Reconciliation Reports
           </h2>
           <button 
             onClick={handleGenerate}
             disabled={loading}
-            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-slate-800 px-4 py-2 rounded-lg text-sm font-bold transition disabled:opacity-50"
+            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-clinical-text px-4 py-2 rounded-lg text-sm font-bold transition disabled:opacity-50"
           >
             <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
             Trigger Daily Job (06:00)
@@ -84,14 +84,14 @@ export function ReconciliationView() {
 
             return (
               <div key={i} className={`p-4 rounded-xl border ${
-                resolved ? 'bg-[#0b1120] border-slate-800' :
+                resolved ? 'bg-clinical-bg border-clinical-border' :
                 hasConflicts ? 'bg-rose-950/20 border-rose-900/50' :
-                'bg-[#020617] border-slate-700'
+                'bg-clinical-bg border-clinical-border'
               }`}>
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-mono text-sm text-slate-700 font-bold">{r.id}</span>
+                      <span className="font-mono text-sm text-clinical-text font-bold">{r.id}</span>
                       <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded border ${
                         resolved ? 'bg-lime-950/30 text-lime-400 border-lime-900' :
                         hasConflicts ? 'bg-rose-950/30 text-rose-600 border-rose-900' :
@@ -100,12 +100,12 @@ export function ReconciliationView() {
                         {resolved ? 'Resolved' : hasConflicts ? 'Needs Review' : 'Pending Review'}
                       </span>
                     </div>
-                    <div className="text-xs text-slate-600">Date: {r.date} | Hospital: {r.hospitalId}</div>
+                    <div className="text-xs text-clinical-muted">Date: {r.date} | Hospital: {r.hospitalId}</div>
                   </div>
                   {!resolved && (
                     <button 
                       onClick={() => handleResolve(r.id)}
-                      className="bg-[#0b1120] border border-slate-700 hover:border-slate-500 text-slate-700 px-3 py-1.5 rounded text-xs font-bold transition"
+                      className="bg-clinical-bg border border-clinical-border hover:border-slate-500 text-clinical-text px-3 py-1.5 rounded text-xs font-bold transition"
                     >
                       Mark Resolved
                     </button>
@@ -113,18 +113,18 @@ export function ReconciliationView() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-[#0b1120] p-3 rounded-lg border border-slate-800">
-                    <div className="text-[10px] text-slate-600 uppercase font-bold mb-2">Borrowed Units ({borrowed.length})</div>
-                    <div className="text-xs text-slate-600 font-mono flex flex-wrap gap-1">
+                  <div className="bg-clinical-bg p-3 rounded-lg border border-clinical-border">
+                    <div className="text-[10px] text-clinical-muted uppercase font-bold mb-2">Borrowed Units ({borrowed.length})</div>
+                    <div className="text-xs text-clinical-muted font-mono flex flex-wrap gap-1">
                       {borrowed.map((u: string, idx: number) => (
-                        <span key={idx} className="bg-slate-900 px-1.5 py-0.5 rounded">{u}</span>
+                        <span key={idx} className="bg-clinical-card px-1.5 py-0.5 rounded">{u}</span>
                       ))}
                       {borrowed.length === 0 && 'None'}
                     </div>
                   </div>
                   
-                  <div className={`p-3 rounded-lg border ${hasConflicts ? 'bg-rose-950/30 border-rose-900/50' : 'bg-[#0b1120] border-slate-800'}`}>
-                    <div className={`text-[10px] uppercase font-bold mb-2 ${hasConflicts ? 'text-rose-600' : 'text-slate-600'}`}>
+                  <div className={`p-3 rounded-lg border ${hasConflicts ? 'bg-rose-950/30 border-rose-900/50' : 'bg-clinical-bg border-clinical-border'}`}>
+                    <div className={`text-[10px] uppercase font-bold mb-2 ${hasConflicts ? 'text-rose-600' : 'text-clinical-muted'}`}>
                       Conflicts Detected ({conflicts.length})
                     </div>
                     <div className="text-xs font-mono flex flex-wrap gap-1">
@@ -137,7 +137,7 @@ export function ReconciliationView() {
                 </div>
 
                 {resolved && (
-                  <div className="mt-3 text-[10px] text-slate-600 border-t border-slate-800 pt-2 flex items-center gap-1">
+                  <div className="mt-3 text-[10px] text-clinical-muted border-t border-clinical-border pt-2 flex items-center gap-1">
                     <CheckCircle2 size={12} className="text-lime-500" />
                     Resolved by {r.resolvedBy} at {new Date(r.resolvedAt).toLocaleString()}
                   </div>
@@ -146,7 +146,7 @@ export function ReconciliationView() {
             );
           })}
           {reports.length === 0 && !loading && (
-            <div className="text-center p-8 text-slate-600 text-sm">No reconciliation reports found.</div>
+            <div className="text-center p-8 text-clinical-muted text-sm">No reconciliation reports found.</div>
           )}
         </div>
       </div>

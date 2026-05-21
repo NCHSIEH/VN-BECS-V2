@@ -100,22 +100,22 @@ export function CrossmatchView() {
     <div className="flex flex-col h-full gap-8 max-w-7xl mx-auto w-full p-8 overflow-y-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
       
       {/* Header Context */}
-      <div className="flex items-center justify-between border-b border-slate-900 pb-8">
+      <div className="flex items-center justify-between border-b border-clinical-border pb-8">
          <div>
             <div className="flex items-center gap-3 mb-2">
                <span className="text-[10px] font-black text-purple-500 uppercase tracking-[0.4em] bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20 italic">Clinical Protocol</span>
-               <div className="h-px w-12 bg-slate-800"></div>
+               <div className="h-px w-12 bg-clinical-bg"></div>
             </div>
-            <h1 className="text-4xl font-black text-slate-800 tracking-tighter uppercase italic leading-none">Compatibility Intelligence</h1>
+            <h1 className="text-4xl font-black text-clinical-text tracking-tighter uppercase italic leading-none">Compatibility Intelligence</h1>
          </div>
          <div className="flex items-center gap-4">
             <div className="flex flex-col items-end">
-               <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">System Confidence</span>
+               <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">System Confidence</span>
                <div className="flex items-center gap-3 mt-1">
-                  <div className="h-1.5 w-40 bg-slate-900 rounded-full overflow-hidden p-0.5 border border-slate-800 shadow-inner">
+                  <div className="h-1.5 w-40 bg-clinical-card rounded-full overflow-hidden p-0.5 border border-clinical-border shadow-inner">
                      <div className="h-full bg-purple-500 w-[98%] shadow-[0_0_10px_rgba(168,85,247,0.6)] rounded-full" />
                   </div>
-                  <span className="text-[10px] font-black text-slate-800">98%</span>
+                  <span className="text-[10px] font-black text-clinical-text">98%</span>
                </div>
             </div>
          </div>
@@ -125,17 +125,17 @@ export function CrossmatchView() {
         {/* Form & Patient Context */}
         <div className="col-span-12 lg:col-span-5 space-y-6">
            {/* Patient Discovery Card */}
-           <div className={`clinical-card p-8 transition-all duration-500 ${selectedPatient ? 'border-purple-500/30 bg-purple-500/5 shadow-2xl shadow-purple-900/10' : 'bg-slate-900/10'}`}>
+           <div className={`clinical-card p-8 transition-all duration-500 ${selectedPatient ? 'border-purple-500/30 bg-purple-500/5 shadow-2xl shadow-purple-900/10' : 'bg-clinical-card/10'}`}>
               <div className="flex justify-between items-start mb-8">
-                 <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] italic">Patient Interoperability (HIS)</h3>
+                 <h3 className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] italic">Patient Interoperability (HIS)</h3>
                  {selectedPatient && <ShieldCheck className="text-emerald-500" size={20} />}
               </div>
               
               <div className="space-y-6">
                  <div>
-                    <label className="block text-[9px] font-black text-slate-600 uppercase tracking-widest mb-2">Master Patient Index (MRN)</label>
+                    <label className="block text-[9px] font-black text-clinical-muted uppercase tracking-widest mb-2">Master Patient Index (MRN)</label>
                     <div className="relative group">
-                       <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-purple-500 transition-colors" size={18} />
+                       <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-clinical-muted group-focus-within:text-purple-500 transition-colors" size={18} />
                        <input 
                          required 
                          value={patientId} 
@@ -147,23 +147,23 @@ export function CrossmatchView() {
                  </div>
 
                  {selectedPatient ? (
-                    <div className="p-6 bg-slate-50/80 border border-slate-800 rounded-[24px] animate-in zoom-in-95 duration-300">
+                    <div className="p-6 bg-clinical-bg/80 border border-clinical-border rounded-[24px] animate-in zoom-in-95 duration-300">
                        <div className="flex justify-between mb-4">
-                          <span className="text-lg font-black text-slate-800 uppercase italic">{selectedPatient.name}</span>
-                          <span className="bg-emerald-500 text-slate-800 px-3 py-1 rounded-xl text-[10px] font-black uppercase">{selectedPatient.abo}{selectedPatient.rhd === 'Positive' ? '+' : '-'}</span>
+                          <span className="text-lg font-black text-clinical-text uppercase italic">{selectedPatient.name}</span>
+                          <span className="bg-emerald-500 text-clinical-text px-3 py-1 rounded-xl text-[10px] font-black uppercase">{selectedPatient.abo}{selectedPatient.rhd === 'Positive' ? '+' : '-'}</span>
                        </div>
                        <div className="space-y-3">
-                          <div className="flex justify-between items-center text-[10px] border-b border-slate-900 pb-2">
-                             <span className="text-slate-600 font-bold uppercase tracking-widest">Antibody History</span>
+                          <div className="flex justify-between items-center text-[10px] border-b border-clinical-border pb-2">
+                             <span className="text-clinical-muted font-bold uppercase tracking-widest">Antibody History</span>
                              <span className={`font-black ${selectedPatient.antibodyHistory?.length ? 'text-rose-500' : 'text-emerald-500'}`}>
                                 {selectedPatient.antibodyHistory?.length ? selectedPatient.antibodyHistory.join(', ') : 'NEGATIVE'}
                              </span>
                           </div>
                           <div className="flex justify-between items-center text-[10px]">
-                             <span className="text-slate-600 font-bold uppercase tracking-widest">Match Score</span>
+                             <span className="text-clinical-muted font-bold uppercase tracking-widest">Match Score</span>
                              <div className="flex items-center gap-2">
-                                <span className="font-black text-slate-800">{matchScore}%</span>
-                                <div className="w-12 h-1 bg-slate-900 rounded-full overflow-hidden">
+                                <span className="font-black text-clinical-text">{matchScore}%</span>
+                                <div className="w-12 h-1 bg-clinical-card rounded-full overflow-hidden">
                                    <div className="h-full bg-purple-500" style={{ width: `${matchScore}%` }} />
                                 </div>
                              </div>
@@ -179,32 +179,32 @@ export function CrossmatchView() {
            </div>
 
            {/* Test Configuration */}
-           <div className="clinical-card p-8 bg-slate-900/10">
-              <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] mb-8 italic">Test Configuration</h3>
+           <div className="clinical-card p-8 bg-clinical-card/10">
+              <h3 className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] mb-8 italic">Test Configuration</h3>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                   <label className="block text-[9px] font-black text-slate-600 uppercase tracking-widest mb-2">Component Identifier (ISBT)</label>
+                   <label className="block text-[9px] font-black text-clinical-muted uppercase tracking-widest mb-2">Component Identifier (ISBT)</label>
                    <input required value={componentId} onChange={e => setComponentId(e.target.value)}
                      placeholder="DIN/Product (e.g. C-12345)"
                      className="clinical-input h-14 w-full font-mono" />
                 </div>
 
                 <div>
-                   <label className="block text-[9px] font-black text-slate-600 uppercase tracking-widest mb-2">Methodological Protocol</label>
+                   <label className="block text-[9px] font-black text-clinical-muted uppercase tracking-widest mb-2">Methodological Protocol</label>
                    <div className="grid grid-cols-3 gap-3">
                      {(['IS', 'AHG', 'EXM'] as CrossmatchMethod[]).map(m => (
                        <button key={m} type="button" onClick={() => setMethod(m)}
                          className={`py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all ${
                            method === m
-                             ? 'bg-purple-600 text-slate-800 border-purple-500 shadow-lg shadow-purple-900/20 scale-105'
-                             : 'bg-slate-50/50 text-slate-600 border-slate-800 hover:border-slate-600'
+                             ? 'bg-purple-600 text-clinical-text border-purple-500 shadow-lg shadow-purple-900/20 scale-105'
+                             : 'bg-clinical-bg/50 text-clinical-muted border-clinical-border hover:border-slate-600'
                          }`}
                        >
                          {m}
                        </button>
                      ))}
                    </div>
-                   <p className="text-[9px] text-slate-600 mt-2 italic px-1">
+                   <p className="text-[9px] text-clinical-muted mt-2 italic px-1">
                       {method === 'IS' && 'Immediate Spin: ABO incompatibility only.'}
                       {method === 'AHG' && 'Indirect Antiglobulin: Full antibody screen.'}
                       {method === 'EXM' && 'Electronic: System-validated matching.'}
@@ -213,12 +213,12 @@ export function CrossmatchView() {
 
                 <div className="grid grid-cols-2 gap-4">
                    <div>
-                      <label className="block text-[9px] font-black text-slate-600 uppercase tracking-widest mb-2">Specimen Age</label>
+                      <label className="block text-[9px] font-black text-clinical-muted uppercase tracking-widest mb-2">Specimen Age</label>
                       <input type="date" value={specimenDate} onChange={e => setSpecimenDate(e.target.value)}
                         className={`clinical-input h-12 w-full text-xs ${specimenValid ? '' : 'border-rose-500 bg-rose-500/5'}`} />
                    </div>
                    <div>
-                      <label className="block text-[9px] font-black text-slate-600 uppercase tracking-widest mb-2">Technician ID</label>
+                      <label className="block text-[9px] font-black text-clinical-muted uppercase tracking-widest mb-2">Technician ID</label>
                       <input required value={testedBy} onChange={e => setTestedBy(e.target.value)}
                         placeholder="Auth Code"
                         className="clinical-input h-12 w-full text-xs" />
@@ -235,7 +235,7 @@ export function CrossmatchView() {
                 <button 
                   type="submit" 
                   disabled={!specimenValid || !exmAllowed || !selectedPatient}
-                  className="w-full bg-purple-600 hover:bg-purple-500 disabled:opacity-20 disabled:cursor-not-allowed text-slate-800 font-black py-4 rounded-[24px] transition-all shadow-xl shadow-purple-900/20 hover:scale-[1.02] active:scale-95 uppercase tracking-[0.2em] italic text-xs"
+                  className="w-full bg-purple-600 hover:bg-purple-500 disabled:opacity-20 disabled:cursor-not-allowed text-clinical-text font-black py-4 rounded-[24px] transition-all shadow-xl shadow-purple-900/20 hover:scale-[1.02] active:scale-95 uppercase tracking-[0.2em] italic text-xs"
                 >
                   Authorize Crossmatch
                 </button>
@@ -245,9 +245,9 @@ export function CrossmatchView() {
 
         {/* Intelligence Ledger */}
         <div className="col-span-12 lg:col-span-7 flex flex-col gap-8">
-           <div className="clinical-card p-8 bg-slate-900/10 flex-1 flex flex-col min-h-[600px]">
-              <div className="flex justify-between items-center mb-8 border-b border-slate-900 pb-6">
-                 <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] italic">Historical Intelligence Ledger ({records.length})</h3>
+           <div className="clinical-card p-8 bg-clinical-card/10 flex-1 flex flex-col min-h-[600px]">
+              <div className="flex justify-between items-center mb-8 border-b border-clinical-border pb-6">
+                 <h3 className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] italic">Historical Intelligence Ledger ({records.length})</h3>
                  <div className="flex gap-2">
                     <div className="w-2 h-2 rounded-full bg-emerald-500" />
                     <div className="w-2 h-2 rounded-full bg-rose-500" />
@@ -278,23 +278,23 @@ export function CrossmatchView() {
                                r.result === 'Compatible' ? 'text-emerald-500' :
                                r.result === 'Incompatible' ? 'text-rose-500' : 'text-amber-400'
                              }`}>{r.result}</span>
-                             <span className="text-[9px] bg-slate-900 text-slate-600 border border-slate-800 px-2 py-0.5 rounded-lg font-black uppercase tracking-widest">{r.method}</span>
+                             <span className="text-[9px] bg-clinical-card text-clinical-muted border border-clinical-border px-2 py-0.5 rounded-lg font-black uppercase tracking-widest">{r.method}</span>
                           </div>
-                          <div className="text-[10px] text-slate-600 font-bold uppercase tracking-widest">
-                             Component: <span className="text-slate-800 font-mono">{r.componentId}</span> <span className="mx-2 text-slate-800">|</span> MRN: <span className="text-slate-800">{r.patientId}</span>
+                          <div className="text-[10px] text-clinical-muted font-bold uppercase tracking-widest">
+                             Component: <span className="text-clinical-text font-mono">{r.componentId}</span> <span className="mx-2 text-clinical-text">|</span> MRN: <span className="text-clinical-text">{r.patientId}</span>
                           </div>
                        </div>
                     </div>
                     <div className="text-right space-y-1">
-                       <div className="text-[10px] font-black text-slate-800 uppercase italic">{r.testedBy}</div>
-                       <div className="flex items-center justify-end gap-2 text-[9px] text-slate-600 font-bold uppercase tracking-widest">
+                       <div className="text-[10px] font-black text-clinical-text uppercase italic">{r.testedBy}</div>
+                       <div className="flex items-center justify-end gap-2 text-[9px] text-clinical-muted font-bold uppercase tracking-widest">
                           <Clock size={12} /> {new Date(r.createdAt).toLocaleString()}
                        </div>
                     </div>
                   </div>
                 ))}
                 {records.length === 0 && (
-                  <div className="flex-1 flex flex-col items-center justify-center text-slate-700 py-20 space-y-4">
+                  <div className="flex-1 flex flex-col items-center justify-center text-clinical-text py-20 space-y-4">
                      <FlaskConical size={64} className="opacity-10" />
                      <p className="font-black uppercase tracking-[0.4em] text-xs italic">No Intelligence Found in Current Node</p>
                   </div>

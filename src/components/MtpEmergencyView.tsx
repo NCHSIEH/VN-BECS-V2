@@ -77,7 +77,7 @@ export function MtpEmergencyView() {
     <div className="flex-1 overflow-y-auto custom-scrollbar space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12 p-6">
       
       {/* Strategic MTP Command Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-8 rounded-[24px] border-l-4 border-l-rose-600 border border-slate-200 shadow-sm relative overflow-hidden">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-clinical-card p-8 rounded-[24px] border-l-4 border-l-rose-600 border border-clinical-border shadow-sm relative overflow-hidden">
          <div className="absolute -top-10 -right-10 opacity-5">
             <ShieldAlert size={200} className="text-rose-600" />
          </div>
@@ -87,7 +87,7 @@ export function MtpEmergencyView() {
                   <Zap size={24} />
                </div>
                <div>
-                  <h1 className="text-3xl font-bold text-slate-800 uppercase tracking-tight">{t('mtp_title') || 'Massive Transfusion Protocol'}</h1>
+                  <h1 className="text-3xl font-bold text-clinical-text uppercase tracking-tight">{t('mtp_title') || 'Massive Transfusion Protocol'}</h1>
                   <p className="text-rose-600 font-semibold uppercase tracking-wider text-xs mt-1">Circular 26/2013/TT-BYT Compliant &middot; Rapid Release</p>
                </div>
             </div>
@@ -113,7 +113,7 @@ export function MtpEmergencyView() {
         {/* Active Resuscitation Streams */}
         <div className="xl:col-span-2 space-y-6">
            <div className="flex items-center justify-between px-2">
-              <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+              <h2 className="text-sm font-bold text-clinical-text uppercase tracking-wider flex items-center gap-2">
                  <Activity size={18} className="text-rose-600" /> {t('mtp_monitor') || 'Active Protocol Monitor'}
               </h2>
               <span className="text-xs font-bold text-rose-700 bg-rose-100 px-3 py-1 rounded-full">
@@ -122,8 +122,8 @@ export function MtpEmergencyView() {
            </div>
            
            {mtpCases.length === 0 ? (
-             <div className="clinical-card p-16 flex flex-col items-center justify-center text-slate-600 border-dashed border-2 bg-slate-50">
-                <ShieldAlert size={48} className="opacity-20 mb-4 text-slate-600" />
+             <div className="clinical-card p-16 flex flex-col items-center justify-center text-clinical-muted border-dashed border-2 bg-clinical-bg">
+                <ShieldAlert size={48} className="opacity-20 mb-4 text-clinical-muted" />
                 <p className="font-bold uppercase tracking-wider text-sm">{t('mtp_no_active') || 'No active MTP cases'}</p>
              </div>
            ) : (
@@ -138,11 +138,11 @@ export function MtpEmergencyView() {
         {/* Tactical Guidelines & Triage */}
         <div className="xl:col-span-1 space-y-6">
            <div className="flex items-center gap-2 px-2">
-              <ClipboardCheck className="text-slate-700" size={18} />
-              <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Circular 26/2013/TT-BYT Guidelines</h2>
+              <ClipboardCheck className="text-clinical-text" size={18} />
+              <h2 className="text-sm font-bold text-clinical-text uppercase tracking-wider">Circular 26/2013/TT-BYT Guidelines</h2>
            </div>
            
-           <div className="clinical-card p-6 bg-white border-slate-200 space-y-6">
+           <div className="clinical-card p-6 bg-clinical-card border-clinical-border space-y-6">
               <div className="space-y-4">
                  <GuidelineItem step="1" title="Immediate Release (O-)" desc="Issue uncrossmatched O- PRBCs immediately upon physician approval (SOP 10)." active />
                  <GuidelineItem step="2" title="Retrospective Sample" desc="Collect patient sample for crossmatch as soon as possible." active={mtpCases.some(c => c.currentRound >= 1)} />
@@ -163,11 +163,11 @@ export function MtpEmergencyView() {
 
       {/* Activation Portal */}
       {showActivate && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="clinical-card max-w-lg w-full bg-white border-slate-200 p-8 shadow-2xl">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-clinical-bg backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="clinical-card max-w-lg w-full bg-clinical-card border-clinical-border p-8 shadow-2xl">
              <div className="flex justify-between items-start mb-8">
                 <div>
-                   <h3 className="text-2xl font-bold text-slate-800 uppercase tracking-tight">Initiate MTP</h3>
+                   <h3 className="text-2xl font-bold text-clinical-text uppercase tracking-tight">Initiate MTP</h3>
                    <p className="text-rose-600 text-xs font-bold uppercase tracking-wider mt-1">Standard Protocol</p>
                 </div>
                 <div className="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center text-rose-600">
@@ -177,7 +177,7 @@ export function MtpEmergencyView() {
              
              <div className="space-y-5">
                 <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Patient Identifier (CCCD/MRN)</label>
+                   <label className="text-xs font-bold text-clinical-muted uppercase tracking-wider">Patient Identifier (CCCD/MRN)</label>
                    <input 
                      value={patientId} 
                      onChange={e=>setPatientId(e.target.value)} 
@@ -185,17 +185,17 @@ export function MtpEmergencyView() {
                    />
                 </div>
                 <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Location</label>
+                   <label className="text-xs font-bold text-clinical-muted uppercase tracking-wider">Location</label>
                    <input value={location} onChange={e=>setLocation(e.target.value)} className="clinical-input" />
                 </div>
                 <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Authorized Clinician</label>
+                   <label className="text-xs font-bold text-clinical-muted uppercase tracking-wider">Authorized Clinician</label>
                    <input value={doctor} onChange={e=>setDoctor(e.target.value)} className="clinical-input" />
                 </div>
              </div>
              
              <div className="mt-8 flex gap-4">
-                <button onClick={() => setShowActivate(false)} className="flex-1 py-3 text-sm font-bold text-slate-600 hover:text-slate-700 transition-colors bg-slate-100 rounded-xl">Cancel</button>
+                <button onClick={() => setShowActivate(false)} className="flex-1 py-3 text-sm font-bold text-clinical-muted hover:text-clinical-text transition-colors bg-clinical-bg rounded-xl">Cancel</button>
                 <button onClick={handleActivate} className="flex-[2] bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 rounded-xl shadow-md transition-all uppercase tracking-wide text-sm">
                    Initiate Protocol
                 </button>
@@ -206,14 +206,14 @@ export function MtpEmergencyView() {
 
       {/* Break Glass Portal */}
       {showBreakGlass && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="clinical-card max-w-lg w-full bg-white border-orange-300 p-8 shadow-2xl relative overflow-hidden">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-clinical-bg backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="clinical-card max-w-lg w-full bg-clinical-card border-orange-300 p-8 shadow-2xl relative overflow-hidden">
              <div className="absolute top-0 left-0 w-full h-1.5 bg-orange-500"></div>
 
              <div className="flex justify-between items-start mb-8">
                 <div>
                    <h3 className="text-2xl font-bold text-orange-600 uppercase tracking-tight">Break-Glass Release</h3>
-                   <p className="text-slate-600 text-xs font-bold uppercase tracking-wider mt-1">Uncrossmatched O-Negative</p>
+                   <p className="text-clinical-muted text-xs font-bold uppercase tracking-wider mt-1">Uncrossmatched O-Negative</p>
                 </div>
                 <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center text-orange-600">
                    <FileWarning size={24} />
@@ -226,18 +226,18 @@ export function MtpEmergencyView() {
 
              <div className="space-y-5">
                 <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Authorizing Clinician (Mandatory)</label>
+                   <label className="text-xs font-bold text-clinical-muted uppercase tracking-wider">Authorizing Clinician (Mandatory)</label>
                    <input value={bgDoctor} onChange={e=>setBgDoctor(e.target.value)} className="clinical-input border-orange-200 focus:ring-orange-500/20 focus:border-orange-500" />
                 </div>
                 <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Emergency Reason</label>
+                   <label className="text-xs font-bold text-clinical-muted uppercase tracking-wider">Emergency Reason</label>
                    <input value={bgReason} onChange={e=>setBgReason(e.target.value)} className="clinical-input border-orange-200 focus:ring-orange-500/20 focus:border-orange-500" />
                 </div>
              </div>
 
              <div className="mt-8 flex gap-4">
-                <button onClick={() => setShowBreakGlass(false)} className="flex-1 py-3 text-sm font-bold text-slate-600 hover:text-slate-700 transition-colors bg-slate-100 rounded-xl">Cancel</button>
-                <button onClick={handleBreakGlass} className="flex-[2] bg-orange-600 hover:bg-orange-700 text-slate-800 font-bold py-3 rounded-xl shadow-md transition-all uppercase tracking-wide text-sm flex justify-center items-center gap-2">
+                <button onClick={() => setShowBreakGlass(false)} className="flex-1 py-3 text-sm font-bold text-clinical-muted hover:text-clinical-text transition-colors bg-clinical-bg rounded-xl">Cancel</button>
+                <button onClick={handleBreakGlass} className="flex-[2] bg-orange-600 hover:bg-orange-700 text-clinical-text font-bold py-3 rounded-xl shadow-md transition-all uppercase tracking-wide text-sm flex justify-center items-center gap-2">
                    Authorize Release <ArrowRight size={18} />
                 </button>
              </div>
@@ -253,9 +253,9 @@ function MtpCaseCard({ mtp, onIssue }: { mtp: any, onIssue: () => void }) {
   const progress = Math.min(((mtp.unitsIssued || 0) / (mtp.unitsTarget || 6)) * 100, 100);
   
   return (
-    <div className={`clinical-card p-6 bg-white border ${isEmergency ? 'border-orange-300 shadow-orange-100' : 'border-slate-200'} transition-all relative`}>
+    <div className={`clinical-card p-6 bg-clinical-card border ${isEmergency ? 'border-orange-300 shadow-orange-100' : 'border-clinical-border'} transition-all relative`}>
        {isEmergency && (
-         <div className="absolute top-0 right-0 bg-orange-500 text-slate-800 text-[10px] font-bold px-3 py-1 rounded-bl-xl uppercase tracking-wider">
+         <div className="absolute top-0 right-0 bg-orange-500 text-clinical-text text-[10px] font-bold px-3 py-1 rounded-bl-xl uppercase tracking-wider">
             Uncrossmatched / Break-Glass
          </div>
        )}
@@ -267,7 +267,7 @@ function MtpCaseCard({ mtp, onIssue }: { mtp: any, onIssue: () => void }) {
                    <UserCircle size={32} />
                 </div>
                 <div>
-                   <h3 className="text-2xl font-bold text-slate-800 tracking-tight uppercase">{mtp.patientIdentifier}</h3>
+                   <h3 className="text-2xl font-bold text-clinical-text tracking-tight uppercase">{mtp.patientIdentifier}</h3>
                    <div className="flex items-center gap-2 mt-1">
                       <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
                       <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Active &middot; Round {mtp.currentRound || 1}</span>
@@ -275,7 +275,7 @@ function MtpCaseCard({ mtp, onIssue }: { mtp: any, onIssue: () => void }) {
                 </div>
              </div>
              
-             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-clinical-bg rounded-xl border border-clinical-border">
                 <MtpStat label="Clinician" value={mtp.authorizedClinician} />
                 <MtpStat label="Location" value={mtp.clinicalScenario} />
                 <MtpStat label="Time Active" value="14:22" highlight={!isEmergency} />
@@ -294,15 +294,15 @@ function MtpCaseCard({ mtp, onIssue }: { mtp: any, onIssue: () => void }) {
           </div>
 
           <div className="w-full md:w-[280px] space-y-4">
-             <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
+             <div className="bg-clinical-bg rounded-xl p-5 border border-clinical-border">
                 <div className="flex justify-between items-end mb-3">
-                   <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Units Issued</span>
-                   <span className="text-3xl font-bold text-slate-800 leading-none">
+                   <span className="text-xs font-bold text-clinical-muted uppercase tracking-wider">Units Issued</span>
+                   <span className="text-3xl font-bold text-clinical-text leading-none">
                       {mtp.unitsIssued || 0}
-                      <span className="text-xs text-slate-600 ml-1">/{mtp.unitsTarget || 6}</span>
+                      <span className="text-xs text-clinical-muted ml-1">/{mtp.unitsTarget || 6}</span>
                    </span>
                 </div>
-                <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+                <div className="h-2 w-full bg-clinical-border rounded-full overflow-hidden">
                    <div 
                       className={`h-full rounded-full transition-all duration-1000 ${isEmergency ? 'bg-orange-500' : 'bg-rose-500'}`}
                       style={{ width: `${progress}%` }} 
@@ -312,13 +312,13 @@ function MtpCaseCard({ mtp, onIssue }: { mtp: any, onIssue: () => void }) {
 
              <button 
                onClick={onIssue}
-               className={`w-full text-slate-800 font-bold py-4 rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 uppercase tracking-wide text-xs ${isEmergency ? 'bg-orange-600 hover:bg-orange-700' : 'bg-rose-600 hover:bg-rose-700'}`}
+               className={`w-full text-clinical-text font-bold py-4 rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 uppercase tracking-wide text-xs ${isEmergency ? 'bg-orange-600 hover:bg-orange-700' : 'bg-rose-600 hover:bg-rose-700'}`}
              >
                 <Barcode size={18} /> Record Issue
              </button>
 
              {isEmergency && (
-                 <button className="w-full bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold py-3 rounded-xl transition-all text-xs flex items-center justify-center gap-2">
+                 <button className="w-full bg-clinical-card border border-clinical-border hover:bg-clinical-bg text-clinical-text font-bold py-3 rounded-xl transition-all text-xs flex items-center justify-center gap-2">
                      <ClipboardCheck size={16}/> Submit Retro-Crossmatch
                  </button>
              )}
@@ -331,8 +331,8 @@ function MtpCaseCard({ mtp, onIssue }: { mtp: any, onIssue: () => void }) {
 function MtpStat({ label, value, highlight }: any) {
    return (
       <div className="flex flex-col gap-1">
-         <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">{label}</span>
-         <p className={`text-sm font-bold ${highlight ? 'text-orange-600' : 'text-slate-700'} truncate`} title={value}>{value}</p>
+         <span className="text-[10px] font-bold text-clinical-muted uppercase tracking-wider">{label}</span>
+         <p className={`text-sm font-bold ${highlight ? 'text-orange-600' : 'text-clinical-text'} truncate`} title={value}>{value}</p>
       </div>
    );
 }
@@ -340,13 +340,13 @@ function MtpStat({ label, value, highlight }: any) {
 
 function GuidelineItem({ step, title, desc, active }: { step: string, title: string, desc: string, active?: boolean }) {
   return (
-    <div className={`flex gap-3 p-3 rounded-xl border transition-all ${active ? 'bg-rose-50 border-rose-200' : 'bg-slate-50 border-slate-200 opacity-60'}`}>
-       <div className={`w-6 h-6 rounded-md flex items-center justify-center font-bold text-xs shrink-0 ${active ? 'bg-rose-600 text-white' : 'bg-slate-300 text-slate-600'}`}>
+    <div className={`flex gap-3 p-3 rounded-xl border transition-all ${active ? 'bg-rose-50 border-rose-200' : 'bg-clinical-bg border-clinical-border opacity-60'}`}>
+       <div className={`w-6 h-6 rounded-md flex items-center justify-center font-bold text-xs shrink-0 ${active ? 'bg-rose-600 text-white' : 'bg-slate-300 text-clinical-muted'}`}>
           {step}
        </div>
        <div>
-          <h4 className={`text-xs font-bold uppercase tracking-wider mb-0.5 ${active ? 'text-slate-800' : 'text-slate-600'}`}>{title}</h4>
-          <p className="text-[10px] text-slate-600 leading-tight">{desc}</p>
+          <h4 className={`text-xs font-bold uppercase tracking-wider mb-0.5 ${active ? 'text-clinical-text' : 'text-clinical-muted'}`}>{title}</h4>
+          <p className="text-[10px] text-clinical-muted leading-tight">{desc}</p>
        </div>
     </div>
   );

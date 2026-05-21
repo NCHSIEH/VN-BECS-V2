@@ -106,23 +106,23 @@ export function BedsideVerificationView() {
 
   return (
     <div className="flex flex-col h-full items-center justify-center animate-in fade-in zoom-in duration-500 p-6">
-       <div className="max-w-xl w-full bg-[#020617] border border-slate-800 p-10 rounded-[40px] shadow-2xl relative overflow-hidden">
+       <div className="max-w-xl w-full bg-clinical-bg border border-clinical-border p-10 rounded-[40px] shadow-2xl relative overflow-hidden">
           {/* Visual Polish */}
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-right from-lime-500 to-sky-500 opacity-50"></div>
           
           <div className="flex flex-col items-center mb-10 text-center">
-             <div className="bg-slate-900 w-20 h-20 rounded-[32px] flex items-center justify-center mb-6 border border-slate-800 shadow-inner">
+             <div className="bg-clinical-card w-20 h-20 rounded-[32px] flex items-center justify-center mb-6 border border-clinical-border shadow-inner">
                 <ScanFace size={40} className="text-sky-400" />
              </div>
              <h2 className="text-3xl font-black text-white uppercase italic tracking-tighter leading-none">Bedside Safety Node</h2>
-             <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mt-4 max-w-xs">Dual-Personnel Authentication & ISBT Scanning</p>
+             <p className="text-clinical-muted text-[10px] font-black uppercase tracking-[0.2em] mt-4 max-w-xs">Dual-Personnel Authentication & ISBT Scanning</p>
           </div>
 
           <form onSubmit={handleVerify} className="space-y-8 flex flex-col">
              {/* Stage 1: Identity & EHR Bridge */}
-             <div className="p-6 bg-slate-950/50 border border-slate-800 rounded-3xl relative">
+             <div className="p-6 bg-clinical-bg border border-clinical-border rounded-3xl relative">
                 <div className="flex justify-between items-center mb-6">
-                   <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                   <div className="text-[10px] font-black text-clinical-muted uppercase tracking-widest flex items-center gap-2">
                       <Database size={14} className="text-sky-500" /> Clinical EHR Bridge
                    </div>
                    {ehrStatus === 'linked' && <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/30">Record Linked</span>}
@@ -149,17 +149,17 @@ export function BedsideVerificationView() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 text-center">
-                     <span className="text-[9px] font-black text-slate-500 uppercase block mb-1">Blood Group</span>
+                  <div className="bg-clinical-card p-4 rounded-2xl border border-clinical-border text-center">
+                     <span className="text-[9px] font-black text-clinical-muted uppercase block mb-1">Blood Group</span>
                      <span className="text-xl font-black text-white italic tracking-tighter">{patientAbo} {patientRhd === 'Positive' ? 'RhD+' : 'RhD-'}</span>
                   </div>
                   <div className={`p-4 rounded-2xl border transition-all flex flex-col items-center justify-center ${
                      ehrStatus === 'linked' ? 'bg-emerald-500/10 border-emerald-500/30' : 
-                     ehrStatus === 'failed' ? 'bg-rose-500/10 border-rose-500/30' : 'bg-slate-900 border-slate-800'
+                     ehrStatus === 'failed' ? 'bg-rose-500/10 border-rose-500/30' : 'bg-clinical-card border-clinical-border'
                   }`}>
-                     <span className="text-[9px] font-black text-slate-500 uppercase block mb-1">EHR Status</span>
+                     <span className="text-[9px] font-black text-clinical-muted uppercase block mb-1">EHR Status</span>
                      <span className={`text-[10px] font-black uppercase tracking-widest ${
-                        ehrStatus === 'linked' ? 'text-emerald-400' : ehrStatus === 'failed' ? 'text-rose-500' : 'text-slate-600'
+                        ehrStatus === 'linked' ? 'text-emerald-400' : ehrStatus === 'failed' ? 'text-rose-500' : 'text-clinical-muted'
                      }`}>
                         {ehrStatus === 'linked' ? 'Sync Success' : ehrStatus === 'failed' ? 'Record Missing' : 'Standby'}
                      </span>
@@ -169,24 +169,24 @@ export function BedsideVerificationView() {
 
              {/* Stage 2: Clinical Gating */}
              <div className="grid grid-cols-2 gap-4">
-                <div className={`p-4 rounded-3xl border flex items-center gap-4 transition-all ${consentVerified ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-slate-900/40 border-slate-800'}`}>
-                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${consentVerified ? 'text-emerald-400 bg-emerald-500/20' : 'text-slate-700 bg-slate-950'}`}>
+                <div className={`p-4 rounded-3xl border flex items-center gap-4 transition-all ${consentVerified ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-clinical-bg border-clinical-border'}`}>
+                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${consentVerified ? 'text-emerald-400 bg-emerald-500/20' : 'text-clinical-text bg-clinical-bg'}`}>
                       <FileText size={20} />
                    </div>
                    <div>
-                      <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Consent</p>
-                      <p className={`text-[10px] font-black uppercase tracking-tighter ${consentVerified ? 'text-white' : 'text-slate-600'}`}>
+                      <p className="text-[9px] font-black text-clinical-muted uppercase tracking-widest leading-none mb-1">Consent</p>
+                      <p className={`text-[10px] font-black uppercase tracking-tighter ${consentVerified ? 'text-white' : 'text-clinical-muted'}`}>
                          {consentVerified ? 'Authenticated' : 'Required'}
                       </p>
                    </div>
                 </div>
-                <div className={`p-4 rounded-3xl border flex items-center gap-4 transition-all ${vitalsChecked ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-slate-900/40 border-slate-800'}`}>
-                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${vitalsChecked ? 'text-emerald-400 bg-emerald-500/20' : 'text-slate-700 bg-slate-950'}`}>
+                <div className={`p-4 rounded-3xl border flex items-center gap-4 transition-all ${vitalsChecked ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-clinical-bg border-clinical-border'}`}>
+                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${vitalsChecked ? 'text-emerald-400 bg-emerald-500/20' : 'text-clinical-text bg-clinical-bg'}`}>
                       <Stethoscope size={20} />
                    </div>
                    <div>
-                      <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Vitals</p>
-                      <p className={`text-[10px] font-black uppercase tracking-tighter ${vitalsChecked ? 'text-white' : 'text-slate-600'}`}>
+                      <p className="text-[9px] font-black text-clinical-muted uppercase tracking-widest leading-none mb-1">Vitals</p>
+                      <p className={`text-[10px] font-black uppercase tracking-tighter ${vitalsChecked ? 'text-white' : 'text-clinical-muted'}`}>
                          {vitalsChecked ? 'Stabilized' : 'Required'}
                       </p>
                    </div>
@@ -196,7 +196,7 @@ export function BedsideVerificationView() {
              {/* Stage 3: Scanning & Authentication */}
              <div className="space-y-4">
                 <div>
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 block flex justify-between items-center">
+                  <label className="text-[10px] font-black text-clinical-muted uppercase tracking-widest mb-3 block flex justify-between items-center">
                     <span>ISBT-128 Unit Barcode</span>
                     <button type="button" onClick={() => setUnitBarcodeRaw("=W0000 23 123456")} className="text-[9px] text-sky-500 font-black uppercase tracking-widest hover:text-white transition-all underline decoration-sky-500/30 underline-offset-4">Mock Scan</button>
                   </label>
@@ -206,7 +206,7 @@ export function BedsideVerificationView() {
                     onChange={e => setUnitBarcodeRaw(e.target.value)}
                     type="text" 
                     placeholder="SCAN UNIT LABEL..."
-                    className="w-full bg-slate-950 border border-slate-800 text-white p-5 rounded-3xl focus:border-emerald-500/50 outline-none transition-all text-xl font-black tracking-widest font-mono shadow-inner placeholder:text-slate-800"
+                    className="w-full bg-clinical-bg border border-clinical-border text-white p-5 rounded-3xl focus:border-emerald-500/50 outline-none transition-all text-xl font-black tracking-widest font-mono shadow-inner placeholder:text-clinical-text"
                   />
                 </div>
 
@@ -218,7 +218,7 @@ export function BedsideVerificationView() {
                      onChange={e => setVerifier2Id(e.target.value)}
                      type="text" 
                      placeholder="SECOND AUTHENTICATOR PIN/ID"
-                     className="w-full bg-slate-950 border border-slate-800 text-white p-4 rounded-2xl focus:border-emerald-500/50 outline-none transition-all text-xs font-black tracking-widest uppercase shadow-inner placeholder:text-slate-800"
+                     className="w-full bg-clinical-bg border border-clinical-border text-white p-4 rounded-2xl focus:border-emerald-500/50 outline-none transition-all text-xs font-black tracking-widest uppercase shadow-inner placeholder:text-clinical-text"
                    />
                    <datalist id="verifier-list">
                      <option value="ID-1011 (Dr. Jenkins)" />
@@ -232,7 +232,7 @@ export function BedsideVerificationView() {
                type="submit" 
                className={`w-full font-black py-6 rounded-[32px] mt-4 transition-all shadow-xl uppercase text-xs tracking-[0.3em] italic flex items-center justify-center gap-4 ${
                   isLocked 
-                  ? 'bg-slate-800 text-slate-600 border border-slate-700 cursor-not-allowed' 
+                  ? 'bg-clinical-bg text-clinical-muted border border-clinical-border cursor-not-allowed' 
                   : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/40 hover:scale-[1.02]'
                }`}
              >

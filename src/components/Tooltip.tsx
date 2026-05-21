@@ -46,7 +46,7 @@ export function Tooltip({ content, children, delay = 400 }: TooltipProps) {
             transition={{ duration: 0.15, ease: "easeOut" }}
             className="absolute z-[200] bottom-full mb-2 left-1/2 -translate-x-1/2 w-max max-w-[200px] pointer-events-none"
           >
-            <div className="bg-[#020617] border border-slate-700 text-slate-800 text-[10px] sm:text-xs py-1.5 px-3 rounded-lg shadow-xl font-medium leading-relaxed text-center">
+            <div className="bg-clinical-bg border border-clinical-border text-clinical-text text-[10px] sm:text-xs py-1.5 px-3 rounded-lg shadow-xl font-medium leading-relaxed text-center">
               {content}
               {/* Arrow */}
               <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-[#020617]" />

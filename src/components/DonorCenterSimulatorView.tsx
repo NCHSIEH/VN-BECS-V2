@@ -7,13 +7,33 @@ import { LimsFlowIndicator } from './FlowIndicator';
 import { VietnamIdValidator, validateDonorAge, validateCollectionVolume, validateDonorName, validateDonorWeight, validateVietnamDeferralRules } from '../lib/validators';
 import type { DonationType } from '../types';
 
-export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?: 'DONOR' | 'LAB' | 'PROCESS' | 'RELEASE' }) {
+interface DonorCenterSimulatorViewProps {
+  activeTab?: 'DONOR' | 'LAB' | 'PROCESS' | 'RELEASE';
+  onTabChange?: (tab: 'DONOR' | 'LAB' | 'PROCESS' | 'RELEASE') => void;
+  initialTab?: 'DONOR' | 'LAB' | 'PROCESS' | 'RELEASE';
+}
+
+export function DonorCenterSimulatorView({ 
+  activeTab: controlledActiveTab, 
+  onTabChange, 
+  initialTab = 'DONOR' 
+}: DonorCenterSimulatorViewProps) {
   const { t } = useI18n();
   const [catalog, setCatalog] = useState<ProductCatalog[]>([]);
-  const [activeTab, setActiveTab] = useState<'DONOR' | 'LAB' | 'PROCESS' | 'RELEASE'>(initialTab);
+  const [localActiveTab, setLocalActiveTab] = useState<'DONOR' | 'LAB' | 'PROCESS' | 'RELEASE'>(initialTab);
+
+  const activeTab = controlledActiveTab !== undefined ? controlledActiveTab : localActiveTab;
+  const setActiveTab = (tab: 'DONOR' | 'LAB' | 'PROCESS' | 'RELEASE') => {
+    if (onTabChange) {
+      onTabChange(tab);
+    } else {
+      setLocalActiveTab(tab);
+    }
+  };
   const [status, setStatus] = useState<{type: 'success'|'error', msg: string} | null>(null);
   const [gatingError, setGatingError] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [limsToast, setLimsToast] = useState<{ title: string; message: string; nextStage?: 'DONOR' | 'LAB' | 'PROCESS' | 'RELEASE'; nextLabel?: string } | null>(null);
 
   const [isDonorModalOpen, setIsDonorModalOpen] = useState(false);
   const [donorForm, setDonorForm] = useState({
@@ -63,6 +83,9 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
       .then(res => res.ok ? res.json() : [])
       .then(d => setResources(Array.isArray(d) ? d : []))
       .catch(() => setResources([]));
+
+    // Notify Sidebar to refresh workload badges
+    window.dispatchEvent(new Event('lims-data-updated'));
   };
 
   useEffect(() => {
@@ -244,6 +267,13 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
 
       loadData();
       setIsDonorModalOpen(false);
+      // Toast: Guide to LAB stage next
+      setLimsToast({
+        title: '✅ 捐血者已登記',
+        message: '已完成捐血者身分登記。請前往「2. 健康篩檢」執行採血前篩檢。',
+        nextStage: 'LAB',
+        nextLabel: '前往健康篩檢 →'
+      });
     } catch(e: any) {
       setDonorFormError(e.message || "Network Error");
     }
@@ -297,6 +327,13 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
     try {
       await fetch(`/api/v1/lims/lab-tests/${donationId}/run`, { method: 'POST' });
       loadData();
+      // Toast: IDM test completed, guide to PROCESS
+      setLimsToast({
+        title: '🧪 IDM 檢驗已完成',
+        message: '血液傳染病標記 (IDM) 檢驗完成。若結果為 CLEARED，請前往「3. 採血作業」執行成分製造。',
+        nextStage: 'PROCESS',
+        nextLabel: '前往採血作業 →'
+      });
     } catch(e) {}
   };
 
@@ -314,6 +351,13 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
     try {
       await fetch(`/api/v1/lims/process-component/${donationId}`, { method: 'POST' });
       loadData();
+      // Toast: Component fabricated, guide to RELEASE
+      setLimsToast({
+        title: '🩸 成分血袋製造完成',
+        message: '血液成分分離完成，血袋現已備妥。請前往「4. 實驗室物流」執行品管核發入庫。',
+        nextStage: 'RELEASE',
+        nextLabel: '前往實驗室物流 →'
+      });
     } catch(e) {}
   };
 
@@ -326,6 +370,11 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
       if (res.ok) {
          setStatus({ type: 'success', msg: `✅ ${t('lims_release_success')} ISBT: ${compId}` });
          loadData();
+         // Toast: Released to Hub
+         setLimsToast({
+           title: '🚀 血品已核發入庫',
+           message: `血袋 ${compId} 已成功同步至中央調度中心庫存。可返回 Portal 切換至 HUB 站追蹤後續物流。`,
+         });
       } else {
          setStatus({ type: 'error', msg: `Sync Failed: ${data.error}` });
       }
@@ -339,7 +388,50 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
   const getProductName = (code: string) => catalog.find(c => c.productCode === code)?.alias || code;
 
   return (
-    <div className="flex flex-col h-full bg-[#0b1120] selection:bg-rose-500/30 overflow-hidden">
+    <div className="flex flex-col h-full bg-clinical-bg selection:bg-rose-500/30 overflow-hidden">
+      {/* LIMS Stage Navigation Toast */}
+      {limsToast && (
+        <div className="fixed bottom-8 right-8 z-[200] max-w-sm w-full animate-in slide-in-from-bottom-4 duration-500">
+          <div className="bg-clinical-card/95 backdrop-blur-2xl border border-clinical-border rounded-3xl shadow-2xl overflow-hidden">
+            {/* Toast accent bar */}
+            <div className="h-1 w-full bg-gradient-to-r from-clinical-primary via-sky-400 to-emerald-400" />
+            <div className="p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <p className="text-[13px] font-black text-clinical-text uppercase tracking-tight mb-1">{limsToast.title}</p>
+                  <p className="text-[11px] text-clinical-muted leading-relaxed">{limsToast.message}</p>
+                </div>
+                <button
+                  onClick={() => setLimsToast(null)}
+                  className="p-1.5 text-clinical-muted hover:text-clinical-text transition-colors rounded-lg hover:bg-clinical-bg shrink-0"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+              {limsToast.nextStage && (
+                <div className="mt-4 flex gap-3">
+                  <button
+                    onClick={() => {
+                      setActiveTab(limsToast.nextStage!);
+                      setLimsToast(null);
+                    }}
+                    className="flex-1 px-4 py-2.5 bg-clinical-primary hover:opacity-90 text-white rounded-xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-clinical-primary/30"
+                  >
+                    {limsToast.nextLabel || '前往下一步 →'}
+                  </button>
+                  <button
+                    onClick={() => setLimsToast(null)}
+                    className="px-4 py-2.5 text-clinical-muted hover:text-clinical-text rounded-xl text-[11px] font-black uppercase tracking-widest transition-all"
+                  >
+                    稍後
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Top Decorative Bar */}
       <div className="h-1.5 w-full bg-gradient-to-r from-rose-600 via-sky-500 to-emerald-500 shrink-0" />
 
@@ -349,87 +441,33 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
             <div className="w-3 h-3 rounded-full bg-rose-500 animate-pulse shadow-[0_0_15px_rgba(225,29,72,0.8)]" />
             <div className="flex flex-col">
                <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.4em] italic">Active Mission</span>
-               <span className="text-sm font-black text-slate-800 uppercase italic tracking-tighter">Site A Registration Overflow</span>
+               <span className="text-sm font-black text-clinical-text uppercase italic tracking-tighter">Site A Registration Overflow</span>
             </div>
          </div>
          <div className="flex items-center gap-6">
             <div className="flex flex-col items-end">
-               <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Throughput Readiness</span>
+               <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">Throughput Readiness</span>
                <div className="flex items-center gap-3 mt-1">
-                  <div className="h-1.5 w-48 bg-slate-900 rounded-full overflow-hidden p-0.5 border border-slate-800 shadow-inner">
+                  <div className="h-1.5 w-48 bg-clinical-card rounded-full overflow-hidden p-0.5 border border-clinical-border shadow-inner">
                      <div className="h-full bg-rose-500 w-[42%] shadow-[0_0_10px_rgba(225,29,72,0.6)] rounded-full transition-all duration-1000" />
                   </div>
-                  <span className="text-[10px] font-black text-slate-800">42%</span>
+                  <span className="text-[10px] font-black text-clinical-text">42%</span>
                </div>
             </div>
          </div>
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        {/* Workflow Sidebar */}
-        <div className="w-96 bg-slate-50/50 border-r border-slate-900 flex flex-col shrink-0 p-8 gap-8 overflow-y-auto custom-scrollbar">
-           <div className="space-y-2">
-              <h2 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] mb-6">Operational Stages</h2>
-              {[
-                { id: 'DONOR', label: '1. Registration', icon: <Users size={20} />, color: 'rose' },
-                { id: 'LAB', label: '2. Clinical Screening', icon: <Thermometer size={20} />, color: 'sky' },
-                { id: 'PROCESS', label: '3. Phlebotomy', icon: <Droplet size={20} />, color: 'emerald' },
-                { id: 'RELEASE', label: '4. Lab Logistics', icon: <Send size={20} />, color: 'amber' },
-              ].map((stage) => (
-                <button
-                  key={stage.id}
-                  onClick={() => setActiveTab(stage.id as any)}
-                  className={`w-full flex items-center justify-between p-6 rounded-[28px] transition-all group relative overflow-hidden ${
-                    activeTab === stage.id 
-                      ? 'bg-slate-900 text-slate-800 border border-slate-800 shadow-2xl scale-[1.02]'
-                      : 'text-slate-600 hover:text-slate-600 hover:bg-slate-900/30'
-                  }`}
-                >
-                  <div className="flex items-center gap-5 relative z-10">
-                     <div className={`transition-colors ${activeTab === stage.id ? 'text-rose-500' : 'text-slate-700'}`}>
-                        {stage.icon}
-                     </div>
-                     <span className="text-[14px] font-black uppercase italic tracking-tight">{stage.label}</span>
-                  </div>
-                  {activeTab === stage.id && <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse relative z-10" />}
-                </button>
-              ))}
-           </div>
-
-           <div className="mt-auto space-y-6">
-              <div className="bg-slate-900/50 p-6 rounded-[32px] border border-slate-800 shadow-inner">
-                 <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-4">Site Performance</p>
-                 <div className="flex gap-4">
-                    <div className="flex flex-col">
-                       <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Enrollments</span>
-                       <span className="text-xl font-black text-rose-500">{todayCollections}</span>
-                    </div>
-                    <div className="w-px h-8 bg-slate-800 mt-2" />
-                    <div className="flex flex-col">
-                       <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Lab Load</span>
-                       <span className="text-xl font-black text-sky-500">{pendingTests}</span>
-                    </div>
-                 </div>
-              </div>
-              <div className="flex items-center justify-between px-2">
-                 <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Asset Gating</span>
-                 <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-2">
-                    <ShieldCheck size={12} /> SECURED
-                 </span>
-              </div>
-           </div>
-        </div>
-
         {/* Operational Viewport */}
-        <div className="flex-1 overflow-y-auto p-12 custom-scrollbar bg-slate-50/20">
+        <div className="flex-1 overflow-y-auto p-12 custom-scrollbar bg-clinical-bg">
           <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in slide-in-from-right-12 duration-1000">
             
             {/* Contextual Header */}
-            <div className="flex justify-between items-end border-b border-slate-900 pb-12">
+            <div className="flex justify-between items-end border-b border-clinical-border pb-12">
                <div className="space-y-4">
                   <div className="flex items-center gap-4">
                      <div className="w-1.5 h-1.5 rounded-full bg-rose-600 shadow-[0_0_10px_rgba(225,29,72,0.6)]" />
-                     <p className="text-slate-600 text-[11px] font-black uppercase tracking-[0.5em]">VN-DONOR-NODE-01</p>
+                     <p className="text-clinical-muted text-[11px] font-black uppercase tracking-[0.5em]">VN-DONOR-NODE-01</p>
                   </div>
                   <h1 className="premium-heading">
                     {activeTab === 'DONOR' && 'Registry Control'}
@@ -446,13 +484,13 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
             </div>
 
             {gatingError && (
-              <div className="p-8 rounded-[32px] bg-rose-500 border border-rose-400 text-slate-800 mb-8 flex gap-6 items-center animate-in shake duration-500 shadow-2xl shadow-rose-900/40">
+              <div className="p-8 rounded-[32px] bg-rose-500 border border-rose-400 text-clinical-text mb-8 flex gap-6 items-center animate-in shake duration-500 shadow-2xl shadow-rose-900/40">
                 <ShieldAlert size={40} className="shrink-0" />
                 <div className="flex-1">
                    <p className="font-black text-xs uppercase tracking-[0.2em] italic mb-1">Safety Gate Violation</p>
                    <p className="font-bold text-lg opacity-90 leading-tight">{gatingError}</p>
                 </div>
-                <button onClick={() => setGatingError(null)} className="px-6 py-3 bg-white hover:bg-white/30 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all">Acknowledge</button>
+                <button onClick={() => setGatingError(null)} className="px-6 py-3 bg-clinical-card hover:bg-clinical-card/30 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all">Acknowledge</button>
               </div>
             )}
 
@@ -469,16 +507,16 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
             <div className="space-y-12">
               {activeTab === 'DONOR' && (
                 <div className="space-y-8">
-                  <div className="flex justify-between items-center bg-slate-50/50 p-8 rounded-[32px] border border-slate-800 shadow-inner group">
-                    <div className="flex items-center gap-6 text-slate-600 flex-1">
+                  <div className="flex justify-between items-center bg-clinical-bg/50 p-8 rounded-[32px] border border-clinical-border shadow-inner group">
+                    <div className="flex items-center gap-6 text-clinical-muted flex-1">
                       <Search size={24} className="group-hover:text-rose-500 transition-colors" />
-                      <input type="text" placeholder="Search donors by MRN, Name, or CCCD..." className="bg-transparent border-none focus:ring-0 text-lg font-medium w-full text-slate-700 placeholder:text-slate-800" />
+                      <input type="text" placeholder="Search donors by MRN, Name, or CCCD..." className="bg-transparent border-none focus:ring-0 text-lg font-medium w-full text-clinical-text placeholder:text-clinical-text" />
                     </div>
                   </div>
 
-                  <div className="overflow-hidden rounded-[40px] border border-slate-900 bg-slate-900/10 shadow-2xl">
+                  <div className="overflow-hidden rounded-[40px] border border-clinical-border bg-clinical-card shadow-sm">
                     <table className="w-full text-left text-sm">
-                      <thead className="bg-slate-50/50 text-slate-600 text-[10px] font-black uppercase tracking-[0.3em] border-b border-slate-900">
+                      <thead className="bg-clinical-bg text-clinical-muted text-[10px] font-black uppercase tracking-[0.3em] border-b border-clinical-border">
                         <tr>
                           <th className="p-8">{t('lims_col_donor_id')}</th>
                           <th className="p-8">{t('lims_col_name')}</th>
@@ -487,21 +525,21 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
                           <th className="p-8 text-right">{t('lims_col_action')}</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-900/50">
+                      <tbody className="divide-y divide-clinical-border">
                         {donors.map(d => (
-                          <tr key={d.id} className="hover:bg-slate-900/40 transition-all group duration-500">
+                          <tr key={d.id} className="hover:bg-clinical-bg transition-all group duration-500">
                             <td className="p-8">
                                <div className="flex items-center gap-4">
-                                 <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-600 group-hover:bg-rose-500/20 group-hover:text-rose-600 transition-all">
+                                 <div className="w-10 h-10 rounded-xl bg-clinical-bg flex items-center justify-center text-clinical-muted group-hover:bg-rose-500/20 group-hover:text-rose-600 transition-all">
                                    <Hash size={16} />
                                  </div>
-                                 <span className="font-mono font-black text-slate-600 tracking-tighter text-base">{d.id}</span>
+                                 <span className="font-mono font-black text-clinical-muted tracking-tighter text-base">{d.id}</span>
                                </div>
                             </td>
                             <td className="p-8">
                                <div className="flex flex-col">
-                                  <span className="font-black text-slate-800 text-lg italic uppercase">{d.name}</span>
-                                  <span className="text-[10px] text-slate-600 font-mono tracking-widest">{d.nationalId}</span>
+                                  <span className="font-black text-clinical-text text-lg italic uppercase">{d.name}</span>
+                                  <span className="text-[10px] text-clinical-muted font-mono tracking-widest">{d.nationalId}</span>
                                </div>
                             </td>
                             <td className="p-8 text-center">
@@ -511,19 +549,19 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
                             </td>
                             <td className="p-8">
                                <div className="flex flex-col">
-                                 <span className="text-slate-600 font-bold text-[13px]">{new Date(d.registeredAt).toLocaleDateString()}</span>
-                                 <span className="text-[10px] text-slate-600 font-mono uppercase">{new Date(d.registeredAt).toLocaleTimeString()}</span>
+                                 <span className="text-clinical-muted font-bold text-[13px]">{new Date(d.registeredAt).toLocaleDateString()}</span>
+                                 <span className="text-[10px] text-clinical-muted font-mono uppercase">{new Date(d.registeredAt).toLocaleTimeString()}</span>
                                </div>
                             </td>
                             <td className="p-8 text-right">
                                <div className="flex gap-4 justify-end">
-                                 <button onClick={() => openDonorModal(d)} className="p-3 rounded-2xl bg-slate-50 border border-slate-800 text-slate-600 hover:text-slate-800 hover:border-slate-600 transition-all shadow-inner">
+                                 <button onClick={() => openDonorModal(d)} className="p-3 rounded-2xl bg-clinical-bg border border-clinical-border text-clinical-muted hover:text-clinical-text hover:border-slate-600 transition-all shadow-inner">
                                     <Activity size={20} />
                                  </button>
                                  <button 
                                    onClick={() => openCollectModal(d.id)} 
                                    disabled={d.deferralStatus === 'Active'}
-                                   className={`px-6 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all shadow-lg italic ${d.deferralStatus === 'Active' ? 'bg-slate-800 text-slate-600 border border-slate-700 cursor-not-allowed' : 'bg-rose-600/10 text-rose-500 border border-rose-600/20 hover:bg-rose-600 hover:text-white hover:shadow-rose-900/20'}`}
+                                   className={`px-6 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all shadow-lg italic ${d.deferralStatus === 'Active' ? 'bg-clinical-bg text-clinical-muted border border-clinical-border cursor-not-allowed' : 'bg-rose-600/10 text-rose-500 border border-rose-600/20 hover:bg-rose-600 hover:text-white hover:shadow-rose-900/20'}`}
                                  >
                                     {d.deferralStatus === 'Active' ? 'Deferred' : 'Phlebotomy'}
                                  </button>
@@ -545,8 +583,8 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
                             <Activity size={32} />
                          </div>
                          <div>
-                            <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] mb-1">Queue Load</p>
-                            <p className="text-3xl font-black text-slate-800 italic">{donations.filter(d => d.idmStatus === 'PENDING').length} Units</p>
+                            <p className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] mb-1">Queue Load</p>
+                            <p className="text-3xl font-black text-clinical-text italic">{donations.filter(d => d.idmStatus === 'PENDING').length} Units</p>
                          </div>
                       </div>
                       <div className="glass-station p-8 flex items-center gap-8 group">
@@ -554,8 +592,8 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
                             <CheckCircle size={32} />
                          </div>
                          <div>
-                            <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] mb-1">Diagnostics Pass</p>
-                            <p className="text-3xl font-black text-slate-800 italic">{donations.filter(d => d.idmStatus === 'CLEARED').length} Units</p>
+                            <p className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] mb-1">Diagnostics Pass</p>
+                            <p className="text-3xl font-black text-clinical-text italic">{donations.filter(d => d.idmStatus === 'CLEARED').length} Units</p>
                          </div>
                       </div>
                       <div className="glass-station p-8 flex items-center gap-8 group">
@@ -563,15 +601,15 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
                             <ShieldAlert size={32} />
                          </div>
                          <div>
-                            <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] mb-1">Biological Risk</p>
-                            <p className="text-3xl font-black text-slate-800 italic">{reactiveRate}% Rate</p>
+                            <p className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] mb-1">Biological Risk</p>
+                            <p className="text-3xl font-black text-clinical-text italic">{reactiveRate}% Rate</p>
                          </div>
                       </div>
                    </div>
 
-                   <div className="overflow-hidden rounded-[40px] border border-slate-900 bg-slate-900/10 shadow-2xl">
+                   <div className="overflow-hidden rounded-[40px] border border-clinical-border bg-clinical-card shadow-sm">
                     <table className="w-full text-left text-sm">
-                      <thead className="bg-slate-50/50 text-slate-600 text-[10px] font-black uppercase tracking-[0.3em] border-b border-slate-900">
+                      <thead className="bg-clinical-bg text-clinical-muted text-[10px] font-black uppercase tracking-[0.3em] border-b border-clinical-border">
                         <tr>
                           <th className="p-8">{t('lims_col_don_id')}</th>
                           <th className="p-8">{t('lims_col_name')}</th>
@@ -580,18 +618,18 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
                           <th className="p-8 text-right">{t('lims_col_action')}</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-900/50">
+                      <tbody className="divide-y divide-clinical-border">
                         {donations.filter(d => Boolean(d.idmStatus)).map(donation => (
-                          <tr key={donation.id} className="hover:bg-slate-900/40 transition-all duration-500 group">
+                          <tr key={donation.id} className="hover:bg-clinical-bg transition-all duration-500 group">
                             <td className="p-8 font-mono font-black text-sky-400 tracking-tighter text-lg italic">{donation.id}</td>
                             <td className="p-8">
                                <div className="flex flex-col">
-                                 <span className="font-black text-slate-800 text-base italic uppercase">{donation.donorName}</span>
-                                 <span className="text-[10px] text-slate-600 uppercase font-bold tracking-widest">{donation.donationType} · {donation.volume}ml</span>
+                                 <span className="font-black text-clinical-text text-base italic uppercase">{donation.donorName}</span>
+                                 <span className="text-[10px] text-clinical-muted uppercase font-bold tracking-widest">{donation.donationType} · {donation.volume}ml</span>
                                </div>
                             </td>
                             <td className="p-8 text-center">
-                              <span className="bg-slate-50 text-slate-600 px-4 py-2 rounded-2xl text-[11px] font-black tracking-widest border border-slate-800">
+                              <span className="bg-clinical-bg text-clinical-muted px-4 py-2 rounded-2xl text-[11px] font-black tracking-widest border border-clinical-border">
                                 {donation.donorAbo}{donation.donorRhd === 'Positive' ? '+' : '-'}
                               </span>
                             </td>
@@ -635,9 +673,9 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
 
               {activeTab === 'PROCESS' && (
                 <div className="space-y-8 animate-in fade-in duration-700">
-                   <div className="overflow-hidden rounded-[40px] border border-slate-900 bg-slate-900/10 shadow-2xl">
+                   <div className="overflow-hidden rounded-[40px] border border-clinical-border bg-clinical-card shadow-sm">
                     <table className="w-full text-left text-sm">
-                      <thead className="bg-slate-50/50 text-slate-600 text-[10px] font-black uppercase tracking-[0.3em] border-b border-slate-900">
+                      <thead className="bg-clinical-bg text-clinical-muted text-[10px] font-black uppercase tracking-[0.3em] border-b border-clinical-border">
                         <tr>
                           <th className="p-8">Unit ID</th>
                           <th className="p-8">Serology</th>
@@ -646,10 +684,10 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
                           <th className="p-8 text-right">Ops</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-900/50">
+                      <tbody className="divide-y divide-clinical-border">
                         {donations.filter(d => Boolean(d.idmStatus) && d.componentCount === 0).map(donation => (
-                          <tr key={donation.id} className="hover:bg-slate-900/40 transition-all group">
-                            <td className="p-8 font-mono font-black text-slate-700 tracking-tighter text-lg italic">{donation.id}</td>
+                          <tr key={donation.id} className="hover:bg-clinical-bg transition-all group">
+                            <td className="p-8 font-mono font-black text-clinical-text tracking-tighter text-lg italic">{donation.id}</td>
                             <td className="p-8">
                                {donation.idmStatus === 'CLEARED' ? (
                                  <span className="text-emerald-500 font-black text-[11px] uppercase tracking-[0.2em] bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20">SAFE</span>
@@ -658,11 +696,11 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
                                )}
                             </td>
                             <td className="p-8 text-center">
-                              <span className="bg-slate-50 text-slate-600 px-4 py-2 rounded-2xl text-[11px] font-black tracking-widest border border-slate-800">
+                              <span className="bg-clinical-bg text-clinical-muted px-4 py-2 rounded-2xl text-[11px] font-black tracking-widest border border-clinical-border">
                                 {donation.donorAbo}{donation.donorRhd === 'Positive' ? '+' : '-'}
                               </span>
                             </td>
-                            <td className="p-8 text-slate-600 font-mono text-[13px]">{donation.volume} ml</td>
+                            <td className="p-8 text-clinical-muted font-mono text-[13px]">{donation.volume} ml</td>
                             <td className="p-8 text-right">
                                {donation.idmStatus === 'REACTIVE' ? (
                                  <div className="bg-rose-950/30 border border-rose-900/30 text-rose-500 px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] italic">QUARANTINE RESTRICTED</div>
@@ -685,9 +723,9 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
 
               {activeTab === 'RELEASE' && (
                 <div className="space-y-8 animate-in fade-in duration-700">
-                   <div className="overflow-hidden rounded-[40px] border border-slate-900 bg-slate-900/10 shadow-2xl">
+                   <div className="overflow-hidden rounded-[40px] border border-clinical-border bg-clinical-card shadow-sm">
                     <table className="w-full text-left text-sm">
-                      <thead className="bg-slate-50/50 text-slate-600 text-[10px] font-black uppercase tracking-[0.3em] border-b border-slate-900">
+                      <thead className="bg-clinical-bg text-clinical-muted text-[10px] font-black uppercase tracking-[0.3em] border-b border-clinical-border">
                         <tr>
                           <th className="p-8">Global ID</th>
                           <th className="p-8">Product Class</th>
@@ -696,13 +734,13 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
                           <th className="p-8 text-right">Dispatch</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-900/50">
+                      <tbody className="divide-y divide-clinical-border">
                         {components.filter(c => c.status !== 'QUARANTINE' && c.status !== 'DISCARDED').map(comp => (
-                          <tr key={comp.id} className="hover:bg-slate-900/40 transition-all group">
-                            <td className="p-8 font-mono font-black text-slate-800 tracking-tighter text-xl italic">{comp.id}</td>
-                            <td className="p-8 text-slate-600 font-black uppercase italic tracking-tight">{getProductName(comp.productCode)}</td>
+                          <tr key={comp.id} className="hover:bg-clinical-bg transition-all group">
+                            <td className="p-8 font-mono font-black text-clinical-text tracking-tighter text-xl italic">{comp.id}</td>
+                            <td className="p-8 text-clinical-muted font-black uppercase italic tracking-tight">{getProductName(comp.productCode)}</td>
                             <td className="p-8 text-center">
-                              <span className="bg-slate-50 text-slate-700 px-4 py-2 rounded-2xl text-[11px] font-black tracking-widest border border-slate-800">
+                              <span className="bg-clinical-bg text-clinical-text px-4 py-2 rounded-2xl text-[11px] font-black tracking-widest border border-clinical-border">
                                 {comp.abo}{comp.rhd === 'Positive' ? '+' : '-'}
                               </span>
                             </td>
@@ -724,7 +762,7 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
                                  <button 
                                    onClick={() => handleRelease(comp.id)}
                                    disabled={isSyncing}
-                                   className="px-8 py-4 rounded-[18px] bg-white text-slate-950 font-black text-[11px] uppercase tracking-[0.3em] shadow-2xl hover:scale-105 active:scale-95 transition-all italic disabled:opacity-30"
+                                   className="px-8 py-4 rounded-[18px] bg-clinical-bg text-clinical-text font-black text-[11px] uppercase tracking-[0.3em] shadow-sm hover:scale-105 active:scale-95 transition-all italic disabled:opacity-30 border border-clinical-border"
                                  >
                                    {isSyncing ? 'SYNCING...' : 'RELEASE TO HUB'}
                                  </button>
@@ -744,19 +782,19 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
 
       {/* Modern Premium Modals */}
       {isDonorModalOpen && (
-        <div className="fixed inset-0 bg-[#020617]/95 backdrop-blur-3xl z-[100] flex items-center justify-center p-8 animate-in fade-in duration-500">
+        <div className="fixed inset-0 bg-clinical-bg/95 backdrop-blur-3xl z-[100] flex items-center justify-center p-8 animate-in fade-in duration-500">
           <motion.form 
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             onSubmit={submitDonorForm} 
-            className="glass-station bg-slate-50 border-slate-800 w-full max-w-2xl overflow-hidden shadow-[0_0_150px_rgba(0,0,0,1)]"
+            className="glass-station bg-clinical-bg border-clinical-border w-full max-w-2xl overflow-hidden shadow-2xl"
           >
-             <div className="p-12 border-b border-slate-900 flex justify-between items-center bg-slate-900/20">
+             <div className="p-12 border-b border-clinical-border flex justify-between items-center bg-clinical-card">
                 <div>
-                   <h3 className="text-3xl font-black text-slate-800 uppercase italic tracking-tighter">{donorForm.id ? 'Modify Registry' : 'Donor Enrollment'}</h3>
+                   <h3 className="text-3xl font-black text-clinical-text uppercase italic tracking-tighter">{donorForm.id ? 'Modify Registry' : 'Donor Enrollment'}</h3>
                    <p className="text-rose-500 text-[10px] font-black uppercase tracking-[0.4em] mt-2 italic">National Identity Integration</p>
                 </div>
-                <button type="button" onClick={() => setIsDonorModalOpen(false)} className="w-12 h-12 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-600 hover:text-slate-800 transition-all">
+                <button type="button" onClick={() => setIsDonorModalOpen(false)} className="w-12 h-12 rounded-full bg-clinical-card border border-clinical-border flex items-center justify-center text-clinical-muted hover:text-clinical-text transition-all">
                    <X size={24} />
                 </button>
              </div>
@@ -781,7 +819,7 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
                           const validId = (100000000000 + Math.floor(Math.random() * 899999999999)).toString();
                           setDonorForm({...donorForm, nationalId: validId});
                         }}
-                        className="text-[9px] bg-sky-500/10 text-sky-400 px-4 py-2 rounded-xl border border-sky-500/20 hover:bg-sky-500 hover:text-slate-800 transition-all font-black uppercase tracking-widest flex items-center gap-2"
+                        className="text-[9px] bg-sky-500/10 text-sky-400 px-4 py-2 rounded-xl border border-sky-500/20 hover:bg-sky-500 hover:text-clinical-text transition-all font-black uppercase tracking-widest flex items-center gap-2"
                       >
                          <Database size={12} /> Scan Chip Card
                       </button>
@@ -866,30 +904,30 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
                    </div>
                 </div>
 
-                <div className="bg-slate-900/50 p-6 rounded-[24px] border border-slate-800 mt-6">
+                <div className="bg-clinical-bg p-6 rounded-[24px] border border-clinical-border mt-6">
                    <h4 className="text-rose-500 text-[10px] font-black uppercase tracking-widest mb-4">Vietnam Ministry of Health Questionnaire</h4>
                    <div className="space-y-4">
-                      <label className="flex items-center gap-4 text-sm text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-800/50 cursor-pointer">
-                         <input type="checkbox" checked={donorForm.hadTattooRecently} onChange={e => setDonorForm({...donorForm, hadTattooRecently: e.target.checked})} className="rounded bg-slate-900 border-slate-700 text-rose-500 focus:ring-rose-500 w-5 h-5" />
+                      <label className="flex items-center gap-4 text-sm text-clinical-text bg-clinical-bg p-4 rounded-xl border border-clinical-border cursor-pointer">
+                         <input type="checkbox" checked={donorForm.hadTattooRecently} onChange={e => setDonorForm({...donorForm, hadTattooRecently: e.target.checked})} className="rounded bg-clinical-card border-clinical-border text-rose-500 focus:ring-rose-500 w-5 h-5" />
                          <span className="font-bold text-[11px] uppercase tracking-wider">Had a tattoo or piercing within the last 6 months?</span>
                       </label>
-                      <label className="flex items-center gap-4 text-sm text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-800/50 cursor-pointer">
-                         <input type="checkbox" checked={donorForm.traveledToMalariaZone} onChange={e => setDonorForm({...donorForm, traveledToMalariaZone: e.target.checked})} className="rounded bg-slate-900 border-slate-700 text-rose-500 focus:ring-rose-500 w-5 h-5" />
+                      <label className="flex items-center gap-4 text-sm text-clinical-text bg-clinical-bg p-4 rounded-xl border border-clinical-border cursor-pointer">
+                         <input type="checkbox" checked={donorForm.traveledToMalariaZone} onChange={e => setDonorForm({...donorForm, traveledToMalariaZone: e.target.checked})} className="rounded bg-clinical-card border-clinical-border text-rose-500 focus:ring-rose-500 w-5 h-5" />
                          <span className="font-bold text-[11px] uppercase tracking-wider">Traveled to a malaria endemic zone within the last 12 months?</span>
                       </label>
-                      <label className="flex items-center gap-4 text-sm text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-800/50 cursor-pointer">
-                         <input type="checkbox" checked={donorForm.feelingUnwell} onChange={e => setDonorForm({...donorForm, feelingUnwell: e.target.checked})} className="rounded bg-slate-900 border-slate-700 text-rose-500 focus:ring-rose-500 w-5 h-5" />
+                      <label className="flex items-center gap-4 text-sm text-clinical-text bg-clinical-bg p-4 rounded-xl border border-clinical-border cursor-pointer">
+                         <input type="checkbox" checked={donorForm.feelingUnwell} onChange={e => setDonorForm({...donorForm, feelingUnwell: e.target.checked})} className="rounded bg-clinical-card border-clinical-border text-rose-500 focus:ring-rose-500 w-5 h-5" />
                          <span className="font-bold text-[11px] uppercase tracking-wider">Currently feeling unwell, taking medication, or having a fever?</span>
                       </label>
-                      <label className="flex items-center gap-4 text-sm text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-800/50 cursor-pointer">
-                         <input type="checkbox" checked={donorForm.hasHighRiskCondition} onChange={e => setDonorForm({...donorForm, hasHighRiskCondition: e.target.checked})} className="rounded bg-slate-900 border-slate-700 text-rose-500 focus:ring-rose-500 w-5 h-5" />
+                      <label className="flex items-center gap-4 text-sm text-clinical-text bg-clinical-bg p-4 rounded-xl border border-clinical-border cursor-pointer">
+                         <input type="checkbox" checked={donorForm.hasHighRiskCondition} onChange={e => setDonorForm({...donorForm, hasHighRiskCondition: e.target.checked})} className="rounded bg-clinical-card border-clinical-border text-rose-500 focus:ring-rose-500 w-5 h-5" />
                          <span className="font-bold text-[11px] uppercase tracking-wider">Have any high-risk conditions (e.g. HIV, Hepatitis)?</span>
                       </label>
                    </div>
                 </div>
              </div>
-             <div className="p-12 bg-slate-50/60 border-t border-slate-900 flex justify-end gap-6">
-                <button type="button" onClick={() => setIsDonorModalOpen(false)} className="px-10 py-6 rounded-[20px] text-slate-600 font-black text-[11px] uppercase tracking-[0.3em] hover:text-slate-700 transition-colors">Abort</button>
+             <div className="p-12 bg-clinical-bg/60 border-t border-clinical-border flex justify-end gap-6">
+                <button type="button" onClick={() => setIsDonorModalOpen(false)} className="px-10 py-6 rounded-[20px] text-clinical-muted font-black text-[11px] uppercase tracking-[0.3em] hover:text-clinical-text transition-colors">Abort</button>
                 <button type="submit" className="clinical-btn-primary min-w-[240px]">{donorForm.id ? 'Save Changes' : 'Initialize Record'}</button>
              </div>
           </motion.form>
@@ -898,16 +936,16 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
 
       {/* Phlebotomy Modal */}
       {isCollectModalOpen && (
-        <div className="fixed inset-0 bg-[#020617]/95 backdrop-blur-3xl z-[100] flex items-center justify-center p-8 animate-in fade-in duration-500">
+        <div className="fixed inset-0 bg-clinical-bg/95 backdrop-blur-3xl z-[100] flex items-center justify-center p-8 animate-in fade-in duration-500">
           <motion.form 
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             onSubmit={submitCollectForm} 
-            className="glass-station bg-slate-50 border-rose-500/20 w-full max-w-2xl overflow-hidden shadow-[0_0_150px_rgba(225,29,72,0.1)]"
+            className="glass-station bg-clinical-bg border-rose-500/20 w-full max-w-2xl overflow-hidden shadow-[0_0_150px_rgba(225,29,72,0.1)]"
           >
-             <div className="p-12 border-b border-slate-900 flex justify-between items-center bg-rose-500/5">
+             <div className="p-12 border-b border-clinical-border flex justify-between items-center bg-rose-500/5">
                 <div>
-                   <h3 className="text-3xl font-black text-slate-800 uppercase italic tracking-tighter">Phlebotomy Initiation</h3>
+                   <h3 className="text-3xl font-black text-clinical-text uppercase italic tracking-tighter">Phlebotomy Initiation</h3>
                    <p className="text-rose-500 text-[10px] font-black uppercase tracking-[0.4em] mt-2 italic">ISBT-128 Protocol Active</p>
                 </div>
                 <div className="w-16 h-16 rounded-[24px] bg-rose-600 flex items-center justify-center text-white shadow-2xl shadow-rose-900/40">
@@ -922,7 +960,7 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
                    <label className="clinical-label">Unit Identification (DIN)</label>
                    <div className="relative group">
                       <input type="text" value={collectForm.customDonationId} onChange={e => setCollectForm({...collectForm, customDonationId: e.target.value.toUpperCase()})} className="clinical-input py-8 font-mono text-3xl tracking-widest text-rose-500" placeholder="=W0000 24 000000" />
-                      <button type="button" onClick={() => setCollectForm({...collectForm, customDonationId: `=W0000 24 ${Math.floor(Math.random() * 900000 + 100000)}`})} className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-700 hover:text-slate-800 transition-colors">
+                      <button type="button" onClick={() => setCollectForm({...collectForm, customDonationId: `=W0000 24 ${Math.floor(Math.random() * 900000 + 100000)}`})} className="absolute right-6 top-1/2 -translate-y-1/2 text-clinical-text hover:text-clinical-text transition-colors">
                          <RefreshCcw size={24} />
                       </button>
                    </div>
@@ -941,8 +979,8 @@ export function DonorCenterSimulatorView({ initialTab = 'DONOR' }: { initialTab?
                    </div>
                 </div>
              </div>
-             <div className="p-12 bg-slate-50/60 border-t border-slate-900 flex justify-end gap-6">
-                <button type="button" onClick={() => setIsCollectModalOpen(false)} className="px-10 py-6 rounded-[20px] text-slate-600 font-black text-[11px] uppercase tracking-[0.3em] hover:text-slate-700 transition-colors">Abort</button>
+             <div className="p-12 bg-clinical-bg/60 border-t border-clinical-border flex justify-end gap-6">
+                <button type="button" onClick={() => setIsCollectModalOpen(false)} className="px-10 py-6 rounded-[20px] text-clinical-muted font-black text-[11px] uppercase tracking-[0.3em] hover:text-clinical-text transition-colors">Abort</button>
                 <button type="submit" className="clinical-btn-primary min-w-[300px]">Start Collection Run</button>
              </div>
           </motion.form>
@@ -957,7 +995,7 @@ function SegmentBadge({ label, val, color }: any) {
     sky: 'bg-sky-500/10 text-sky-400 border-sky-500/30',
     indigo: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/30',
     purple: 'bg-purple-500/10 text-purple-600 border-purple-500/30',
-    slate: 'bg-slate-500/10 text-slate-600 border-slate-500/30'
+    slate: 'bg-slate-500/10 text-clinical-muted border-slate-500/30'
   };
 
   return (
