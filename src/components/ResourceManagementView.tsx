@@ -91,7 +91,7 @@ export function ResourceManagementView() {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-4 text-slate-500 animate-pulse">
+      <div className="flex-1 flex flex-col items-center justify-center gap-4 text-slate-600 animate-pulse">
         <Settings className="animate-spin" size={48} />
         <span className="font-black uppercase tracking-[0.3em]">Mapping Resource Ecosystem...</span>
       </div>
@@ -108,7 +108,7 @@ export function ResourceManagementView() {
                <span className="text-[10px] font-black text-sky-500 uppercase tracking-[0.4em] bg-sky-500/10 px-3 py-1 rounded-full border border-sky-500/20">Resource Protocol</span>
                <div className="h-px w-12 bg-slate-800"></div>
             </div>
-            <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic leading-none">Supply & Asset Intelligence</h1>
+            <h1 className="text-4xl font-black text-slate-800 tracking-tighter uppercase italic leading-none">Supply & Asset Intelligence</h1>
          </div>
 
          <div className="flex gap-4">
@@ -117,25 +117,25 @@ export function ResourceManagementView() {
                   <BarChart3 size={20} />
                </div>
                <div>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Assets</p>
-                  <p className="text-xl font-black text-white tracking-tighter">{stats.total}</p>
+                  <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest leading-none mb-1">Assets</p>
+                  <p className="text-xl font-black text-slate-800 tracking-tighter">{stats.total}</p>
                </div>
             </div>
             <div className="bg-rose-500/10 border border-rose-500/20 p-4 rounded-2xl flex items-center gap-4 min-w-[140px] shadow-xl">
-               <div className="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center text-rose-400 animate-pulse">
+               <div className="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center text-rose-600 animate-pulse">
                   <AlertTriangle size={20} />
                </div>
                <div>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Critical</p>
+                  <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest leading-none mb-1">Critical</p>
                   <p className="text-xl font-black text-rose-500 tracking-tighter">{stats.critical}</p>
                </div>
             </div>
             <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-2xl flex items-center gap-4 min-w-[160px] shadow-xl group hover:bg-emerald-500/20 transition-all">
-               <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+               <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-600">
                   <ShieldCheck size={20} />
                </div>
                <div>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Resilience</p>
+                  <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest leading-none mb-1">Resilience</p>
                   <p className="text-xl font-black text-emerald-500 tracking-tighter">98.2%</p>
                </div>
             </div>
@@ -144,24 +144,24 @@ export function ResourceManagementView() {
 
       {/* Control Bar */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-slate-900/20 p-6 rounded-[32px] border border-slate-800 backdrop-blur-xl">
-         <div className="flex items-center gap-4 bg-slate-950/50 p-2 rounded-2xl border border-slate-800 w-full md:w-auto">
+         <div className="flex items-center gap-4 bg-slate-50/50 p-2 rounded-2xl border border-slate-800 w-full md:w-auto">
             <Search size={18} className="text-slate-600 ml-2" />
             <input 
               type="text" 
               placeholder="Search assets, reagents, lots..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-transparent border-none focus:ring-0 text-sm font-medium text-slate-300 w-full md:w-64" 
+              className="bg-transparent border-none focus:ring-0 text-sm font-medium text-slate-700 w-full md:w-64"
             />
          </div>
 
          <div className="flex items-center gap-4 w-full md:w-auto">
-            <div className="flex bg-slate-950/50 p-1.5 rounded-2xl border border-slate-800">
+            <div className="flex bg-slate-50/50 p-1.5 rounded-2xl border border-slate-800">
                {(['ALL', 'Reagent', 'Equipment', 'Consumable'] as const).map(type => (
                  <button 
                    key={type}
                    onClick={() => setFilterType(type)}
-                   className={`px-4 py-2 text-[10px] font-black rounded-xl transition-all ${filterType === type ? 'bg-sky-600 text-white shadow-lg' : 'text-slate-600 hover:text-slate-400'}`}
+                   className={`px-4 py-2 text-[10px] font-black rounded-xl transition-all ${filterType === type ? 'bg-sky-600 text-white shadow-lg' : 'text-slate-600 hover:text-slate-600'}`}
                  >
                    {type.toUpperCase()}
                  </button>
@@ -178,7 +178,7 @@ export function ResourceManagementView() {
          <div className="xl:col-span-8 space-y-6">
             <div className="overflow-hidden rounded-[32px] border border-slate-800 bg-slate-900/10 shadow-2xl">
                <table className="w-full text-left text-sm">
-                  <thead className="bg-slate-900/60 text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] border-b border-slate-800">
+                  <thead className="bg-slate-900/60 text-slate-600 text-[10px] font-black uppercase tracking-[0.2em] border-b border-slate-800">
                      <tr>
                         <th className="p-8">Resource Identity</th>
                         <th className="p-8">Lifecycle / Status</th>
@@ -186,23 +186,23 @@ export function ResourceManagementView() {
                         <th className="p-8 text-right">Control</th>
                      </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/50">
+                  <tbody className="divide-y divide-slate-100/50">
                      {filteredResources.map(res => (
                         <tr key={res.id} className="hover:bg-slate-900/30 transition-colors group">
                            <td className="p-8">
                               <div className="flex items-center gap-4">
                                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 ${
-                                    res.type === 'Reagent' ? 'bg-rose-500/10 text-rose-400' :
+                                    res.type === 'Reagent' ? 'bg-rose-500/10 text-rose-600' :
                                     res.type === 'Equipment' ? 'bg-sky-500/10 text-sky-400' :
-                                    'bg-emerald-500/10 text-emerald-400'
+                                    'bg-emerald-500/10 text-emerald-600'
                                  }`}>
                                     {res.type === 'Reagent' ? <FlaskConical size={24} /> :
                                      res.type === 'Equipment' ? <Wrench size={24} /> :
                                      <Package size={24} />}
                                  </div>
                                  <div>
-                                    <h4 className="font-black text-white text-base tracking-tight">{res.name}</h4>
-                                    <p className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest mt-1">{res.id} · {res.type}</p>
+                                    <h4 className="font-black text-slate-800 text-base tracking-tight">{res.name}</h4>
+                                    <p className="text-[10px] font-mono font-bold text-slate-600 uppercase tracking-widest mt-1">{res.id} · {res.type}</p>
                                  </div>
                               </div>
                            </td>
@@ -217,7 +217,7 @@ export function ResourceManagementView() {
                                        <AlertTriangle size={14} /> {res.status}
                                     </div>
                                  )}
-                                 <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">
+                                 <p className="text-[9px] text-slate-600 font-bold uppercase tracking-widest">
                                     {res.expiryDate ? `Expires: ${res.expiryDate}` : 
                                      res.nextMaintenance ? `Next Svc: ${res.nextMaintenance}` : 'Continuous Stock'}
                                  </p>
@@ -227,12 +227,12 @@ export function ResourceManagementView() {
                               {res.stockLevel !== undefined ? (
                                  <div className="space-y-2">
                                     <div className="flex justify-between items-baseline">
-                                       <span className={`text-xl font-black italic tracking-tighter ${res.stockLevel < (res.minStockLevel || 0) ? 'text-rose-500' : 'text-white'}`}>
+                                       <span className={`text-xl font-black italic tracking-tighter ${res.stockLevel < (res.minStockLevel || 0) ? 'text-rose-500' : 'text-slate-800'}`}>
                                           {res.stockLevel}
                                        </span>
                                        <span className="text-[9px] text-slate-600 font-black uppercase">Units</span>
                                     </div>
-                                    <div className="h-1 w-24 bg-slate-950 rounded-full overflow-hidden">
+                                    <div className="h-1 w-24 bg-slate-50 rounded-full overflow-hidden">
                                        <div className={`h-full ${res.stockLevel < (res.minStockLevel || 0) ? 'bg-rose-600' : 'bg-sky-500'} transition-all`} 
                                             style={{ width: `${Math.min(100, (res.stockLevel / ((res.minStockLevel || 1) * 3)) * 100)}%` }}></div>
                                     </div>
@@ -250,7 +250,7 @@ export function ResourceManagementView() {
                                      Authorize
                                   </button>
                                ) : (
-                                  <button className="p-3 bg-slate-950/50 text-slate-500 hover:text-white hover:bg-slate-800 rounded-xl transition-all">
+                                  <button className="p-3 bg-slate-50/50 text-slate-600 hover:text-slate-800 hover:bg-slate-800 rounded-xl transition-all">
                                      <MoreVertical size={18} />
                                   </button>
                                )}
@@ -265,44 +265,44 @@ export function ResourceManagementView() {
          {/* Monitoring Sidebar */}
          <div className="xl:col-span-4 space-y-8">
             <div className="clinical-card p-8 bg-slate-900/20 border border-slate-800 backdrop-blur-xl">
-               <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.3em] mb-8 italic">Maintenance Schedule</h3>
+               <h3 className="text-xs font-black text-slate-600 uppercase tracking-[0.3em] mb-8 italic">Maintenance Schedule</h3>
                <div className="space-y-6">
                   {[
                     { name: 'Cobas NAT', date: 'Jul 10', priority: 'High', type: 'PM' },
                     { name: 'Centrifuge 04', date: 'PAST DUE', priority: 'Critical', type: 'Repair' },
                     { name: 'Platelet Agitator', date: 'Aug 05', priority: 'Low', type: 'PM' },
                   ].map((m, i) => (
-                    <div key={i} className="flex items-center gap-4 p-4 bg-slate-950/50 border border-slate-900 rounded-2xl group hover:border-slate-700 transition-all cursor-default">
-                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${m.priority === 'Critical' ? 'bg-rose-500/20 text-rose-500' : 'bg-slate-800 text-slate-400'}`}>
+                    <div key={i} className="flex items-center gap-4 p-4 bg-slate-50/50 border border-slate-900 rounded-2xl group hover:border-slate-700 transition-all cursor-default">
+                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${m.priority === 'Critical' ? 'bg-rose-500/20 text-rose-500' : 'bg-slate-800 text-slate-600'}`}>
                           <Calendar size={18} />
                        </div>
                        <div className="flex-1 min-w-0">
-                          <p className="text-[11px] font-black text-white uppercase truncate">{m.name}</p>
-                          <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">{m.type} · {m.date}</p>
+                          <p className="text-[11px] font-black text-slate-800 uppercase truncate">{m.name}</p>
+                          <p className="text-[9px] text-slate-600 font-bold uppercase tracking-widest">{m.type} · {m.date}</p>
                        </div>
                        <ChevronRight size={14} className="text-slate-800 group-hover:translate-x-1 transition-transform" />
                     </div>
                   ))}
                </div>
-               <button className="w-full mt-10 py-3 bg-slate-900 border border-slate-800 text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] rounded-2xl hover:bg-slate-800 hover:text-white transition-all">
+               <button className="w-full mt-10 py-3 bg-slate-900 border border-slate-800 text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] rounded-2xl hover:bg-slate-800 hover:text-white transition-all">
                   Access Maintenance Log
                </button>
             </div>
 
             <div className="bg-gradient-to-br from-sky-600 to-sky-700 rounded-[40px] p-8 shadow-2xl shadow-sky-900/20 relative overflow-hidden group">
-               <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24 blur-3xl group-hover:bg-white/20 transition-all duration-1000" />
+               <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24 blur-3xl group-hover:bg-white transition-all duration-1000" />
                <div className="relative z-10">
                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md"><ShieldCheck className="text-white" size={20} /></div>
-                    <h3 className="text-xs font-black text-white uppercase tracking-widest italic">Safety Gating Status</h3>
+                    <div className="p-2 bg-white rounded-xl backdrop-blur-md"><ShieldCheck className="text-slate-800" size={20} /></div>
+                    <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest italic">Safety Gating Status</h3>
                  </div>
-                 <p className="text-[11px] text-white/80 leading-relaxed font-bold uppercase tracking-widest italic mb-8">
+                 <p className="text-[11px] text-slate-800/80 leading-relaxed font-bold uppercase tracking-widest italic mb-8">
                    System-wide gating is currently active. 2 assets are blocking lab operations due to safety violations.
                  </p>
                  <div className="flex items-center justify-between p-4 bg-black/20 rounded-2xl border border-white/10 backdrop-blur-sm">
                     <div>
-                       <p className="text-[8px] font-black text-white/50 uppercase tracking-widest mb-0.5">Integrity Check</p>
-                       <p className="text-sm font-black text-white tracking-tighter uppercase italic">Hard Gate Active</p>
+                       <p className="text-[8px] font-black text-slate-800/50 uppercase tracking-widest mb-0.5">Integrity Check</p>
+                       <p className="text-sm font-black text-slate-800 tracking-tighter uppercase italic">Hard Gate Active</p>
                     </div>
                     <div className="w-2 h-2 rounded-full bg-rose-400 animate-ping"></div>
                  </div>

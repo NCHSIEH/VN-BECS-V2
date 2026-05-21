@@ -42,7 +42,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentRole, setRole, allowedR
       id: 'lab',
       title: t('nav_laboratory'),
       icon: <FlaskConical size={18} />,
-      roles: ['LabTech_Crossmatch', 'SOP11_RareDonor'] as Role[],
+      roles: ['LIMS_Simulator', 'DonorScreener'],
     },
     {
       id: 'logistics',
@@ -54,18 +54,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentRole, setRole, allowedR
       id: 'management',
       title: t('nav_management'),
       icon: <BarChart3 size={18} />,
-      roles: ['Auditor', 'MedicalReviewer', 'Manager', 'NationalCommander'] as Role[],
+      roles: ['Admin', 'QA_Officer'],
     }
   ];
 
   return (
-    <aside className="w-72 bg-slate-950 border-r border-slate-800 flex flex-col h-full overflow-y-auto shrink-0 shadow-2xl z-40">
+    <aside className="w-72 bg-slate-50 border-r border-slate-800 flex flex-col h-full overflow-y-auto shrink-0 shadow-2xl z-40">
       <div className="p-8">
         <div className="flex items-center gap-5 mb-8 px-2 group">
           <BloodDropLogo size={24} />
           <div>
-            <h2 className="text-[14px] font-black text-white uppercase tracking-[0.4em] italic leading-none group-hover:text-rose-500 transition-colors">VN-BECS</h2>
-            <p className="text-[9px] text-slate-500 font-black uppercase tracking-[0.25em] mt-2 opacity-80 italic">Enterprise Command V1.0</p>
+            <h2 className="text-[14px] font-black text-slate-800 uppercase tracking-[0.4em] italic leading-none group-hover:text-rose-500 transition-colors">VN-BECS</h2>
+            <p className="text-[9px] text-slate-600 font-black uppercase tracking-[0.25em] mt-2 opacity-80 italic">Enterprise Command V1.0</p>
           </div>
         </div>
 
@@ -74,7 +74,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentRole, setRole, allowedR
           {onReturnToPortal && (
             <button
               onClick={onReturnToPortal}
-              className="w-full flex items-center gap-4 px-6 py-4 bg-gradient-to-r from-rose-950/30 to-slate-900 border border-rose-500/20 rounded-[24px] text-rose-500 hover:from-rose-600 hover:to-rose-500 hover:text-white transition-all group shadow-lg active:scale-95 mb-10"
+              className="w-full flex items-center gap-4 px-6 py-4 bg-gradient-to-r from-rose-950/30 to-slate-900 border border-rose-500/20 rounded-[24px] text-rose-500 hover:from-rose-600 hover:to-rose-500 hover:text-slate-800 transition-all group shadow-lg active:scale-95 mb-10"
             >
               <ArrowRightLeft size={18} className="group-hover:rotate-180 transition-all duration-500" />
               <span className="text-[11px] font-black uppercase tracking-[0.2em] italic">System Portal</span>
@@ -84,7 +84,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentRole, setRole, allowedR
           <div className="space-y-4">
              <div className="flex items-center gap-3 px-2">
                 <div className="text-emerald-500 bg-emerald-500/10 p-2 rounded-xl border border-emerald-500/20 shadow-inner"><Activity size={20} /></div>
-                <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.25em]">Operational Flow</span>
+                <span className="text-[11px] font-black text-slate-600 uppercase tracking-[0.25em]">Operational Flow</span>
              </div>
              {/* Version Tag */}
              <div className="fixed bottom-8 right-8 text-[10px] font-black text-slate-700 uppercase tracking-[0.5em] italic">
@@ -94,16 +94,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentRole, setRole, allowedR
                onClick={() => setRole('Dashboard' as Role)}
                className={`w-full flex flex-col items-start px-6 py-5 rounded-[24px] transition-all group relative overflow-hidden ${
                  currentRole === ('Dashboard' as Role)
-                   ? 'bg-gradient-to-br from-slate-900 to-slate-950 text-white border border-slate-800 shadow-2xl scale-[1.02]' 
-                   : 'text-slate-500 hover:text-slate-300 hover:bg-slate-900/30'
+                   ? 'bg-gradient-to-br from-slate-900 to-slate-950 text-slate-800 border border-slate-800 shadow-2xl scale-[1.02]'
+                   : 'text-slate-600 hover:text-slate-700 hover:bg-slate-900/30'
                }`}
              >
                <span className="text-[14px] font-black tracking-[0.1em] uppercase italic mb-1">My Task Queue</span>
-               <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Driven by AI Dispatch</span>
+               <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">Driven by AI Dispatch</span>
                {currentRole === ('Dashboard' as Role) && (
                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-600 shadow-[0_0_20px_rgba(225,29,72,0.6)]" />
                )}
-               <div className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-950/50 border border-slate-800 flex items-center justify-center">
+               <div className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-50/50 border border-slate-800 flex items-center justify-center">
                   <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse shadow-[0_0_10px_rgba(225,29,72,0.8)]" />
                </div>
              </button>
@@ -159,7 +159,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentRole, setRole, allowedR
               <div key={idx} className="space-y-4">
                 <div className="flex items-center gap-3 px-2">
                    <div className="p-2 rounded-xl bg-slate-900 border border-slate-800 shadow-inner">{group.icon}</div>
-                   <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">{group.title}</span>
+                   <span className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">{group.title}</span>
                 </div>
                 <div className="space-y-2">
                   {visibleItems.map((item) => (
@@ -168,12 +168,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentRole, setRole, allowedR
                       onClick={() => setRole(item.id as Role)}
                       className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all group relative ${
                         currentRole === item.id
-                          ? 'bg-slate-900 text-white border border-slate-800 shadow-xl scale-[1.02]' 
-                           : 'text-slate-500 hover:text-slate-300 hover:bg-slate-900/30'
+                          ? 'bg-slate-900 text-slate-800 border border-slate-800 shadow-xl scale-[1.02]'
+                           : 'text-slate-600 hover:text-slate-700 hover:bg-slate-900/30'
                       }`}
                     >
                       <div className="flex items-center gap-4">
-                         <div className={`transition-colors ${currentRole === item.id ? 'text-rose-500' : 'text-slate-700 group-hover:text-slate-500'}`}>
+                         <div className={`transition-colors ${currentRole === item.id ? 'text-rose-500' : 'text-slate-700 group-hover:text-slate-600'}`}>
                             {item.icon}
                          </div>
                          <span className="text-[12px] font-black tracking-tight uppercase italic">{item.label}</span>
@@ -190,16 +190,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentRole, setRole, allowedR
         </nav>
       </div>
       
-      <div className="mt-auto p-8 border-t border-slate-900 bg-slate-950/80 backdrop-blur-md">
+      <div className="mt-auto p-8 border-t border-slate-900 bg-slate-50/80 backdrop-blur-md">
         <div className="flex items-center gap-4 bg-slate-900/40 p-4 rounded-3xl border border-slate-800/50 shadow-inner">
-          <div className="w-11 h-11 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-[12px] font-black text-slate-400 shadow-lg">
+          <div className="w-11 h-11 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-[12px] font-black text-slate-600 shadow-lg">
             AD
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[12px] font-black text-white truncate uppercase tracking-widest leading-none">Administrator</p>
+            <p className="text-[12px] font-black text-slate-800 truncate uppercase tracking-widest leading-none">Administrator</p>
             <div className="flex items-center gap-2 mt-2">
                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-               <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] truncate">Live Secure</p>
+               <p className="text-[10px] text-slate-600 font-black uppercase tracking-[0.2em] truncate">Live Secure</p>
             </div>
           </div>
         </div>

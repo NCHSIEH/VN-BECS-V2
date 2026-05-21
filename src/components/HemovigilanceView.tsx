@@ -48,9 +48,9 @@ const REACTION_LABELS: Record<AdverseReactionType, { label: string; desc: string
 };
 
 const SEVERITY_COLORS: Record<AlertSeverity, string> = {
-  Low: 'text-emerald-400 bg-emerald-950/20 border-emerald-900/50',
+  Low: 'text-emerald-600 bg-emerald-950/20 border-emerald-900/50',
   Medium: 'text-amber-400 bg-amber-950/20 border-amber-900/50',
-  High: 'text-orange-400 bg-orange-950/20 border-orange-900/50',
+  High: 'text-orange-600 bg-orange-950/20 border-orange-900/50',
   Critical: 'text-rose-500 bg-rose-950/20 border-rose-900/50',
 };
 
@@ -131,17 +131,17 @@ export function HemovigilanceView() {
                Global Hemovigilance Surveillance
             </div>
             <h1 className="premium-heading">Safety Surveillance</h1>
-            <p className="text-slate-500 text-[11px] font-black uppercase tracking-[0.3em] mt-4 opacity-80">Real-time Adverse Reaction Monitoring & Preventive Isolation</p>
+            <p className="text-slate-600 text-[11px] font-black uppercase tracking-[0.3em] mt-4 opacity-80">Real-time Adverse Reaction Monitoring & Preventive Isolation</p>
          </div>
       </div>
 
       <div className="grid grid-cols-12 gap-6 flex-1 min-h-0">
         {/* Report Form */}
         <div className="col-span-12 xl:col-span-4 bg-[#020617] border border-slate-800 rounded-3xl p-8 flex flex-col shadow-2xl overflow-y-auto custom-scrollbar">
-          <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-8 border-b border-slate-800 pb-4">Incident Reporting</h2>
+          <h2 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] mb-8 border-b border-slate-800 pb-4">Incident Reporting</h2>
 
           {status && (
-            <div className={`p-4 rounded-2xl border mb-6 flex gap-3 items-start text-xs font-bold animate-in slide-in-from-top-4 ${status.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-500'}`}>
+            <div className={`p-4 rounded-2xl border mb-6 flex gap-3 items-start text-xs font-bold animate-in slide-in-from-top-4 ${status.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600' : 'bg-rose-500/10 border-rose-500/30 text-rose-500'}`}>
               {status.type === 'success' ? <CheckCircle2 size={18} /> : <AlertOctagon size={18} />}
               {status.msg}
             </div>
@@ -167,7 +167,7 @@ export function HemovigilanceView() {
                 {(Object.keys(REACTION_LABELS) as AdverseReactionType[]).map(rt => (
                   <button key={rt} type="button" onClick={() => setReactionType(rt)}
                     className={`py-3 rounded-2xl text-[10px] font-black border transition-all uppercase tracking-tighter ${
-                      reactionType === rt ? 'bg-rose-600 text-white border-rose-400 shadow-2xl scale-105' : 'bg-slate-950 text-slate-500 border-slate-800 hover:border-slate-700'
+                      reactionType === rt ? 'bg-rose-600 text-white border-rose-400 shadow-2xl scale-105' : 'bg-slate-50 text-slate-600 border-slate-800 hover:border-slate-700'
                     }`}
                   >
                     {REACTION_LABELS[rt].label}
@@ -182,7 +182,7 @@ export function HemovigilanceView() {
                 {(['Low', 'Medium', 'High', 'Critical'] as AlertSeverity[]).map(s => (
                   <button key={s} type="button" onClick={() => setSeverity(s)}
                     className={`flex-1 py-3 rounded-2xl text-[11px] font-black border transition-all uppercase tracking-widest ${
-                      severity === s ? SEVERITY_COLORS[s] + ' shadow-xl scale-105' : 'bg-slate-950 text-slate-500 border-slate-800'
+                      severity === s ? SEVERITY_COLORS[s] + ' shadow-xl scale-105' : 'bg-slate-50 text-slate-600 border-slate-800'
                     }`}
                   >
                     {s}
@@ -198,16 +198,16 @@ export function HemovigilanceView() {
             </div>
 
             <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[32px] space-y-6 shadow-inner">
-              <label className="flex items-center gap-4 text-slate-400 text-[11px] font-black uppercase tracking-[0.2em] cursor-pointer hover:text-white transition-colors">
+              <label className="flex items-center gap-4 text-slate-600 text-[11px] font-black uppercase tracking-[0.2em] cursor-pointer hover:text-slate-800 transition-colors">
                 <div className={`w-6 h-6 rounded-xl border-2 flex items-center justify-center transition-all ${pauseAll ? 'bg-rose-600 border-rose-400 shadow-lg' : 'border-slate-800'}`}>
-                   {pauseAll && <Pause size={12} className="text-white" />}
+                   {pauseAll && <Pause size={12} className="text-slate-800" />}
                 </div>
                 <input type="checkbox" className="hidden" checked={pauseAll} onChange={e => setPauseAll(e.target.checked)} />
                 Lock all transfusions for this MRN
               </label>
-              <label className="flex items-center gap-4 text-slate-400 text-[11px] font-black uppercase tracking-[0.2em] cursor-pointer hover:text-white transition-colors">
+              <label className="flex items-center gap-4 text-slate-600 text-[11px] font-black uppercase tracking-[0.2em] cursor-pointer hover:text-slate-800 transition-colors">
                 <div className={`w-6 h-6 rounded-xl border-2 flex items-center justify-center transition-all ${triggerLookback ? 'bg-amber-500 border-amber-400 shadow-lg' : 'border-slate-800'}`}>
-                   {triggerLookback && <Eye size={12} className="text-white" />}
+                   {triggerLookback && <Eye size={12} className="text-slate-800" />}
                 </div>
                 <input type="checkbox" className="hidden" checked={triggerLookback} onChange={e => setTriggerLookback(e.target.checked)} />
                 Trigger Batch Lookback Analysis
@@ -231,7 +231,7 @@ export function HemovigilanceView() {
                           <Layers size={28} />
                        </div>
                        <div>
-                          <h3 className="text-xl font-black text-white uppercase italic tracking-tighter leading-none">Lookback Correlation Engine</h3>
+                          <h3 className="text-xl font-black text-slate-800 uppercase italic tracking-tighter leading-none">Lookback Correlation Engine</h3>
                           <p className="text-amber-500/60 text-[10px] font-black uppercase tracking-widest mt-2">Active Batch: <span className="text-amber-400">{correlatedBatch}</span></p>
                        </div>
                     </div>
@@ -245,8 +245,8 @@ export function HemovigilanceView() {
                  <div className="flex gap-4 overflow-x-auto pb-2 custom-scrollbar">
                     {affectedUnits.slice(0, 5).map((u, i) => (
                        <div key={i} className="min-w-[140px] bg-slate-900/40 border border-slate-800 p-4 rounded-2xl">
-                          <div className="text-[10px] font-mono text-slate-500 mb-2">{u.unitId}</div>
-                          <div className="text-sm font-black text-white">{u.abo} {u.rhd === 'Positive' ? '+' : '-'}</div>
+                          <div className="text-[10px] font-mono text-slate-600 mb-2">{u.unitId}</div>
+                          <div className="text-sm font-black text-slate-800">{u.abo} {u.rhd === 'Positive' ? '+' : '-'}</div>
                           <div className="text-[9px] text-amber-500 font-black mt-2">LINKED VIA LOT</div>
                        </div>
                     ))}
@@ -261,13 +261,13 @@ export function HemovigilanceView() {
 
            <div className="flex-1 bg-[#020617] border border-slate-800 rounded-3xl p-8 flex flex-col shadow-2xl min-h-0">
              <div className="flex justify-between items-center mb-8 border-b border-slate-800 pb-4">
-                <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] flex items-center gap-3">
+                <h2 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] flex items-center gap-3">
                    <Clock size={16} className="text-sky-500" /> Surveillance Log
                 </h2>
                 <div className="flex items-center gap-4">
                    <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></div>
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Live Monitoring Active</span>
+                      <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Live Monitoring Active</span>
                    </div>
                 </div>
              </div>
@@ -281,17 +281,17 @@ export function HemovigilanceView() {
                            <ShieldAlert size={20} />
                         </div>
                        <div className="flex flex-col">
-                          <span className="text-sm font-black text-white uppercase italic tracking-tight">{REACTION_LABELS[r.reactionType]?.label || r.reactionType}</span>
+                          <span className="text-sm font-black text-slate-800 uppercase italic tracking-tight">{REACTION_LABELS[r.reactionType]?.label || r.reactionType}</span>
                           <span className="text-[9px] font-black uppercase tracking-widest opacity-60">TXN Ref: {r.transfusionId}</span>
                        </div>
                        <div className="flex gap-2 ml-4">
-                          {r.allTransfusionsPaused && <span className="text-[8px] bg-rose-950/50 text-rose-400 px-2 py-1 rounded-lg border border-rose-800/50 flex items-center gap-1 font-black uppercase tracking-widest"><Pause size={8} /> Paused</span>}
+                          {r.allTransfusionsPaused && <span className="text-[8px] bg-rose-950/50 text-rose-600 px-2 py-1 rounded-lg border border-rose-800/50 flex items-center gap-1 font-black uppercase tracking-widest"><Pause size={8} /> Paused</span>}
                           {r.lookbackTriggered && <span className="text-[8px] bg-amber-950/50 text-amber-400 px-2 py-1 rounded-lg border border-amber-800/50 flex items-center gap-1 font-black uppercase tracking-widest"><Eye size={8} /> Lookback</span>}
                        </div>
                      </div>
-                     <div className="text-[10px] font-black text-slate-500 opacity-60 font-mono tracking-widest">{r.id}</div>
+                     <div className="text-[10px] font-black text-slate-600 opacity-60 font-mono tracking-widest">{r.id}</div>
                    </div>
-                   <p className="text-xs text-slate-300 font-medium leading-relaxed mb-4 pl-13 italic opacity-80">"{r.description}"</p>
+                   <p className="text-xs text-slate-700 font-medium leading-relaxed mb-4 pl-13 italic opacity-80">"{r.description}"</p>
                    <div className="flex items-center justify-between pt-4 border-t border-black/5">
                       <div className="flex items-center gap-6">
                          <div className="flex items-center gap-2">
@@ -303,7 +303,7 @@ export function HemovigilanceView() {
                             <span className="text-[9px] font-black uppercase tracking-widest opacity-60">Batch: {r.batchId || 'N/A'}</span>
                          </div>
                       </div>
-                      <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{new Date(r.reportedAt).toLocaleTimeString()}</span>
+                      <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">{new Date(r.reportedAt).toLocaleTimeString()}</span>
                    </div>
                  </div>
                ))}

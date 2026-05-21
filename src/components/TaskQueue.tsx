@@ -51,7 +51,7 @@ export const TaskQueue: React.FC<TaskQueueProps> = ({ role, onNavigate }) => {
         priority: 'High', 
         progress: 45, 
         deadline: '15m', 
-        roleTarget: 'LabTech_Crossmatch', 
+        roleTarget: 'LIMS_Simulator',
         icon: <FlaskConical size={24} /> 
       },
       { 
@@ -91,7 +91,7 @@ export const TaskQueue: React.FC<TaskQueueProps> = ({ role, onNavigate }) => {
         priority: 'Routine', 
         progress: 0, 
         deadline: 'EOD', 
-        roleTarget: 'Manager', 
+        roleTarget: 'Admin',
         icon: <Activity size={24} /> 
       }
     ];
@@ -118,17 +118,17 @@ export const TaskQueue: React.FC<TaskQueueProps> = ({ role, onNavigate }) => {
              <div className="w-2 h-2 rounded-full bg-rose-600 animate-ping" />
              <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.4em]">Operational Intelligence</span>
           </div>
-          <h1 className="text-5xl font-black text-white italic tracking-tighter uppercase leading-none">Mission Control</h1>
-          <p className="text-slate-500 text-[11px] font-black uppercase tracking-[0.3em] mt-4">Active Command Stream | <span className="text-rose-500">{role}</span></p>
+          <h1 className="text-5xl font-black text-slate-800 italic tracking-tighter uppercase leading-none">Mission Control</h1>
+          <p className="text-slate-600 text-[11px] font-black uppercase tracking-[0.3em] mt-4">Active Command Stream | <span className="text-rose-500">{role}</span></p>
         </div>
         
         <div className="flex gap-4">
            <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800 p-5 rounded-[24px] min-w-[140px] text-center">
-              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Efficiency</p>
+              <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">Efficiency</p>
               <p className="text-3xl font-black text-emerald-500 tracking-tighter italic">94.2%</p>
            </div>
            <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800 p-5 rounded-[24px] min-w-[140px] text-center">
-              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Active</p>
+              <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">Active</p>
               <p className="text-3xl font-black text-rose-500 tracking-tighter italic">{missions.length}</p>
            </div>
         </div>
@@ -137,7 +137,7 @@ export const TaskQueue: React.FC<TaskQueueProps> = ({ role, onNavigate }) => {
       {missions.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center py-24 bg-slate-900/20 rounded-[40px] border border-dashed border-slate-800">
            <Activity size={48} className="text-slate-800 mb-6" />
-           <p className="text-slate-500 font-black uppercase tracking-[0.3em] text-xs text-center leading-relaxed">
+           <p className="text-slate-600 font-black uppercase tracking-[0.3em] text-xs text-center leading-relaxed">
              No High-Priority Missions Detected<br/>
              <span className="opacity-50">Monitoring global data streams...</span>
            </p>
@@ -158,14 +158,14 @@ export const TaskQueue: React.FC<TaskQueueProps> = ({ role, onNavigate }) => {
                  </div>
               </div>
 
-              <h3 className="text-2xl font-black italic tracking-tight mb-3 uppercase leading-tight text-white">{mission.title}</h3>
-              <p className="text-[12px] font-bold text-white/70 mb-10 leading-relaxed uppercase tracking-wide">
+              <h3 className="text-2xl font-black italic tracking-tight mb-3 uppercase leading-tight text-slate-800">{mission.title}</h3>
+              <p className="text-[12px] font-bold text-slate-800/70 mb-10 leading-relaxed uppercase tracking-wide">
                 {mission.description}
               </p>
 
               <div className="mt-auto space-y-8">
                  <div className="space-y-3">
-                    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-white/50">
+                    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-800/50">
                        <span>Readiness</span>
                        <span>{mission.progress}%</span>
                     </div>
@@ -186,7 +186,7 @@ export const TaskQueue: React.FC<TaskQueueProps> = ({ role, onNavigate }) => {
               </div>
 
               {/* Priority Tag */}
-              <div className="absolute -top-3 -right-3 px-4 py-2 rounded-xl bg-slate-950 border border-slate-800 text-[10px] font-black text-white uppercase tracking-widest shadow-2xl group-hover:-translate-y-1 transition-transform">
+              <div className="absolute -top-3 -right-3 px-4 py-2 rounded-xl bg-slate-50 border border-slate-800 text-[10px] font-black text-slate-800 uppercase tracking-widest shadow-2xl group-hover:-translate-y-1 transition-transform">
                  {mission.priority}
               </div>
             </div>

@@ -65,7 +65,7 @@ export function AuditLogViewer() {
   }, [filteredEvents, searchQuery]);
 
   const getEventIcon = (type: string) => {
-    if (!type) return <Activity className="text-slate-500" />;
+    if (!type) return <Activity className="text-slate-600" />;
     if (type.includes('Collection')) return <Droplets className="text-rose-500" />;
     if (type.includes('Release')) return <Beaker className="text-sky-500" />;
     if (type.includes('Dispatch')) return <Truck className="text-amber-500" />;
@@ -73,7 +73,7 @@ export function AuditLogViewer() {
     if (type.includes('Verify')) return <UserCheck className="text-indigo-500" />;
     if (type.includes('RARE')) return <ShieldAlert className="text-sky-500" />;
     if (type.includes('MTP')) return <Zap className="text-rose-500" />;
-    return <Activity className="text-slate-500" />;
+    return <Activity className="text-slate-600" />;
   };
 
   return (
@@ -85,20 +85,20 @@ export function AuditLogViewer() {
                Compliance & Sovereignty Hub
             </div>
             <h1 className="premium-heading">Audit Ledger</h1>
-            <p className="text-slate-500 text-[11px] font-black uppercase tracking-[0.3em] mt-4 opacity-80">Immutable Blockchain-Verified Traceability Records</p>
+            <p className="text-slate-600 text-[11px] font-black uppercase tracking-[0.3em] mt-4 opacity-80">Immutable Blockchain-Verified Traceability Records</p>
          </div>
 
          <div className="flex gap-4">
             <div className="flex bg-slate-900/50 p-2 rounded-2xl border border-slate-800 shadow-2xl backdrop-blur-xl">
                <button 
                  onClick={() => setViewMode('table')}
-                 className={`px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${viewMode === 'table' ? 'bg-slate-800 text-white shadow-2xl border border-slate-700' : 'text-slate-500 hover:text-slate-300'}`}
+                 className={`px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${viewMode === 'table' ? 'bg-slate-800 text-white shadow-2xl border border-slate-700' : 'text-slate-600 hover:text-slate-700'}`}
                >
                  Raw Registry
                </button>
                <button 
                  onClick={() => setViewMode('timeline')}
-                 className={`px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${viewMode === 'timeline' ? 'bg-slate-800 text-white shadow-2xl border border-slate-700' : 'text-slate-500 hover:text-slate-300'}`}
+                 className={`px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${viewMode === 'timeline' ? 'bg-slate-800 text-white shadow-2xl border border-slate-700' : 'text-slate-600 hover:text-slate-700'}`}
                >
                  Vein-to-Vein
                </button>
@@ -107,14 +107,14 @@ export function AuditLogViewer() {
       </div>
 
       <div className="flex flex-col md:flex-row gap-6 bg-slate-900/20 p-6 rounded-[40px] border border-slate-800">
-         <div className="flex-1 flex items-center gap-4 bg-slate-950/50 p-3 rounded-2xl border border-slate-800 px-6 focus-within:border-rose-500/50 transition-all shadow-inner group">
+         <div className="flex-1 flex items-center gap-4 bg-slate-50/50 p-3 rounded-2xl border border-slate-800 px-6 focus-within:border-rose-500/50 transition-all shadow-inner group">
             <Search size={22} className="text-slate-600 group-focus-within:text-rose-500 transition-colors" />
             <input 
               type="text" 
               placeholder="Search by ISBT Unit ID or Authority Hash..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-transparent border-none focus:ring-0 text-base font-black uppercase tracking-widest text-slate-300 w-full placeholder:text-slate-700"
+              className="bg-transparent border-none focus:ring-0 text-base font-black uppercase tracking-widest text-slate-700 w-full placeholder:text-slate-700"
             />
          </div>
       </div>
@@ -123,7 +123,7 @@ export function AuditLogViewer() {
          {viewMode === 'table' ? (
             <div className="flex-1 overflow-auto custom-scrollbar">
                <table className="w-full text-left text-sm border-collapse">
-                 <thead className="bg-slate-900/80 text-[11px] uppercase text-slate-500 sticky top-0 border-b border-slate-800 backdrop-blur-xl z-20">
+                 <thead className="bg-slate-900/80 text-[11px] uppercase text-slate-600 sticky top-0 border-b border-slate-800 backdrop-blur-xl z-20">
                    <tr>
                      <th className="px-10 py-6 font-black tracking-[0.2em]">Digital Timestamp</th>
                      <th className="px-10 py-6 font-black tracking-[0.2em]">Authority Role</th>
@@ -135,25 +135,25 @@ export function AuditLogViewer() {
                  <tbody className="divide-y divide-slate-900 font-mono text-[13px]">
                    {filteredEvents.map((event, index) => (
                      <tr key={index} className="hover:bg-slate-900/40 transition-all group">
-                       <td className="px-10 py-6 text-slate-500 whitespace-nowrap">
+                       <td className="px-10 py-6 text-slate-600 whitespace-nowrap">
                          <div className="flex items-center gap-3">
                             <Clock size={14} className="text-slate-700 group-hover:text-rose-500 transition-colors" />
                             {new Date(event.timestamp).toLocaleString()}
                          </div>
                        </td>
                        <td className="px-10 py-6">
-                         <span className="px-4 py-1.5 rounded-xl bg-slate-900 text-slate-400 border border-slate-800 uppercase text-[10px] font-black tracking-widest group-hover:border-slate-700 transition-all">
+                         <span className="px-4 py-1.5 rounded-xl bg-slate-900 text-slate-600 border border-slate-800 uppercase text-[10px] font-black tracking-widest group-hover:border-slate-700 transition-all">
                            {event.actorRole}
                          </span>
                        </td>
                        <td className="px-10 py-6">
-                         <div className="flex items-center gap-3 font-black text-slate-300 uppercase tracking-tighter">
+                         <div className="flex items-center gap-3 font-black text-slate-700 uppercase tracking-tighter">
                             {getEventIcon(event.eventType)}
                             {event.eventType}
                          </div>
                        </td>
                        <td className="px-10 py-6 text-rose-500 font-black tracking-tighter text-base">{event.objectId}</td>
-                       <td className="px-10 py-6 text-slate-500 font-medium italic group-hover:text-slate-300 transition-colors">{event.details}</td>
+                       <td className="px-10 py-6 text-slate-600 font-medium italic group-hover:text-slate-700 transition-colors">{event.details}</td>
                      </tr>
                    ))}
                    {filteredEvents.length === 0 && (
@@ -173,15 +173,15 @@ export function AuditLogViewer() {
                      <div className="w-20 h-20 bg-slate-900 rounded-[32px] flex items-center justify-center text-slate-700 mb-6 border border-slate-800">
                         <History size={40} />
                      </div>
-                     <h3 className="text-xl font-black text-slate-400 uppercase italic tracking-tighter leading-none">Timeline Visualizer</h3>
+                     <h3 className="text-xl font-black text-slate-600 uppercase italic tracking-tighter leading-none">Timeline Visualizer</h3>
                      <p className="text-slate-600 text-[10px] font-black uppercase tracking-[0.2em] mt-4 max-w-xs">Enter a specific Unit ID above to reconstruct the end-to-end "Vein-to-Vein" lifecycle.</p>
                   </div>
                ) : (
                   <div className="max-w-3xl mx-auto">
                      <div className="mb-12 flex items-center justify-between">
                         <div>
-                           <h2 className="text-2xl font-black text-white tracking-tighter uppercase italic">Unit Lifecycle: {searchQuery}</h2>
-                           <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-1">Full Traceability Path Discovered</p>
+                           <h2 className="text-2xl font-black text-slate-800 tracking-tighter uppercase italic">Unit Lifecycle: {searchQuery}</h2>
+                           <p className="text-slate-600 text-[10px] font-black uppercase tracking-widest mt-1">Full Traceability Path Discovered</p>
                         </div>
                         <button 
                           onClick={() => {
@@ -206,12 +206,12 @@ export function AuditLogViewer() {
                               
                               <div className="clinical-card p-6 bg-slate-900/20 hover:border-slate-700 transition-all group">
                                  <div className="flex justify-between items-start mb-2">
-                                    <h4 className="font-black text-white uppercase italic tracking-tight">{event.eventType}</h4>
+                                    <h4 className="font-black text-slate-800 uppercase italic tracking-tight">{event.eventType}</h4>
                                     <span className="text-[10px] font-mono text-slate-600">{new Date(event.timestamp).toLocaleString()}</span>
                                  </div>
-                                 <p className="text-xs text-slate-400 leading-relaxed mb-4">{event.details}</p>
+                                 <p className="text-xs text-slate-600 leading-relaxed mb-4">{event.details}</p>
                                  <div className="flex items-center gap-3">
-                                    <div className="px-3 py-1 rounded-lg bg-slate-950 border border-slate-800 text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                                    <div className="px-3 py-1 rounded-lg bg-slate-50 border border-slate-800 text-[9px] font-black text-slate-600 uppercase tracking-widest">
                                        Actor: {event.actorRole}
                                     </div>
                                     {event.eventType === 'BarcodeMismatch' && (
