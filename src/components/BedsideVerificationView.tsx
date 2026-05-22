@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   ScanFace, 
   Activity, 
@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import { validateISBT128 } from "../lib/bloodSafety";
 import { useI18n } from "../lib/i18n";
-import { MOCK_PATIENTS } from "../lib/mockPatients";
 import { SearchableSelect } from "./SearchableSelect";
 
 export function BedsideVerificationView() {
@@ -30,13 +29,29 @@ export function BedsideVerificationView() {
   const [ehrStatus, setEhrStatus] = useState<'idle' | 'fetching' | 'linked' | 'failed'>('idle');
   const [result, setResult] = useState<{success: boolean, message: string} | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [patientsList, setPatientsList] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function loadPatients() {
+      try {
+        const res = await fetch('/api/v1/patients');
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setPatientsList(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch patients list for Bedside Verification:", err);
+      }
+    }
+    loadPatients();
+  }, []);
 
   const handlePatientIdChange = (val: string) => {
     setPatientId(val);
     setEhrStatus('idle');
     setConsentVerified(false);
     setVitalsChecked(false);
-    const match = MOCK_PATIENTS.find(p => p.id === val);
+    const match = patientsList.find(p => p.id === val || p.mrn === val);
     if (match) {
        setPatientAbo(match.abo);
        setPatientRhd(match.rhd);
@@ -47,8 +62,8 @@ export function BedsideVerificationView() {
     if (!patientId) return;
     setEhrStatus('fetching');
     setTimeout(() => {
-       // Mock: P-12345 has full records, others might fail
-       if (patientId.includes("H001")) {
+       const match = patientsList.find(p => p.id === patientId || p.mrn === patientId);
+       if (match) {
           setEhrStatus('linked');
           setConsentVerified(true);
           setVitalsChecked(true);
@@ -132,7 +147,10 @@ export function BedsideVerificationView() {
                   <div className="flex-1">
                     <SearchableSelect 
                         label=""
-                        options={MOCK_PATIENTS.map(p => ({ value: p.id, label: `${p.id} - ${p.abo} ${p.rhd === 'Positive' ? 'RhD+' : 'RhD-'}` }))}
+                        options={patientsList.map(p => ({ 
+                           value: p.mrn || p.id, 
+                           label: `${p.mrn || p.id} (${p.name || ''}) - ${p.abo} ${p.rhd === 'Positive' ? 'RhD+' : 'RhD-'}` 
+                        }))}
                         value={patientId}
                         onChange={handlePatientIdChange}
                         placeholder="Search Patient MRN..."

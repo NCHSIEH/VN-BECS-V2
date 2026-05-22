@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 export type Language = 'en' | 'zh-TW' | 'vi';
 
@@ -16,7 +16,9 @@ export function useI18n() {
   return context;
 }
 
-const dict: Record<Language, Record<string, string>> = {
+// Minimal fallback dictionary to ensure the system is completely functional
+// even if database loading fails or during the initial bootstrapping phase.
+const fallbackDict: Record<Language, Record<string, string>> = {
   en: {
     app_title: "BECS (Blood Establishment Computer System)",
     login_title: "VN-BECS COMMAND",
@@ -552,6 +554,17 @@ const dict: Record<Language, Record<string, string>> = {
     theme_name_aurora_glow: "Aurora Nebula Dream (Dark Glass)",
     theme_desc_aurora_glow: "[Nebular Dark Glass] Mesmerizing cosmic flow. Employs a stunning purple-pink stellar aurora backdrop stacked with transparent deep-purple cards and glowing hot pink actions.",
     theme_accent_aurora_glow: "Stellar Nebula & Violet Glass",
+    lims_toast_stage1_title: "✅ Donor Registered",
+    lims_toast_stage1_msg: "Donor registration complete. Please proceed to '2. Lab Testing' for pre-collection screening.",
+    lims_toast_stage1_btn: "Go to Lab Testing →",
+    lims_toast_stage2_title: "🧪 IDM Test Completed",
+    lims_toast_stage2_msg: "Infectious Disease Marker (IDM) testing complete. If CLEARED, proceed to '3. Component Processing'.",
+    lims_toast_stage2_btn: "Go to Component Processing →",
+    lims_toast_stage3_title: "🩸 Component Fabricated",
+    lims_toast_stage3_msg: "Blood component separation complete. Proceed to '4. Release & Dispatch' for QA release.",
+    lims_toast_stage3_btn: "Go to Release & Dispatch →",
+    lims_toast_stage4_title: "🚀 Component Released to Hub",
+    lims_toast_stage4_msg: "Component {compId} has been successfully synced to the central logistics hub. You may return to the Portal to track it in the HUB station.",
   },
   'zh-TW': {
     app_title: "BECS (血液管理電腦系統)",
@@ -1075,6 +1088,17 @@ const dict: Record<Language, Record<string, string>> = {
     theme_name_aurora_glow: "極光星塵夢幻磨砂 (Aurora Nebula Dream)",
     theme_desc_aurora_glow: "【幻彩暗黑】宇宙星雲般的浪漫氣息。璀璨奪目的深邃星空極光漸層背景，層疊以深紫色磨砂玻璃卡片與閃耀亮粉紅(Hot Pink)主色按鈕。",
     theme_accent_aurora_glow: "星空極光漸層與紫羅蘭玻璃",
+    lims_toast_stage1_title: "✅ 捐血者已登記",
+    lims_toast_stage1_msg: "已完成捐血者身分登記。請前往「2. 健康篩檢」執行採血前篩檢。",
+    lims_toast_stage1_btn: "前往健康篩檢 →",
+    lims_toast_stage2_title: "🧪 IDM 檢驗已完成",
+    lims_toast_stage2_msg: "血液傳染病標記 (IDM) 檢驗完成。若結果為 CLEARED，請前往「3. 採血作業」執行成分製造。",
+    lims_toast_stage2_btn: "前往採血作業 →",
+    lims_toast_stage3_title: "🩸 成分血袋製造完成",
+    lims_toast_stage3_msg: "血液成分分離完成，血袋現已備妥。請前往「4. 實驗室物流」執行品管核發入庫。",
+    lims_toast_stage3_btn: "前往實驗室物流 →",
+    lims_toast_stage4_title: "🚀 血品已核發入庫",
+    lims_toast_stage4_msg: "血袋 {compId} 已成功同步至中央調度中心庫存。可返回 Portal 切換至 HUB 站追蹤後續物流。",
   },
   vi: {
     app_title: "VN-BECS (Hệ thống máy tính cơ sở truyền máu)",
@@ -1612,14 +1636,82 @@ const dict: Record<Language, Record<string, string>> = {
     theme_name_aurora_glow: "Mơ mộng Tinh vân Cực quang (Dark Glass)",
     theme_desc_aurora_glow: "[Nebular Dark Glass] Dòng chảy vũ trụ huyền ảo và lãng mạn. Sử dụng nền cực quang tím hồng tuyệt đẹp xếp lớp với các thẻ màu tím đậm trong suốt và các nút màu hồng rực rỡ.",
     theme_accent_aurora_glow: "Tinh Vân Vũ Trụ & Kính Tím",
+    lims_toast_stage1_title: "✅ Đã Đăng Ký Người Hiến Máu",
+    lims_toast_stage1_msg: "Đăng ký người hiến máu hoàn tất. Vui lòng chuyển đến '2. Sàng Lọc' để kiểm tra sức khỏe trước khi lấy máu.",
+    lims_toast_stage1_btn: "Đi tới Sàng Lọc →",
+    lims_toast_stage2_title: "🧪 Kiểm Tra IDM Hoàn Tất",
+    lims_toast_stage2_msg: "Đã hoàn tất kiểm tra dấu ấn bệnh truyền nhiễm (IDM). Nếu kết quả là CLEARED, vui lòng chuyển đến '3. Xử Lý Thành Phần'.",
+    lims_toast_stage2_btn: "Đi Tới Xử Lý Thành Phần →",
+    lims_toast_stage3_title: "🩸 Thành Phần Máu Đã Xử Lý",
+    lims_toast_stage3_msg: "Hoàn tất tách thành phần máu. Vui lòng chuyển đến '4. Phát Hành & Vận Chuyển' để QA phát hành.",
+    lims_toast_stage3_btn: "Đi Tới Phát Hành & Vận Chuyển →",
+    lims_toast_stage4_title: "🚀 Đã Phát Hành Đến Trung Tâm",
+    lims_toast_stage4_msg: "Túi máu {compId} đã được đồng bộ hóa thành công tới trung tâm điều phối. Bạn có thể quay lại Cổng thông tin để theo dõi tại Trạm HUB.",
   },
-};
+};;
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Language>(() => {
-    const saved = localStorage.getItem('becs_lang');
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('becs_lang') : null;
     return (saved as Language) || 'vi';
   });
+
+  const [dbDict, setDbDict] = useState<Record<Language, Record<string, string>>>({
+    en: {},
+    'zh-TW': {},
+    vi: {}
+  });
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    
+    async function loadTranslations() {
+      try {
+        const response = await fetch('/api/v1/translations');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch translations: ${response.statusText}`);
+        }
+        const data = await response.json();
+        
+        if (Array.isArray(data)) {
+          const newDict: Record<Language, Record<string, string>> = {
+            en: {},
+            'zh-TW': {},
+            vi: {}
+          };
+          
+          data.forEach((row: { key: string; lang: string; value: string }) => {
+            const l = row.lang as Language;
+            if (newDict[l]) {
+              newDict[l][row.key] = row.value;
+            }
+          });
+          
+          if (isMounted) {
+            setDbDict(newDict);
+            setIsLoading(false);
+          }
+        } else {
+          throw new Error('Invalid translations response format');
+        }
+      } catch (err: any) {
+        console.error('Error loading translations from database:', err);
+        if (isMounted) {
+          setLoadError(err.message || 'Unknown database error');
+          // If database fails, fallback to static minimal dictionary to avoid crashing
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadTranslations();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleSetLang = (l: Language) => {
     setLang(l);
@@ -1627,14 +1719,84 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   };
 
   const t = (key: string, variables?: Record<string, string>) => {
-    let text = dict[lang]?.[key] || dict['en'][key] || key;
+    // Priority: DB dict translation -> Fallback static dict -> Fallback English DB/Static -> key
+    let text = dbDict[lang]?.[key] || 
+               fallbackDict[lang]?.[key] || 
+               dbDict['en']?.[key] || 
+               fallbackDict['en']?.[key] || 
+               key;
+               
     if (variables) {
       Object.keys(variables).forEach(k => {
-        text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), variables[k]);
+        text = text.split(`{${k}}`).join(variables[k]);
       });
     }
     return text;
   };
+
+  if (isLoading) {
+    return (
+      <div 
+        id="i18n-loading-screen"
+        className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#f4f1ea] text-[#0f172a] p-6 select-none"
+        style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}
+      >
+        {/* McKinsey-style Elegant Border */}
+        <div className="absolute inset-8 border border-[#0f172a]/10 pointer-events-none rounded-2xl" />
+        
+        {/* Loading Content */}
+        <div className="max-w-xl w-full flex flex-col items-center text-center space-y-8 animate-fade-in">
+          {/* Pulsing clinical logo container */}
+          <div className="relative flex items-center justify-center w-24 h-24 bg-white rounded-3xl shadow-lg border border-[#0f172a]/5 animate-pulse">
+            <svg className="w-12 h-12 text-rose-600 animate-bounce" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+            </svg>
+            <div className="absolute -inset-1 border border-dashed border-rose-500/20 rounded-[28px] animate-spin" style={{ animationDuration: '10s' }} />
+          </div>
+
+          <div className="space-y-4">
+            <h1 className="text-sm font-black uppercase tracking-[0.25em] text-[#0f172a] italic">
+              VN-BECS V1.0 COMMAND
+            </h1>
+            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
+              National Blood Establishment Computer System
+            </p>
+          </div>
+
+          {/* Elegant Slate Shimmer Loading Indicator */}
+          <div className="w-48 h-1 bg-slate-200 rounded-full overflow-hidden relative">
+            <div className="absolute inset-y-0 left-0 w-24 bg-rose-600 rounded-full animate-shimmer" style={{
+              animation: 'shimmer 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite'
+            }} />
+          </div>
+
+          {/* Cycling Status Indicators */}
+          <div className="space-y-2 text-[10px] font-black uppercase tracking-[0.15em] text-slate-600 transition-all duration-500">
+            <div className="animate-pulse">
+              EN: Synchronizing national database & secure clinical protocols...
+            </div>
+            <div className="opacity-80">
+              TW: 正在同步國家級安全數據庫與臨床驗證協定...
+            </div>
+            <div className="opacity-60">
+              VI: Đang đồng bộ hóa cơ sở dữ liệu chỉ huy và giao thức lâm sàng...
+            </div>
+          </div>
+        </div>
+        
+        {/* Inline CSS for loading animations */}
+        <style dangerouslySetInnerHTML={{__html: `
+          @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(200%); }
+          }
+          .animate-shimmer {
+            animation: shimmer 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+          }
+        `}} />
+      </div>
+    );
+  }
 
   return (
     <I18nContext.Provider value={{ lang, setLang: handleSetLang, t }}>

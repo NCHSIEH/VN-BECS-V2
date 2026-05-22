@@ -33,6 +33,11 @@ export function AdminMDMView({ onBack, initialTab }: { onBack: () => void; initi
   const [editingOrg, setEditingOrg] = useState<any>(null);
   const [editingUser, setEditingUser] = useState<any>(null);
 
+  // Filter states for MSD staff directory
+  const [userFilter, setUserFilter] = useState('');
+  const [orgFilter, setOrgFilter] = useState('ALL');
+  const [roleFilter, setRoleFilter] = useState('ALL');
+
   const fetchMDM = () => {
     fetch('/api/v1/mdm/organizations').then(r => r.json()).then(data => {
       if (Array.isArray(data)) {
@@ -176,7 +181,7 @@ export function AdminMDMView({ onBack, initialTab }: { onBack: () => void; initi
                <Shield size={18} /> <span className="text-xs font-bold uppercase tracking-widest">{t('mdm_catalog')}</span>
             </button>
             <button onClick={() => setTab('RBAC')} className={`p-4 rounded-xl flex items-center gap-3 transition-all ${tab === 'RBAC' ? 'bg-fuchsia-600 text-white shadow-lg' : 'bg-clinical-bg text-clinical-muted hover:bg-clinical-bg'}`}>
-               <Key size={18} /> <span className="text-xs font-bold uppercase tracking-widest">RBAC Matrix</span>
+               <Key size={18} /> <span className="text-xs font-bold uppercase tracking-widest">{t('mdm_rbac')}</span>
             </button>
          </div>
 
@@ -189,13 +194,13 @@ export function AdminMDMView({ onBack, initialTab }: { onBack: () => void; initi
                 </h2>
                 
                 <form onSubmit={handleAddOrg} className="grid grid-cols-4 gap-4 mb-8 bg-clinical-bg p-4 rounded-xl border border-clinical-border">
-                  <input required value={orgName} onChange={e=>setOrgName(e.target.value)} className="bg-clinical-bg border border-clinical-border rounded p-2 text-sm focus:border-indigo-500 outline-none" placeholder="Name" />
+                  <input required value={orgName} onChange={e=>setOrgName(e.target.value)} className="bg-clinical-bg border border-clinical-border rounded p-2 text-sm focus:border-indigo-500 outline-none" placeholder={t('mdm_name')} />
                   <select value={orgType} onChange={e=>setOrgType(e.target.value)} className="bg-clinical-bg border border-clinical-border rounded p-2 text-sm focus:border-indigo-500 outline-none">
-                     <option>Hospital</option>
-                     <option>BloodCenter</option>
-                     <option>Hub</option>
+                     <option value="Hospital">{t('org_type_hospital')}</option>
+                     <option value="BloodCenter">{t('org_type_bloodcenter')}</option>
+                     <option value="Hub">{t('org_type_hub')}</option>
                   </select>
-                  <input required value={orgLoc} onChange={e=>setOrgLoc(e.target.value)} className="bg-clinical-bg border border-clinical-border rounded p-2 text-sm focus:border-indigo-500 outline-none" placeholder="Location" />
+                  <input required value={orgLoc} onChange={e=>setOrgLoc(e.target.value)} className="bg-clinical-bg border border-clinical-border rounded p-2 text-sm focus:border-indigo-500 outline-none" placeholder={t('mdm_location')} />
                   <button type="submit" className="bg-indigo-600 hover:bg-indigo-500 text-clinical-text font-bold py-2 rounded flex justify-center items-center gap-1 transition-colors">
                     <Plus size={16} /> {t('mdm_add_org')}
                   </button>
@@ -205,7 +210,7 @@ export function AdminMDMView({ onBack, initialTab }: { onBack: () => void; initi
                   <table className="w-full text-left text-sm">
                     <thead className="bg-clinical-card text-clinical-muted">
                       <tr>
-                        <th className="p-3">ID</th>
+                        <th className="p-3">{t('mdm_id')}</th>
                         <th className="p-3">{t('mdm_name')}</th>
                         <th className="p-3">{t('mdm_type')}</th>
                         <th className="p-3">{t('mdm_location')}</th>
@@ -218,7 +223,9 @@ export function AdminMDMView({ onBack, initialTab }: { onBack: () => void; initi
                           <td className="p-3 font-mono text-xs text-clinical-muted">{o.id}</td>
                           <td className="p-3 font-bold text-clinical-text">{o.name}</td>
                           <td className="p-3">
-                             <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-clinical-bg text-clinical-muted">{o.type}</span>
+                             <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-clinical-bg text-clinical-muted">
+                                {o.type === 'Hospital' ? t('org_type_hospital') : o.type === 'BloodCenter' ? t('org_type_bloodcenter') : o.type === 'Hub' ? t('org_type_hub') : o.type}
+                             </span>
                           </td>
                           <td className="p-3 text-clinical-muted">{o.location}</td>
                           <td className="p-3 text-right">
@@ -240,21 +247,21 @@ export function AdminMDMView({ onBack, initialTab }: { onBack: () => void; initi
                           <button type="button" onClick={() => setEditingOrg(null)} className="p-2 hover:bg-clinical-bg rounded-lg text-clinical-muted hover:text-white transition-colors"><X size={20} /></button>
                        </div>
                        <div className="p-8 space-y-6">
-                          <div className="flex flex-col gap-2">
-                             <label className="text-[10px] font-black text-clinical-muted uppercase tracking-widest">Name</label>
+                           <div className="flex flex-col gap-2">
+                             <label className="text-[10px] font-black text-clinical-muted uppercase tracking-widest">{t('mdm_name')}</label>
                              <input value={editingOrg.name} onChange={e=>setEditingOrg({...editingOrg, name: e.target.value})} className="bg-clinical-bg border border-clinical-border rounded-xl p-3 text-xs text-clinical-text outline-none focus:border-rose-500 transition-all" />
                           </div>
                           <div className="grid grid-cols-2 gap-6">
                              <div className="flex flex-col gap-2">
-                                <label className="text-[10px] font-black text-clinical-muted uppercase tracking-widest">Type</label>
+                                <label className="text-[10px] font-black text-clinical-muted uppercase tracking-widest">{t('mdm_type')}</label>
                                 <select value={editingOrg.type} onChange={e=>setEditingOrg({...editingOrg, type: e.target.value})} className="bg-clinical-bg border border-clinical-border rounded-xl p-3 text-xs text-clinical-text outline-none focus:border-rose-500 transition-all">
-                                   <option>Hospital</option>
-                                   <option>BloodCenter</option>
-                                   <option>Hub</option>
+                                   <option value="Hospital">{t('org_type_hospital')}</option>
+                                   <option value="BloodCenter">{t('org_type_bloodcenter')}</option>
+                                   <option value="Hub">{t('org_type_hub')}</option>
                                 </select>
                              </div>
                              <div className="flex flex-col gap-2">
-                                <label className="text-[10px] font-black text-clinical-muted uppercase tracking-widest">Location</label>
+                                <label className="text-[10px] font-black text-clinical-muted uppercase tracking-widest">{t('mdm_location')}</label>
                                 <input value={editingOrg.location} onChange={e=>setEditingOrg({...editingOrg, location: e.target.value})} className="bg-clinical-bg border border-clinical-border rounded-xl p-3 text-xs text-clinical-text outline-none focus:border-rose-500 transition-all" />
                              </div>
                           </div>
@@ -276,25 +283,25 @@ export function AdminMDMView({ onBack, initialTab }: { onBack: () => void; initi
                 </h2>
 
                 <form onSubmit={handleAddUser} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 bg-clinical-bg p-4 rounded-xl border border-clinical-border">
-                  <input required value={uName} onChange={e=>setUName(e.target.value)} className="bg-clinical-bg border border-clinical-border rounded p-2 text-sm focus:border-indigo-500 outline-none" placeholder="Username" />
-                  <input required value={uPass} onChange={e=>setUPass(e.target.value)} type="password" className="bg-clinical-bg border border-clinical-border rounded p-2 text-sm focus:border-indigo-500 outline-none" placeholder="Password" />
+                  <input required value={uName} onChange={e=>setUName(e.target.value)} className="bg-clinical-bg border border-clinical-border rounded p-2 text-sm focus:border-indigo-500 outline-none" placeholder={t('mdm_username')} />
+                  <input required value={uPass} onChange={e=>setUPass(e.target.value)} type="password" className="bg-clinical-bg border border-clinical-border rounded p-2 text-sm focus:border-indigo-500 outline-none" placeholder={t('mdm_password')} />
                   <select value={uRole} onChange={e=>setURole(e.target.value)} className="bg-clinical-bg border border-clinical-border rounded p-2 text-sm focus:border-indigo-500 outline-none">
-                     <optgroup label="─── LIMS ───">
-                        <option value="DonorScreener">DonorScreener (助理)</option>
-                        <option value="Nurse">Nurse (護理師)</option>
-                        <option value="LIMS_Simulator">LIMS_Simulator</option>
+                     <optgroup label={`─── ${t('mdm_optgrp_lims')} ───`}>
+                        <option value="DonorScreener">{t('mdm_role_ds_desc')}</option>
+                        <option value="Nurse">{t('mdm_role_nurse_desc')}</option>
+                        <option value="LIMS_Simulator">{t('mdm_role_lims_desc')}</option>
                       </optgroup>
-                      <optgroup label="─── 臨床 ───">
-                        <option value="HospitalOperator">HospitalOperator</option>
+                      <optgroup label={`─── ${t('mdm_optgrp_hosp')} ───`}>
+                        <option value="HospitalOperator">{t('mdm_role_hosp_desc')}</option>
                       </optgroup>
-                      <optgroup label="─── 物流 ───">
-                        <option value="WarehouseIssuer">WarehouseIssuer</option>
-                        <option value="Dispatcher">Dispatcher</option>
-                        <option value="Courier">Courier</option>
+                      <optgroup label={`─── ${t('mdm_optgrp_log')} ───`}>
+                        <option value="WarehouseIssuer">{t('mdm_role_wh_desc')}</option>
+                        <option value="Dispatcher">{t('mdm_role_disp_desc')}</option>
+                        <option value="Courier">{t('mdm_role_cour_desc')}</option>
                       </optgroup>
-                      <optgroup label="─── 管理 ───">
-                        <option value="Manager">Manager</option>
-                        <option value="Admin">Admin</option>
+                      <optgroup label={`─── ${t('mdm_optgrp_admin')} ───`}>
+                        <option value="Manager">{t('mdm_role_mgr_desc')}</option>
+                        <option value="Admin">{t('mdm_role_admin_desc')}</option>
                       </optgroup>
                   </select>
                   <select required value={uOrgId} onChange={e=>setUOrgId(e.target.value)} className="bg-clinical-bg border border-clinical-border rounded p-2 text-sm focus:border-indigo-500 outline-none">
@@ -302,24 +309,59 @@ export function AdminMDMView({ onBack, initialTab }: { onBack: () => void; initi
                   </select>
                   <input value={uEmail} onChange={e=>setUEmail(e.target.value)} className="bg-clinical-bg border border-clinical-border rounded p-2 text-sm focus:border-indigo-500 outline-none" placeholder="Email" />
                   <input value={uPhone} onChange={e=>setUPhone(e.target.value)} className="bg-clinical-bg border border-clinical-border rounded p-2 text-sm focus:border-indigo-500 outline-none" placeholder="Phone" />
-                  <input value={uDept} onChange={e=>setUDept(e.target.value)} className="bg-clinical-bg border border-clinical-border rounded p-2 text-sm focus:border-indigo-500 outline-none" placeholder="Department" />
+                  <input value={uDept} onChange={e=>setUDept(e.target.value)} className="bg-clinical-bg border border-clinical-border rounded p-2 text-sm focus:border-indigo-500 outline-none" placeholder={t('mdm_department')} />
                   <button type="submit" className="bg-indigo-600 hover:bg-indigo-500 text-clinical-text font-bold py-2 rounded flex justify-center items-center gap-1 transition-colors">
                     <Plus size={16} /> {t('mdm_add_user')}
                   </button>
                 </form>
 
+                {/* Filter and Search Row */}
+                <div className="flex flex-col md:flex-row gap-4 mb-4 bg-clinical-bg p-4 rounded-xl border border-clinical-border items-center">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black text-clinical-muted uppercase tracking-widest">{t('mdm_search')}:</span>
+                    <input value={userFilter} onChange={e=>setUserFilter(e.target.value)} className="bg-clinical-card border border-clinical-border rounded p-1.5 text-xs focus:border-indigo-500 outline-none w-32" placeholder={`${t('mdm_username')}...`} />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black text-clinical-muted uppercase tracking-widest">{t('mdm_filter_org')}:</span>
+                    <select value={orgFilter} onChange={e=>setOrgFilter(e.target.value)} className="bg-clinical-card border border-clinical-border rounded p-1.5 text-xs focus:border-indigo-500 outline-none w-32">
+                       <option value="ALL">{t('mdm_all_orgs')}</option>
+                       {orgs.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black text-clinical-muted uppercase tracking-widest">{t('mdm_role')}:</span>
+                    <select value={roleFilter} onChange={e=>setRoleFilter(e.target.value)} className="bg-clinical-card border border-clinical-border rounded p-1.5 text-xs focus:border-indigo-500 outline-none w-32">
+                       <option value="ALL">{t('mdm_all_roles')}</option>
+                       <option value="DonorScreener">DonorScreener</option>
+                       <option value="Nurse">Nurse</option>
+                       <option value="LIMS_Simulator">LIMS_Simulator</option>
+                       <option value="HospitalOperator">HospitalOperator</option>
+                       <option value="WarehouseIssuer">WarehouseIssuer</option>
+                       <option value="Dispatcher">Dispatcher</option>
+                       <option value="Courier">Courier</option>
+                       <option value="Manager">Manager</option>
+                       <option value="Admin">Admin</option>
+                    </select>
+                  </div>
+                </div>
+ 
                 <div className="overflow-x-auto rounded-xl border border-clinical-border">
                   <table className="w-full text-left text-sm">
                     <thead className="bg-clinical-card text-clinical-muted">
                       <tr>
-                        <th className="p-3">User</th>
-                        <th className="p-3">Role & Org</th>
-                        <th className="p-3">Contact Info</th>
-                        <th className="p-3 text-right">Actions</th>
+                        <th className="p-3">{t('mdm_tbl_user')}</th>
+                        <th className="p-3">{t('mdm_tbl_role_org')}</th>
+                        <th className="p-3">{t('mdm_tbl_contact')}</th>
+                        <th className="p-3 text-right">{t('mdm_actions')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-clinical-border">
-                      {users.map(u => (
+                      {users.filter(u => {
+                        if (orgFilter !== 'ALL' && u.orgId !== orgFilter) return false;
+                        if (roleFilter !== 'ALL' && u.role !== roleFilter) return false;
+                        if (userFilter && !u.username.toLowerCase().includes(userFilter.toLowerCase())) return false;
+                        return true;
+                      }).map(u => (
                         <tr key={u.id} className={`hover:bg-clinical-bg transition-colors ${!u.isActive ? 'opacity-50' : ''}`}>
                           <td className="p-3 font-bold text-clinical-text">
                             <div className="flex items-center gap-3">
@@ -349,8 +391,8 @@ export function AdminMDMView({ onBack, initialTab }: { onBack: () => void; initi
                           </td>
                           <td className="p-3">
                              <div className="flex flex-col text-[10px] text-clinical-muted">
-                                <span>{u.details?.email || 'No Email'}</span>
-                                <span>{u.details?.phone || 'No Phone'}</span>
+                                <span>{u.details?.email || t('mdm_no_email')}</span>
+                                <span>{u.details?.phone || t('mdm_no_phone')}</span>
                              </div>
                           </td>
                           <td className="p-3 text-right flex items-center justify-end gap-2">
@@ -368,8 +410,10 @@ export function AdminMDMView({ onBack, initialTab }: { onBack: () => void; initi
                 </div>
 
                 <div className="mt-6 p-4 rounded-xl border border-fuchsia-900/30 bg-fuchsia-950/20">
-                   <p className="text-[10px] font-black text-fuchsia-400 uppercase tracking-widest mb-1 flex items-center gap-2"><Key size={12} /> LIMS 角色存取控制提示</p>
-                   <p className="text-[10px] text-clinical-muted">DonorScreener → 登記 only ｜ Nurse → 健康篩檢 + 採血 ｜ LIMS_Simulator → 實驗室物流 only ｜ Admin/Manager → 全部功能</p>
+                   <p className="text-[10px] font-black text-fuchsia-400 uppercase tracking-widest mb-1 flex items-center gap-2">
+                     <Key size={12} /> {t('mdm_rbac_hint_title')}
+                   </p>
+                   <p className="text-[10px] text-clinical-muted">{t('mdm_rbac_hint_desc')}</p>
                  </div>
 
                 {editingUser && (
@@ -382,39 +426,39 @@ export function AdminMDMView({ onBack, initialTab }: { onBack: () => void; initi
                        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
                            <div className="grid grid-cols-2 gap-6">
                               <div className="flex flex-col gap-2">
-                                 <label className="text-[10px] font-black text-clinical-muted uppercase tracking-widest">Username</label>
+                                 <label className="text-[10px] font-black text-clinical-muted uppercase tracking-widest">{t('mdm_username')}</label>
                                  <input value={editingUser.username} onChange={e=>setEditingUser({...editingUser, username: e.target.value})} className="bg-clinical-bg border border-clinical-border rounded-xl p-3 text-xs text-clinical-text outline-none focus:border-rose-500 transition-all" />
                               </div>
                               <div className="flex flex-col gap-2">
-                                 <label className="text-[10px] font-black text-clinical-muted uppercase tracking-widest">Password</label>
-                                 <input type="text" value={editingUser.password || ''} onChange={e=>setEditingUser({...editingUser, password: e.target.value})} className="bg-clinical-bg border border-clinical-border rounded-xl p-3 text-xs text-clinical-text outline-none focus:border-rose-500 transition-all font-mono" placeholder="New Password" />
+                                 <label className="text-[10px] font-black text-clinical-muted uppercase tracking-widest">{t('mdm_password')}</label>
+                                 <input type="text" value={editingUser.password || ''} onChange={e=>setEditingUser({...editingUser, password: e.target.value})} className="bg-clinical-bg border border-clinical-border rounded-xl p-3 text-xs text-clinical-text outline-none focus:border-rose-500 transition-all font-mono" placeholder={t('mdm_new_password_placeholder')} />
                               </div>
                            </div>
                           <div className="grid grid-cols-2 gap-6">
                              <div className="flex flex-col gap-2">
-                                <label className="text-[10px] font-black text-clinical-muted uppercase tracking-widest">Role</label>
+                                <label className="text-[10px] font-black text-clinical-muted uppercase tracking-widest">{t('mdm_role')}</label>
                                 <select value={editingUser.role} onChange={e=>setEditingUser({...editingUser, role: e.target.value})} className="bg-clinical-bg border border-clinical-border rounded-xl p-3 text-xs text-clinical-text outline-none focus:border-rose-500 transition-all">
-                                   <optgroup label="─── LIMS ───">
-                                      <option value="DonorScreener">DonorScreener (助理)</option>
-                                      <option value="Nurse">Nurse (護理師)</option>
-                                      <option value="LIMS_Simulator">LIMS_Simulator</option>
+                                   <optgroup label={`─── ${t('mdm_optgrp_lims')} ───`}>
+                                      <option value="DonorScreener">{t('mdm_role_ds_desc')}</option>
+                                      <option value="Nurse">{t('mdm_role_nurse_desc')}</option>
+                                      <option value="LIMS_Simulator">{t('mdm_role_lims_desc')}</option>
                                    </optgroup>
-                                   <optgroup label="─── 臨床 ───">
-                                      <option value="HospitalOperator">HospitalOperator</option>
+                                   <optgroup label={`─── ${t('mdm_optgrp_hosp')} ───`}>
+                                      <option value="HospitalOperator">{t('mdm_role_hosp_desc')}</option>
                                    </optgroup>
-                                   <optgroup label="─── 物流 ───">
-                                      <option value="WarehouseIssuer">WarehouseIssuer</option>
-                                      <option value="Dispatcher">Dispatcher</option>
-                                      <option value="Courier">Courier</option>
+                                   <optgroup label={`─── ${t('mdm_optgrp_log')} ───`}>
+                                      <option value="WarehouseIssuer">{t('mdm_role_wh_desc')}</option>
+                                      <option value="Dispatcher">{t('mdm_role_disp_desc')}</option>
+                                      <option value="Courier">{t('mdm_role_cour_desc')}</option>
                                    </optgroup>
-                                   <optgroup label="─── 管理 ───">
-                                      <option value="Manager">Manager</option>
-                                      <option value="Admin">Admin</option>
+                                   <optgroup label={`─── ${t('mdm_optgrp_admin')} ───`}>
+                                      <option value="Manager">{t('mdm_role_mgr_desc')}</option>
+                                      <option value="Admin">{t('mdm_role_admin_desc')}</option>
                                    </optgroup>
                                 </select>
                              </div>
                              <div className="flex flex-col gap-2">
-                                <label className="text-[10px] font-black text-clinical-muted uppercase tracking-widest">Organization</label>
+                                <label className="text-[10px] font-black text-clinical-muted uppercase tracking-widest">{t('mdm_filter_org')}</label>
                                 <select value={editingUser.orgId} onChange={e=>setEditingUser({...editingUser, orgId: e.target.value})} className="bg-clinical-bg border border-clinical-border rounded-xl p-3 text-xs text-clinical-text outline-none focus:border-rose-500 transition-all">
                                    {orgs.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
                                 </select>
@@ -444,69 +488,69 @@ export function AdminMDMView({ onBack, initialTab }: { onBack: () => void; initi
             {tab === 'RBAC' && (
               <div>
                 <h2 className="text-xl font-bold text-clinical-text mb-2 flex items-center gap-2 border-b border-clinical-border pb-4">
-                  <Key className="text-fuchsia-500" /> LIMS Role-Based Access Control (RBAC) Matrix
+                  <Key className="text-fuchsia-500" /> {t('mdm_rbac_title')}
                 </h2>
-                <p className="text-[11px] text-clinical-muted mb-6">此矩陣定義各帳號角色在 LIMS 捐血中心系統中可存取的操作階段。鎖定階段在側邊欄呈現灰色並附加鎖定圖示，禁止點擊。</p>
+                <p className="text-sm text-clinical-muted mb-6">{t('mdm_rbac_matrix_desc')}</p>
 
                 {/* Role Matrix Table */}
                 <div className="overflow-x-auto rounded-2xl border border-fuchsia-900/30 mb-8">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-fuchsia-950/40">
-                        <th className="p-4 text-left text-[11px] font-black uppercase tracking-widest text-fuchsia-300">角色 / 身分</th>
-                        <th className="p-4 text-center text-[11px] font-black uppercase tracking-widest text-clinical-muted">1. 登記<br/><span className="text-[9px] font-normal normal-case">Registration</span></th>
-                        <th className="p-4 text-center text-[11px] font-black uppercase tracking-widest text-clinical-muted">2. 健康篩檢<br/><span className="text-[9px] font-normal normal-case">Screening</span></th>
-                        <th className="p-4 text-center text-[11px] font-black uppercase tracking-widest text-clinical-muted">3. 採血作業<br/><span className="text-[9px] font-normal normal-case">Phlebotomy</span></th>
-                        <th className="p-4 text-center text-[11px] font-black uppercase tracking-widest text-clinical-muted">4. 實驗室物流<br/><span className="text-[9px] font-normal normal-case">Lab Logistics</span></th>
+                        <th className="p-4 text-left text-xs font-black uppercase tracking-widest text-fuchsia-300">{t('mdm_rbac_table_role')}</th>
+                        <th className="p-4 text-center text-xs font-black uppercase tracking-widest text-clinical-muted">{t('lims_stage_registration')}</th>
+                        <th className="p-4 text-center text-xs font-black uppercase tracking-widest text-clinical-muted">{t('lims_stage_screening')}</th>
+                        <th className="p-4 text-center text-xs font-black uppercase tracking-widest text-clinical-muted">{t('lims_stage_phlebotomy')}</th>
+                        <th className="p-4 text-center text-xs font-black uppercase tracking-widest text-clinical-muted">{t('lims_stage_logistics')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-clinical-border">
                       {[
                         {
                           role: 'DonorScreener',
-                          label: '助理 (DonorScreener)',
+                          label: t('mdm_role_ds_desc'),
                           color: 'text-sky-400',
-                          desc: '執行捐血者初步登記、身分核對與健康問卷',
+                          desc: t('mdm_rbac_policy_lims_desc_1'),
                           access: [true, false, false, false]
                         },
                         {
                           role: 'Nurse',
-                          label: '護理師 (Nurse)',
+                          label: t('mdm_role_nurse_desc'),
                           color: 'text-rose-400',
-                          desc: '執行健康篩檢、體格測量與靜脈穿刺採血',
+                          desc: t('mdm_rbac_policy_lims_desc_1') + ' & ' + t('mdm_rbac_policy_lims_desc_2'),
                           access: [false, true, true, false]
                         },
                         {
                           role: 'LIMS_Simulator',
-                          label: '實驗室人員 (LIMS_Simulator)',
+                          label: t('mdm_role_lims_desc'),
                           color: 'text-amber-400',
-                          desc: '執行血液成分分離、品管檢驗與放行入庫',
+                          desc: t('mdm_rbac_policy_lims_desc_2') + ' & ' + t('mdm_rbac_policy_lims_desc_3'),
                           access: [false, false, false, true]
                         },
                         {
                           role: 'Admin',
-                          label: '管理員 (Admin / Manager)',
+                          label: t('mdm_role_admin_desc'),
                           color: 'text-fuchsia-400',
-                          desc: '全系統最高權限，可存取所有 LIMS 功能與設定',
+                          desc: t('mdm_rbac_policy_admin_desc_2'),
                           access: [true, true, true, true]
                         },
                       ].map((row, idx) => (
                         <tr key={idx} className="hover:bg-clinical-bg/50 transition-colors">
                           <td className="p-4">
-                            <p className={`text-[12px] font-black uppercase tracking-tight ${row.color}`}>{row.label}</p>
-                            <p className="text-[10px] text-clinical-muted mt-1">{row.desc}</p>
+                            <p className={`text-xs font-black uppercase tracking-tight ${row.color}`}>{row.label}</p>
+                            <p className="text-[11px] text-clinical-muted mt-1">{row.desc}</p>
                           </td>
                           {row.access.map((allowed, i) => (
                             <td key={i} className="p-4 text-center">
                               {allowed ? (
                                 <div className="flex flex-col items-center gap-1">
-                                  <CheckCircle size={20} className="text-emerald-500" />
-                                  <span className="text-[9px] text-emerald-400 font-black uppercase">Allowed</span>
+                                  <CheckCircle size={12} className="text-emerald-500" />
+                                  <span className="text-[8px] text-emerald-400 font-black uppercase">Allowed</span>
                                 </div>
                               ) : (
                                 <div className="flex flex-col items-center gap-1">
-                                  <Lock size={20} className="text-slate-600" />
-                                  <span className="text-[9px] text-slate-500 font-black uppercase">Locked</span>
+                                  <Lock size={12} className="text-slate-600" />
+                                  <span className="text-[8px] text-slate-500 font-black uppercase">Locked</span>
                                 </div>
                               )}
                             </td>
@@ -517,40 +561,49 @@ export function AdminMDMView({ onBack, initialTab }: { onBack: () => void; initi
                   </table>
                 </div>
 
+                {/* Default Subsystem Permissions Container */}
+                <div className="mb-8 p-6 rounded-2xl border border-indigo-900/30 bg-indigo-950/20 shadow-lg">
+                   <h3 className="text-base font-bold text-indigo-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                     <Shield size={16} className="text-indigo-400 animate-pulse" /> {t('mdm_rbac_default_perms_title')}
+                   </h3>
+                   <p className="text-sm text-clinical-muted leading-relaxed whitespace-pre-line font-medium">
+                     {t('mdm_rbac_default_perms_desc')}
+                   </p>
+                </div>
+
                 {/* RBAC Policy Notes */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-5 rounded-2xl border border-sky-900/30 bg-sky-950/20">
-                    <p className="text-[11px] font-black text-sky-300 uppercase tracking-widest mb-2">🔵 助理 (DonorScreener)</p>
-                    <ul className="text-[10px] text-clinical-muted space-y-1">
-                      <li>✅ 登記捐血者身分 (Stage 1)</li>
-                      <li>✅ 填寫健康問卷 (Stage 1)</li>
-                      <li>🔒 不可執行健康篩檢或採血</li>
-                      <li>🔒 不可存取實驗室物流</li>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="p-6 rounded-2xl border border-sky-900/30 bg-sky-950/20 shadow-md">
+                    <p className="text-sm font-black text-sky-300 uppercase tracking-widest mb-3">
+                      {t('mdm_rbac_policy_lims_title')}
+                    </p>
+                    <ul className="text-xs text-clinical-muted space-y-2 leading-relaxed">
+                      <li>• {t('mdm_rbac_policy_lims_desc_1')}</li>
+                      <li>• {t('mdm_rbac_policy_lims_desc_2')}</li>
+                      <li>• {t('mdm_rbac_policy_lims_desc_3')}</li>
                     </ul>
                   </div>
-                  <div className="p-5 rounded-2xl border border-rose-900/30 bg-rose-950/20">
-                    <p className="text-[11px] font-black text-rose-300 uppercase tracking-widest mb-2">🔴 護理師 (Nurse)</p>
-                    <ul className="text-[10px] text-clinical-muted space-y-1">
-                      <li>🔒 不可直接執行捐血者登記</li>
-                      <li>✅ 健康篩檢 — 體格、血壓量測 (Stage 2)</li>
-                      <li>✅ 採血作業 — 靜脈穿刺 (Stage 3)</li>
-                      <li>🔒 不可存取實驗室物流</li>
+                  <div className="p-6 rounded-2xl border border-amber-900/30 bg-amber-950/20 shadow-md">
+                    <p className="text-sm font-black text-amber-300 uppercase tracking-widest mb-3">
+                      {t('mdm_rbac_policy_hub_title')}
+                    </p>
+                    <ul className="text-xs text-clinical-muted space-y-2 leading-relaxed">
+                      <li>• {t('mdm_rbac_policy_hub_desc_1')}</li>
+                      <li>• {t('mdm_rbac_policy_hub_desc_2')}</li>
+                      <li>• {t('mdm_rbac_policy_hub_desc_3')}</li>
                     </ul>
                   </div>
-                  <div className="p-5 rounded-2xl border border-amber-900/30 bg-amber-950/20">
-                    <p className="text-[11px] font-black text-amber-300 uppercase tracking-widest mb-2">🟡 實驗室人員 (LIMS_Simulator)</p>
-                    <ul className="text-[10px] text-clinical-muted space-y-1">
-                      <li>🔒 不可執行登記、篩檢、採血</li>
-                      <li>✅ 實驗室物流 — IDM 檢驗、成分分離、品管放行 (Stage 4)</li>
+                  <div className="p-6 rounded-2xl border border-fuchsia-900/30 bg-fuchsia-950/20 shadow-md col-span-1 md:col-span-3 lg:col-span-1">
+                    <p className="text-sm font-black text-fuchsia-300 uppercase tracking-widest mb-3">
+                      {t('mdm_rbac_policy_admin_title')}
+                    </p>
+                    <ul className="text-xs text-clinical-muted space-y-2 leading-relaxed mb-3">
+                      <li>• {t('mdm_rbac_policy_admin_desc_1')}</li>
+                      <li>• {t('mdm_rbac_policy_admin_desc_2')}</li>
                     </ul>
-                  </div>
-                  <div className="p-5 rounded-2xl border border-fuchsia-900/30 bg-fuchsia-950/20">
-                    <p className="text-[11px] font-black text-fuchsia-300 uppercase tracking-widest mb-2">🟣 Admin / Manager</p>
-                    <ul className="text-[10px] text-clinical-muted space-y-1">
-                      <li>✅ 全部 LIMS 階段均可存取</li>
-                      <li>✅ 可新增/編輯/停用所有帳號</li>
-                      <li>✅ 可設定系統組織與產品目錄</li>
-                    </ul>
+                    <div className="p-2.5 rounded bg-rose-950/30 border border-rose-900/50 text-[11px] text-rose-400 font-bold">
+                      {t('mdm_rbac_policy_admin_warn')}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -563,16 +616,16 @@ export function AdminMDMView({ onBack, initialTab }: { onBack: () => void; initi
                 </h2>
 
                 <form onSubmit={handleAddProduct} className="grid grid-cols-6 gap-4 mb-8 bg-clinical-bg p-4 rounded-xl border border-clinical-border">
-                  <input required value={pCode} onChange={e=>setPCode(e.target.value)} className="bg-clinical-bg border border-clinical-border rounded p-2 text-sm focus:border-indigo-500 outline-none font-mono" placeholder="Code" />
-                  <input required value={pAlias} onChange={e=>setPAlias(e.target.value)} className="bg-clinical-bg border border-clinical-border rounded p-2 text-sm focus:border-indigo-500 outline-none col-span-2" placeholder="Description" />
+                  <input required value={pCode} onChange={e=>setPCode(e.target.value)} className="bg-clinical-bg border border-clinical-border rounded p-2 text-sm focus:border-indigo-500 outline-none font-mono" placeholder={t('mdm_cat_code_placeholder')} />
+                  <input required value={pAlias} onChange={e=>setPAlias(e.target.value)} className="bg-clinical-bg border border-clinical-border rounded p-2 text-sm focus:border-indigo-500 outline-none col-span-2" placeholder={t('mdm_cat_alias_placeholder')} />
                   <select value={pClass} onChange={e=>setPClass(e.target.value)} className="bg-clinical-bg border border-clinical-border rounded p-2 text-sm focus:border-indigo-500 outline-none">
-                     <option>RBC</option>
-                     <option>PLT</option>
-                     <option>FFP</option>
+                     <option value="RBC">{t('mdm_cat_legend_rbc')}</option>
+                     <option value="PLT">{t('mdm_cat_legend_plt')}</option>
+                     <option value="FFP">{t('mdm_cat_legend_ffp')}</option>
                   </select>
                   <div className="flex flex-col gap-1 justify-center">
                     <label className="flex items-center gap-2 text-[10px] text-clinical-muted uppercase font-bold cursor-pointer">
-                      <input type="checkbox" checked={pAbo} onChange={e=>setPAbo(e.target.checked)} /> ABO Req
+                      <input type="checkbox" checked={pAbo} onChange={e=>setPAbo(e.target.checked)} /> {t('mdm_cat_abo_req')}
                     </label>
                   </div>
                   <button type="submit" className="bg-indigo-600 hover:bg-indigo-500 text-clinical-text font-bold py-2 rounded flex justify-center items-center gap-1 transition-colors">
@@ -584,9 +637,9 @@ export function AdminMDMView({ onBack, initialTab }: { onBack: () => void; initi
                   <table className="w-full text-left text-sm">
                     <thead className="bg-clinical-card text-clinical-muted">
                       <tr>
-                        <th className="p-3">Product Code</th>
-                        <th className="p-3">Alias</th>
-                        <th className="p-3">Rules</th>
+                        <th className="p-3">{t('mdm_cat_col_code')}</th>
+                        <th className="p-3">{t('mdm_cat_col_alias')}</th>
+                        <th className="p-3">{t('mdm_cat_col_rules')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-clinical-border">
@@ -595,12 +648,65 @@ export function AdminMDMView({ onBack, initialTab }: { onBack: () => void; initi
                           <td className="p-3 font-mono text-indigo-600 font-bold">{p.productCode}</td>
                           <td className="p-3 text-clinical-text">{p.alias}</td>
                           <td className="p-3 text-xs flex gap-2">
-                             {p.aboRequired ? "ABO Check Enabled" : "ABO Check Disabled"}
+                             {p.aboRequired ? t('mdm_cat_abo_enabled') : t('mdm_cat_abo_disabled')}
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Clinical Legend Section */}
+                <div className="mt-12 pt-8 border-t border-clinical-border">
+                  <h3 className="text-base font-black text-indigo-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                     <Shield size={18} className="text-indigo-400" /> {t('mdm_cat_clinical_legend_title')}
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                     {/* RBC */}
+                     <div className="p-5 rounded-2xl border border-rose-900/30 bg-rose-950/20 shadow-md flex flex-col gap-2">
+                        <span className="text-[12px] font-black text-rose-400 uppercase tracking-wider">🔴 {t('mdm_cat_legend_rbc')}</span>
+                        <p className="text-xs text-clinical-muted leading-relaxed">{t('mdm_cat_legend_rbc_desc')}</p>
+                     </div>
+
+                     {/* PLT */}
+                     <div className="p-5 rounded-2xl border border-amber-900/30 bg-amber-950/20 shadow-md flex flex-col gap-2">
+                        <span className="text-[12px] font-black text-amber-400 uppercase tracking-wider">🟡 {t('mdm_cat_legend_plt')}</span>
+                        <p className="text-xs text-clinical-muted leading-relaxed">{t('mdm_cat_legend_plt_desc')}</p>
+                     </div>
+
+                     {/* FFP */}
+                     <div className="p-5 rounded-2xl border border-sky-900/30 bg-sky-950/20 shadow-md flex flex-col gap-2">
+                        <span className="text-[12px] font-black text-sky-400 uppercase tracking-wider">🔵 {t('mdm_cat_legend_ffp')}</span>
+                        <p className="text-xs text-clinical-muted leading-relaxed">{t('mdm_cat_legend_ffp_desc')}</p>
+                     </div>
+
+                     {/* CRYO */}
+                     <div className="p-5 rounded-2xl border border-teal-900/30 bg-teal-950/20 shadow-md flex flex-col gap-2">
+                        <span className="text-[12px] font-black text-teal-400 uppercase tracking-wider">🟢 {t('mdm_cat_legend_cryo')}</span>
+                        <p className="text-xs text-clinical-muted leading-relaxed">{t('mdm_cat_legend_cryo_desc')}</p>
+                     </div>
+
+                     {/* WB */}
+                     <div className="p-5 rounded-2xl border border-fuchsia-900/30 bg-fuchsia-950/20 shadow-md flex flex-col gap-2">
+                        <span className="text-[12px] font-black text-fuchsia-400 uppercase tracking-wider">🟣 {t('mdm_cat_legend_wb')}</span>
+                        <p className="text-xs text-clinical-muted leading-relaxed">{t('mdm_cat_legend_wb_desc')}</p>
+                     </div>
+                  </div>
+
+                  {/* ABO Required Warning Banner */}
+                  <div className="p-6 rounded-2xl border border-rose-600/30 bg-gradient-to-r from-rose-950/40 to-slate-900/40 shadow-xl flex flex-col gap-3">
+                     <div className="flex items-center gap-3">
+                        <div className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
+                        <span className="text-sm font-black text-rose-400 uppercase tracking-widest">{t('mdm_cat_abo_reg_title')}</span>
+                     </div>
+                     <p className="text-xs text-clinical-muted leading-relaxed font-semibold">
+                        {t('mdm_cat_abo_reg_warn')}
+                     </p>
+                     <div className="flex items-center gap-2 text-[10px] text-rose-400 font-bold uppercase tracking-wider bg-rose-950/30 w-fit px-3 py-1 rounded border border-rose-900/50">
+                        🛡️ {t('mdm_cat_abo_status_active')}
+                     </div>
+                  </div>
                 </div>
               </div>
             )}

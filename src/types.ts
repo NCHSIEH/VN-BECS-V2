@@ -23,10 +23,25 @@ export type Role =
   | 'HospitalOperator'
   | 'Nurse'
   | 'QA_Officer'
+  | 'Manager'
   | 'Admin';
 
 /** Subsystems the user can access from the Portal. */
 export type SystemType = 'HUB' | 'LIMS' | 'MDM' | 'HOSPITAL' | 'NATIONAL' | 'IAM' | 'DASHBOARD';
+
+/** Default subsystem access permissions for each role. */
+export const DEFAULT_ROLE_MATRIX: Record<Role, SystemType[]> = {
+  DonorScreener: ['LIMS'],
+  Nurse: ['LIMS'],
+  LIMS_Simulator: ['LIMS'],
+  QA_Officer: ['LIMS'],
+  HospitalOperator: ['HOSPITAL'],
+  WarehouseIssuer: ['HUB'],
+  Dispatcher: ['HUB'],
+  Courier: ['HUB'],
+  Manager: ['LIMS', 'HOSPITAL', 'HUB', 'DASHBOARD'],
+  Admin: ['LIMS', 'HOSPITAL', 'HUB', 'MDM', 'DASHBOARD', 'NATIONAL', 'IAM'],
+};
 
 /** Organization classification. */
 export type OrgType = 'BloodCenter' | 'Hub' | 'Hospital';

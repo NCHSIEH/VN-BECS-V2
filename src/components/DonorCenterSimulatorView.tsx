@@ -269,10 +269,10 @@ export function DonorCenterSimulatorView({
       setIsDonorModalOpen(false);
       // Toast: Guide to LAB stage next
       setLimsToast({
-        title: '✅ 捐血者已登記',
-        message: '已完成捐血者身分登記。請前往「2. 健康篩檢」執行採血前篩檢。',
+        title: t('lims_toast_stage1_title'),
+        message: t('lims_toast_stage1_msg'),
         nextStage: 'LAB',
-        nextLabel: '前往健康篩檢 →'
+        nextLabel: t('lims_toast_stage1_btn')
       });
     } catch(e: any) {
       setDonorFormError(e.message || "Network Error");
@@ -329,10 +329,10 @@ export function DonorCenterSimulatorView({
       loadData();
       // Toast: IDM test completed, guide to PROCESS
       setLimsToast({
-        title: '🧪 IDM 檢驗已完成',
-        message: '血液傳染病標記 (IDM) 檢驗完成。若結果為 CLEARED，請前往「3. 採血作業」執行成分製造。',
+        title: t('lims_toast_stage2_title'),
+        message: t('lims_toast_stage2_msg'),
         nextStage: 'PROCESS',
-        nextLabel: '前往採血作業 →'
+        nextLabel: t('lims_toast_stage2_btn')
       });
     } catch(e) {}
   };
@@ -353,10 +353,10 @@ export function DonorCenterSimulatorView({
       loadData();
       // Toast: Component fabricated, guide to RELEASE
       setLimsToast({
-        title: '🩸 成分血袋製造完成',
-        message: '血液成分分離完成，血袋現已備妥。請前往「4. 實驗室物流」執行品管核發入庫。',
+        title: t('lims_toast_stage3_title'),
+        message: t('lims_toast_stage3_msg'),
         nextStage: 'RELEASE',
-        nextLabel: '前往實驗室物流 →'
+        nextLabel: t('lims_toast_stage3_btn')
       });
     } catch(e) {}
   };
@@ -372,8 +372,8 @@ export function DonorCenterSimulatorView({
          loadData();
          // Toast: Released to Hub
          setLimsToast({
-           title: '🚀 血品已核發入庫',
-           message: `血袋 ${compId} 已成功同步至中央調度中心庫存。可返回 Portal 切換至 HUB 站追蹤後續物流。`,
+           title: t('lims_toast_stage4_title'),
+           message: t('lims_toast_stage4_msg', { compId }),
          });
       } else {
          setStatus({ type: 'error', msg: `Sync Failed: ${data.error}` });

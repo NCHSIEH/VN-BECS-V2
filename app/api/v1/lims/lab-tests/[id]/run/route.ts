@@ -3,10 +3,10 @@ import * as db from '@/src/server/db';
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const donationId = params.id;
+    const donationId = (await params).id;
     // Simulate test result
     const status = Math.random() > 0.9 ? 'REACTIVE' : 'CLEARED';
     

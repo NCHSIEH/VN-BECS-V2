@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, ShieldAlert, Zap, History, ClipboardCheck, Barcode, UserCircle, Activity, AlertTriangle, FileWarning, ArrowRight } from 'lucide-react';
+import { AlertCircle, ShieldAlert, Zap, History, ClipboardCheck, Barcode, UserCircle, Activity, AlertTriangle, FileWarning, ArrowRight, ChevronDown } from 'lucide-react';
 import { useI18n } from '../lib/i18n';
+
 
 export function MtpEmergencyView() {
   const { t } = useI18n();
@@ -9,10 +10,17 @@ export function MtpEmergencyView() {
   const [showActivate, setShowActivate] = useState(false);
   const [showBreakGlass, setShowBreakGlass] = useState(false);
   
+  // Patient Selection State
+  const [patientsList, setPatientsList] = useState<any[]>([]);
+  const [selectedPatient, setSelectedPatient] = useState<any>(null);
+  const [showPatientDropdown, setShowPatientDropdown] = useState(false);
+  
   // Form state
-  const [patientId, setPatientId] = useState('TRAUMA-' + Math.floor(Math.random()*9000 + 1000));
   const [location, setLocation] = useState('ER - Trauma Bay 1');
   const [doctor, setDoctor] = useState('Dr. Nguyen (ER Lead)');
+  
+  // CDSS State
+  const [showCdssAlert, setShowCdssAlert] = useState(false);
 
   // Break-glass state
   const [bgReason, setBgReason] = useState('Massive Hemorrhage - Unidentified Patient');
@@ -28,18 +36,38 @@ export function MtpEmergencyView() {
     }
   };
 
+  const fetchPatients = async () => {
+    try {
+      const res = await fetch('/api/v1/patients');
+      const data = await res.json();
+      setPatientsList(data);
+      if (data && data.length > 0) {
+        setSelectedPatient(data[0]); // Select first patient by default
+      }
+    } catch (e) {
+      console.error('Failed to fetch patients:', e);
+    }
+  };
+
   useEffect(() => {
     fetchCases();
+    fetchPatients();
     const interval = setInterval(fetchCases, 5000);
     return () => clearInterval(interval);
   }, []);
 
   const handleActivate = async () => {
+    // 實作 CDSS 攔截點：動態檢查病患身上的高風險標籤
+    if (selectedPatient.specimenExpired || selectedPatient.hasAntibody) {
+      setShowCdssAlert(true);
+      return; // 致命攔截：不允許送出 API
+    }
+
     await fetch('/api/v1/mtp-cases', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        patientIdentifier: patientId,
+        patientIdentifier: selectedPatient.id,
         authorizedClinician: doctor,
         clinicalScenario: location,
         status: 'ACTIVE'
@@ -176,14 +204,47 @@ export function MtpEmergencyView() {
              </div>
              
              <div className="space-y-5">
-                <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-clinical-muted uppercase tracking-wider">Patient Identifier (CCCD/MRN)</label>
-                   <input 
-                     value={patientId} 
-                     onChange={e=>setPatientId(e.target.value)} 
-                     className="clinical-input"
-                   />
-                </div>
+                 <div className="space-y-1.5 relative">
+                   <label className="text-xs font-bold text-clinical-muted uppercase tracking-wider">Patient Profile (MRN)</label>
+                   
+                   <div 
+                     onClick={() => setShowPatientDropdown(!showPatientDropdown)}
+                     className="clinical-input flex items-center justify-between cursor-pointer bg-clinical-bg/80 border-clinical-border/80 hover:border-rose-500/50 transition-colors"
+                   >
+                      <div className="flex flex-col gap-0.5">
+                         {selectedPatient ? (
+                           <>
+                             <span className="font-bold text-clinical-text uppercase tracking-widest">{selectedPatient.id}</span>
+                             <span className="text-clinical-muted text-[10px] font-bold uppercase">{selectedPatient.name}</span>
+                           </>
+                         ) : (
+                           <span className="font-bold text-clinical-muted uppercase tracking-widest">Loading patients...</span>
+                         )}
+                      </div>
+                      <ChevronDown size={18} className={`text-clinical-muted transition-transform ${showPatientDropdown ? 'rotate-180' : ''}`} />
+                   </div>
+                   
+                   {showPatientDropdown && selectedPatient && (
+                     <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl z-50 overflow-hidden divide-y divide-slate-800 animate-in fade-in slide-in-from-top-2 duration-200 max-h-64 overflow-y-auto">
+                        {patientsList.map(p => (
+                          <div 
+                            key={p.id}
+                            onClick={() => { setSelectedPatient(p); setShowPatientDropdown(false); }}
+                            className={`p-4 hover:bg-slate-800 cursor-pointer flex justify-between items-center transition-colors ${selectedPatient.id === p.id ? 'bg-slate-800/50 border-l-2 border-l-rose-500' : 'border-l-2 border-l-transparent'}`}
+                          >
+                             <div>
+                                <div className="font-bold text-white text-sm uppercase tracking-widest">{p.id}</div>
+                                <div className="text-[11px] text-slate-400 mt-0.5 font-bold uppercase">{p.name} <span className="text-slate-600 mx-1">•</span> <span className="text-blue-400">{p.bloodType}</span></div>
+                             </div>
+                             <div className="flex gap-2">
+                                {p.specimenExpired && <ShieldAlert size={16} className="text-rose-500" title="Specimen Expired" />}
+                                {p.hasAntibody && <AlertTriangle size={16} className="text-orange-500" title="Antibodies Present" />}
+                             </div>
+                          </div>
+                        ))}
+                     </div>
+                   )}
+                 </div>
                 <div className="space-y-1.5">
                    <label className="text-xs font-bold text-clinical-muted uppercase tracking-wider">Location</label>
                    <input value={location} onChange={e=>setLocation(e.target.value)} className="clinical-input" />
@@ -242,6 +303,85 @@ export function MtpEmergencyView() {
                 </button>
              </div>
           </div>
+        </div>
+      )}
+
+      {/* CDSS Dual Alert Interception Overlay */}
+      {showCdssAlert && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in zoom-in-95 duration-300">
+           <div className="max-w-2xl w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl shadow-rose-900/20 relative overflow-hidden">
+              {/* Patient Profile Header */}
+              <div className="flex items-center gap-4 mb-8 pb-6 border-b border-slate-800">
+                 <div className="w-14 h-14 bg-slate-800 rounded-2xl flex items-center justify-center">
+                    <UserCircle size={32} className="text-slate-400" />
+                 </div>
+                 <div>
+                    <h3 className="text-2xl font-bold text-white tracking-tight uppercase">{selectedPatient.name}</h3>
+                    <div className="flex items-center gap-3 mt-1">
+                       <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{selectedPatient.id}</span>
+                       <span className="px-2 py-0.5 rounded-md bg-blue-900/50 text-blue-400 text-[10px] font-bold uppercase border border-blue-800/50">{selectedPatient.bloodType}</span>
+                    </div>
+                 </div>
+              </div>
+
+              <div className="space-y-4">
+                 {/* Fatal Error 1: Specimen Expired */}
+                 {selectedPatient.specimenExpired && (
+                   <div className="bg-rose-950/40 border border-rose-900/50 rounded-2xl p-6 flex gap-5 relative overflow-hidden">
+                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-600"></div>
+                      <div className="mt-1">
+                         <div className="w-10 h-10 rounded-full bg-rose-900/50 flex items-center justify-center text-rose-500">
+                            <ShieldAlert size={20} />
+                         </div>
+                      </div>
+                      <div>
+                         <h4 className="text-lg font-bold text-rose-500 tracking-tight">Fatal Error: Specimen Expired</h4>
+                         <p className="text-slate-300 text-sm mt-1 leading-relaxed">The latest patient blood specimen was drawn <strong className="text-white">{selectedPatient.specimenHours} hours ago</strong>. Per Circular 26/2013/TT-BYT, specimens for crossmatching must not exceed 72 hours.</p>
+                         <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-rose-950/50 border border-rose-900/30">
+                            <AlertCircle size={14} className="text-rose-400" />
+                            <span className="text-xs font-bold text-rose-400 uppercase tracking-wider">Action Required: New Draw Required</span>
+                         </div>
+                      </div>
+                   </div>
+                 )}
+
+                 {/* Warning 2: Antibody Blocking */}
+                 {selectedPatient.hasAntibody && (
+                   <div className="bg-orange-950/40 border border-orange-900/50 rounded-2xl p-6 flex gap-5 relative overflow-hidden">
+                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-orange-500"></div>
+                      <div className="mt-1">
+                         <div className="w-10 h-10 rounded-full bg-orange-900/50 flex items-center justify-center text-orange-500">
+                            <AlertTriangle size={20} />
+                         </div>
+                      </div>
+                      <div>
+                         <h4 className="text-lg font-bold text-orange-500 tracking-tight">Clinical Block: Irregular Antibody</h4>
+                         <p className="text-slate-300 text-sm mt-1 leading-relaxed">FHIR historical records indicate the presence of <strong className="text-white">{selectedPatient.antibodyType}</strong> antibodies. To prevent hemolytic transfusion reactions (HTR), automated electronic crossmatching is strictly disabled.</p>
+                         <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-orange-950/50 border border-orange-900/30">
+                            <History size={14} className="text-orange-400" />
+                            <span className="text-xs font-bold text-orange-400 uppercase tracking-wider">Protocol Switch: Manual AHG Enforced</span>
+                         </div>
+                      </div>
+                   </div>
+                 )}
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-slate-800 flex justify-end gap-4">
+                 <button 
+                   onClick={() => setShowCdssAlert(false)} 
+                   className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition-all text-sm uppercase tracking-wider"
+                 >
+                    Acknowledge & Cancel Order
+                 </button>
+                 {/* 故意移除強制送出按鈕，展現 Hard Stop 邏輯 */}
+                 <button 
+                   disabled
+                   className="px-6 py-3 bg-rose-900/20 border border-rose-900/30 text-rose-900/50 font-bold rounded-xl cursor-not-allowed text-sm uppercase tracking-wider flex items-center gap-2"
+                 >
+                    Override (Disabled)
+                 </button>
+              </div>
+           </div>
         </div>
       )}
     </div>

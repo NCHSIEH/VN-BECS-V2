@@ -41,19 +41,6 @@ export function PortalView({
 }: PortalViewProps) {
   const { lang, setLang, t } = useI18n();
   const [showManual, setShowManual] = useState(false);
-  const [showManualResetConfirm, setShowManualResetConfirm] = useState(false);
-  const [isResetting, setIsResetting] = useState(false);
-
-  const handleResetSystem = async () => {
-    setShowManualResetConfirm(false);
-    setIsResetting(true);
-    try {
-      await fetch('/api/v1/reset', { method: 'POST' });
-      window.location.reload();
-    } catch (e) {
-      setIsResetting(false);
-    }
-  };
 
   const stations = [
     {
@@ -250,15 +237,7 @@ export function PortalView({
              </div>
   
              <div className="flex flex-wrap gap-6 shrink-0 w-full md:w-auto justify-end">
-                {user.role === 'Admin' && (
-                   <button 
-                     onClick={() => setShowManualResetConfirm(true)}
-                     className="flex items-center gap-3 px-8 py-4 bg-clinical-card border border-clinical-border text-clinical-text rounded-3xl hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all group active:scale-95 shadow-sm duration-200"
-                   >
-                      <RefreshCcw size={18} className="group-hover:rotate-180 duration-500 transition-transform" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.2em]">Reset Data</span>
-                   </button>
-                )}
+
                 <button 
                   onClick={onLogout}
                   className="flex items-center gap-3 px-8 py-4 bg-rose-600/10 border border-rose-500/20 text-rose-600 rounded-3xl hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all group active:scale-95 shadow-sm duration-200"
@@ -478,33 +457,7 @@ export function PortalView({
         )}
       </AnimatePresence>
 
-      {/* Manual Reset Confirm Dialog */}
-      {showManualResetConfirm && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-clinical-bg/40 backdrop-blur-md p-4">
-          <div className="clinical-card max-w-sm w-full bg-clinical-card border-clinical-border rounded-3xl overflow-hidden shadow-2xl transition-all duration-300">
-             <div className="p-6 border-b border-clinical-border bg-clinical-bg/30">
-               <h3 className="text-sm font-black text-clinical-text uppercase italic tracking-widest">Confirm System Reset</h3>
-             </div>
-             <div className="p-8">
-               <p className="text-clinical-muted text-[11px] font-black uppercase tracking-widest leading-relaxed">
-                 Execute full command reset? All data will be baseline initialized.
-               </p>
-             </div>
-             <div className="p-6 bg-clinical-bg/20 border-t border-clinical-border flex justify-end gap-3">
-               <button onClick={() => setShowManualResetConfirm(false)} className="px-6 py-2 text-[10px] font-black text-clinical-muted hover:text-clinical-text uppercase tracking-widest transition-all">Cancel</button>
-               <button onClick={handleResetSystem} className="px-8 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-600/40 transition-all">Reset</button>
-             </div>
-          </div>
-        </div>
-      )}
 
-      {/* Reset Loading State */}
-      {isResetting && (
-        <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-clinical-bg/85 backdrop-blur-md">
-          <div className="w-12 h-12 border-4 border-rose-600 border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="text-xs font-black text-clinical-text uppercase tracking-[0.2em] italic">Resetting VN-BECS Database...</p>
-        </div>
-      )}
     </div>
   );
 }

@@ -76,10 +76,14 @@ CREATE TABLE IF NOT EXISTS components (
     id TEXT PRIMARY KEY,
     "donationId" TEXT REFERENCES donations(id),
     "productCode" TEXT,
-    "expiryDate" TEXT,
+    type TEXT,
     status TEXT,
+    abo TEXT,
+    rhd TEXT,
+    "expiryDate" TEXT,
     "createdAt" TEXT
 );
+
 
 -- 8. Audit Events
 CREATE TABLE IF NOT EXISTS audit_events (
@@ -195,9 +199,15 @@ CREATE TABLE IF NOT EXISTS patients (
     name TEXT,
     abo TEXT,
     rhd TEXT,
+    "bloodType" TEXT,
     "hospitalId" TEXT,
+    "hasAntibody" BOOLEAN DEFAULT FALSE,
+    "antibodyType" TEXT,
+    "specimenExpired" BOOLEAN DEFAULT FALSE,
+    "specimenHours" INTEGER DEFAULT 0,
     "antibodyHistory" TEXT -- JSON string
 );
+
 
 -- 18. Transfusions
 CREATE TABLE IF NOT EXISTS transfusions (
@@ -307,4 +317,14 @@ END $$;
 
 -- Disable RLS for new tables
 ALTER TABLE rare_donors DISABLE ROW LEVEL SECURITY;
+
+-- 23. Translations (Dynamic Multi-language)
+CREATE TABLE IF NOT EXISTS translations (
+    key TEXT,
+    lang TEXT,
+    value TEXT,
+    PRIMARY KEY (key, lang)
+);
+ALTER TABLE translations DISABLE ROW LEVEL SECURITY;
+
 
