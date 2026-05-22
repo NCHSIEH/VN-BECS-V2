@@ -14,7 +14,7 @@ export async function POST(request: Request) {
          orgId: 'HUB-01',
          orgName: 'System Emergency Hub',
          orgType: 'Hub',
-         permittedSystems: ['MDM', 'HUB', 'LIMS', 'HOSPITAL', 'NATIONAL']
+         permittedSystems: ['MDM', 'IAM', 'HUB', 'LIMS', 'LAB', 'HOSPITAL', 'NATIONAL', 'DASHBOARD']
        });
     }
 
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     
     // Global Admin
     if (user.role === 'Admin') {
-       permittedSystems.push('MDM', 'HUB', 'LIMS', 'LAB', 'HOSPITAL', 'NATIONAL');
+       permittedSystems.push('MDM', 'IAM', 'HUB', 'LIMS', 'LAB', 'HOSPITAL', 'NATIONAL', 'DASHBOARD');
     } else {
        // Role-based defaults
        if (['HospitalOperator', 'Nurse', 'Doctor'].includes(user.role)) {

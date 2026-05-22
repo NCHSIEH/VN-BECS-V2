@@ -155,7 +155,7 @@ export function PortalView({
       <div className="w-full max-w-[1600px] mx-auto flex flex-col gap-16 relative z-10">
         
         {/* Header Section */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-12 border-b border-clinical-border pb-12">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-12 border-b border-clinical-border pb-12 relative z-20">
           <div>
              <div className="flex items-center gap-6 mb-4">
                 <div className="h-12 w-2 bg-rose-600 rounded-full shadow-[0_0_20px_rgba(225,29,72,0.6)] animate-pulse" />
@@ -169,7 +169,7 @@ export function PortalView({
              </div>
           </div>
 
-          <div className="flex flex-col items-end gap-6 w-full md:w-auto">
+          <div className="flex flex-col items-end gap-6 w-full md:w-auto shrink-0">
              {/* Controls Group */}
              <div className="flex flex-wrap items-center gap-8 justify-end w-full">
                 {/* Theme Switcher Button */}
@@ -249,9 +249,9 @@ export function PortalView({
           </div>
         </header>
  
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 relative z-10">
           {stations.map((station, idx) => {
-            const isPermitted = user.role === 'Admin' || (user.permittedSystems && user.permittedSystems.includes(station.id as SystemType));
+            const isPermitted = user.role?.toLowerCase() === 'admin' || (user.permittedSystems && user.permittedSystems.includes(station.id as SystemType));
             
             return (
               <motion.button
