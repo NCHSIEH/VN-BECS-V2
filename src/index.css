@@ -184,7 +184,7 @@
   }
 
   .clinical-label {
-    @apply text-[10px] font-black text-clinical-muted uppercase tracking-[0.2em] mb-2 block;
+    @apply text-sm font-black text-clinical-muted uppercase tracking-widest mb-2 block;
   }
 
   .glass-station {

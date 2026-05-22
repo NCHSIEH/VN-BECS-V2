@@ -385,6 +385,25 @@ export function DonorCenterSimulatorView({
     }
   };
 
+  const throughputReadiness = useMemo(() => {
+    // KPI 1: Bed/Staff Utilization Rate (Donors waiting for phlebotomy)
+    const pendingPhlebotomy = donors.length - donations.length;
+    // KPI 2: Donations per Hour & Queue Length (Lab and processing backlog)
+    const pendingLab = donations.filter(d => !d.labStatus || d.labStatus === 'PENDING').length;
+    const pendingComponents = components.filter(c => c.status !== 'HUB INTRANSIT' && c.status !== 'READY').length;
+    // KPI 3: Hardware & Consumables Health (broken machines)
+    const activeAlarms = resources.filter(r => r.maintenanceStatus === 'MaintenanceRequired').length;
+
+    // Base score is 100%, subtract points for bottlenecks
+    let readiness = 100;
+    readiness -= (pendingPhlebotomy * 15);
+    readiness -= (pendingLab * 5);
+    readiness -= (pendingComponents * 10);
+    readiness -= (activeAlarms * 25);
+
+    return Math.max(12, Math.min(100, readiness)); // Min 12% to keep UI visible, max 100%
+  }, [donors, donations, components, resources]);
+
   const getProductName = (code: string) => catalog.find(c => c.productCode === code)?.alias || code;
 
   return (
@@ -449,9 +468,9 @@ export function DonorCenterSimulatorView({
                <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">Throughput Readiness</span>
                <div className="flex items-center gap-3 mt-1">
                   <div className="h-1.5 w-48 bg-clinical-card rounded-full overflow-hidden p-0.5 border border-clinical-border shadow-inner">
-                     <div className="h-full bg-rose-500 w-[42%] shadow-[0_0_10px_rgba(225,29,72,0.6)] rounded-full transition-all duration-1000" />
+                     <div className="h-full bg-rose-500 shadow-[0_0_10px_rgba(225,29,72,0.6)] rounded-full transition-all duration-1000" style={{ width: `${throughputReadiness}%` }} />
                   </div>
-                  <span className="text-[10px] font-black text-clinical-text">42%</span>
+                  <span className="text-[10px] font-black text-clinical-text">{throughputReadiness}%</span>
                </div>
             </div>
          </div>
@@ -516,7 +535,7 @@ export function DonorCenterSimulatorView({
 
                   <div className="overflow-hidden rounded-[40px] border border-clinical-border bg-clinical-card shadow-sm">
                     <table className="w-full text-left text-sm">
-                      <thead className="bg-clinical-bg text-clinical-muted text-[10px] font-black uppercase tracking-[0.3em] border-b border-clinical-border">
+                      <thead className="bg-clinical-bg text-clinical-muted text-sm font-black uppercase tracking-wider border-b border-clinical-border">
                         <tr>
                           <th className="p-8">{t('lims_col_donor_id')}</th>
                           <th className="p-8">{t('lims_col_name')}</th>
@@ -563,7 +582,7 @@ export function DonorCenterSimulatorView({
                                    disabled={d.deferralStatus === 'Active'}
                                    className={`px-6 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all shadow-lg italic ${d.deferralStatus === 'Active' ? 'bg-clinical-bg text-clinical-muted border border-clinical-border cursor-not-allowed' : 'bg-rose-600/10 text-rose-500 border border-rose-600/20 hover:bg-rose-600 hover:text-white hover:shadow-rose-900/20'}`}
                                  >
-                                    {d.deferralStatus === 'Active' ? 'Deferred' : 'Phlebotomy'}
+                                    {d.deferralStatus === 'Active' ? t('rare_stat_deferred') : t('lims_btn_collect')}
                                  </button>
                                </div>
                             </td>
@@ -609,7 +628,7 @@ export function DonorCenterSimulatorView({
 
                    <div className="overflow-hidden rounded-[40px] border border-clinical-border bg-clinical-card shadow-sm">
                     <table className="w-full text-left text-sm">
-                      <thead className="bg-clinical-bg text-clinical-muted text-[10px] font-black uppercase tracking-[0.3em] border-b border-clinical-border">
+                      <thead className="bg-clinical-bg text-clinical-muted text-sm font-black uppercase tracking-wider border-b border-clinical-border">
                         <tr>
                           <th className="p-8">{t('lims_col_don_id')}</th>
                           <th className="p-8">{t('lims_col_name')}</th>
@@ -675,7 +694,7 @@ export function DonorCenterSimulatorView({
                 <div className="space-y-8 animate-in fade-in duration-700">
                    <div className="overflow-hidden rounded-[40px] border border-clinical-border bg-clinical-card shadow-sm">
                     <table className="w-full text-left text-sm">
-                      <thead className="bg-clinical-bg text-clinical-muted text-[10px] font-black uppercase tracking-[0.3em] border-b border-clinical-border">
+                      <thead className="bg-clinical-bg text-clinical-muted text-sm font-black uppercase tracking-wider border-b border-clinical-border">
                         <tr>
                           <th className="p-8">Unit ID</th>
                           <th className="p-8">Serology</th>
@@ -725,7 +744,7 @@ export function DonorCenterSimulatorView({
                 <div className="space-y-8 animate-in fade-in duration-700">
                    <div className="overflow-hidden rounded-[40px] border border-clinical-border bg-clinical-card shadow-sm">
                     <table className="w-full text-left text-sm">
-                      <thead className="bg-clinical-bg text-clinical-muted text-[10px] font-black uppercase tracking-[0.3em] border-b border-clinical-border">
+                      <thead className="bg-clinical-bg text-clinical-muted text-sm font-black uppercase tracking-wider border-b border-clinical-border">
                         <tr>
                           <th className="p-8">Global ID</th>
                           <th className="p-8">Product Class</th>
@@ -945,8 +964,8 @@ export function DonorCenterSimulatorView({
           >
              <div className="p-12 border-b border-clinical-border flex justify-between items-center bg-rose-500/5">
                 <div>
-                   <h3 className="text-3xl font-black text-clinical-text uppercase italic tracking-tighter">Phlebotomy Initiation</h3>
-                   <p className="text-rose-500 text-[10px] font-black uppercase tracking-[0.4em] mt-2 italic">ISBT-128 Protocol Active</p>
+                   <h3 className="text-3xl font-black text-clinical-text uppercase italic tracking-tighter">{t('lims_modal_phlebotomy_title')}</h3>
+                   <p className="text-rose-500 text-[10px] font-black uppercase tracking-[0.4em] mt-2 italic">{t('lims_modal_isbt_protocol')}</p>
                 </div>
                 <div className="w-16 h-16 rounded-[24px] bg-rose-600 flex items-center justify-center text-white shadow-2xl shadow-rose-900/40">
                    <Droplet size={32} />
@@ -957,7 +976,7 @@ export function DonorCenterSimulatorView({
                   <div className="bg-rose-500/10 text-rose-500 text-xs font-black p-6 rounded-3xl border border-rose-500/20">{collectFormError}</div>
                 )}
                 <div className="space-y-4">
-                   <label className="clinical-label">Unit Identification (DIN)</label>
+                   <label className="clinical-label">{t('lims_modal_din')}</label>
                    <div className="relative group">
                       <input type="text" value={collectForm.customDonationId} onChange={e => setCollectForm({...collectForm, customDonationId: e.target.value.toUpperCase()})} className="clinical-input py-8 font-mono text-3xl tracking-widest text-rose-500" placeholder="=W0000 24 000000" />
                       <button type="button" onClick={() => setCollectForm({...collectForm, customDonationId: `=W0000 24 ${Math.floor(Math.random() * 900000 + 100000)}`})} className="absolute right-6 top-1/2 -translate-y-1/2 text-clinical-text hover:text-clinical-text transition-colors">
@@ -967,21 +986,21 @@ export function DonorCenterSimulatorView({
                 </div>
                 <div className="grid grid-cols-2 gap-10">
                    <div className="space-y-4">
-                      <label className="clinical-label">Target Volume (mL)</label>
+                      <label className="clinical-label">{t('lims_modal_target_vol')}</label>
                       <input required type="number" value={collectForm.volume} onChange={e => setCollectForm({...collectForm, volume: parseInt(e.target.value)})} className="clinical-input py-8 text-2xl text-center" />
                    </div>
                    <div className="space-y-4">
-                      <label className="clinical-label">Collection Method</label>
-                      <select value={collectForm.type} onChange={e => setCollectForm({...collectForm, type: e.target.value})} className="clinical-input py-8 appearance-none text-center italic">
-                         <option value="WholeBlood">WHOLE BLOOD</option>
-                         <option value="Apheresis">APHERESIS</option>
+                      <label className="clinical-label">{t('lims_modal_coll_method')}</label>
+                      <select value={collectForm.type} onChange={e => setCollectForm({...collectForm, type: e.target.value})} className="clinical-input py-8 appearance-none text-center italic uppercase">
+                         <option value="WholeBlood">{t('lims_type_wb')}</option>
+                         <option value="Apheresis">{t('lims_type_apheresis')}</option>
                       </select>
                    </div>
                 </div>
              </div>
              <div className="p-12 bg-clinical-bg/60 border-t border-clinical-border flex justify-end gap-6">
-                <button type="button" onClick={() => setIsCollectModalOpen(false)} className="px-10 py-6 rounded-[20px] text-clinical-muted font-black text-[11px] uppercase tracking-[0.3em] hover:text-clinical-text transition-colors">Abort</button>
-                <button type="submit" className="clinical-btn-primary min-w-[300px]">Start Collection Run</button>
+                <button type="button" onClick={() => setIsCollectModalOpen(false)} className="px-10 py-6 rounded-[20px] text-clinical-muted font-black text-[11px] uppercase tracking-[0.3em] hover:text-clinical-text transition-colors">{t('lims_modal_abort')}</button>
+                <button type="submit" className="clinical-btn-primary min-w-[300px]">{t('lims_modal_start_run')}</button>
              </div>
           </motion.form>
         </div>
