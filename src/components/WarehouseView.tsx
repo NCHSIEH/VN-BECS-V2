@@ -14,6 +14,15 @@ export function WarehouseView() {
   const [activeTab, setActiveTab] = useState<'DISPATCH' | 'INVENTORY' | 'RESOURCES'>('DISPATCH');
   const [inventory, setInventory] = useState<any[]>([]);
 
+  const getPriorityLabel = (priority: string) => {
+    const p = (priority || '').toUpperCase();
+    if (p === 'NORMAL' || p === 'ROUTINE') return t('wh_priority_routine') || 'Routine';
+    if (p === 'HIGH') return t('wh_priority_high') || 'High';
+    if (p === 'URGENT') return t('wh_priority_urgent') || 'Urgent';
+    if (p === 'CRITICAL' || p === 'STAT' || p === 'MTP') return t('wh_priority_critical') || 'Critical';
+    return priority;
+  };
+
   const fetchData = () => {
     fetch('/api/v1/orders')
       .then(res => res.json())
@@ -82,13 +91,13 @@ export function WarehouseView() {
          <div className="flex items-center gap-6">
             <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.8)]" />
             <div className="flex flex-col">
-               <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.4em] italic">Logistics Command</span>
-               <span className="text-sm font-black text-clinical-text uppercase italic tracking-tighter">Central Hub Inventory Dispatch</span>
+               <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.4em] italic">{t('ui_logistics')}</span>
+               <span className="text-sm font-black text-clinical-text uppercase italic tracking-tighter">{t('ui_inventory_dispatch')}</span>
             </div>
          </div>
          <div className="flex items-center gap-6">
             <div className="flex flex-col items-end">
-               <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">Cold Chain Integrity</span>
+               <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">{t('cour_cold_chain_integrity')}</span>
                <div className="flex items-center gap-3 mt-1">
                   <div className="h-1.5 w-48 bg-clinical-card rounded-full overflow-hidden p-0.5 border border-clinical-border shadow-inner">
                      <div className="h-full bg-emerald-500 w-[94%] shadow-[0_0_10px_rgba(16,185,129,0.6)] rounded-full transition-all duration-1000" />
@@ -103,11 +112,11 @@ export function WarehouseView() {
         {/* Workflow Sidebar */}
         <div className="w-96 bg-clinical-bg/50 border-r border-clinical-border flex flex-col shrink-0 p-8 gap-8 overflow-y-auto custom-scrollbar">
            <div className="space-y-2">
-              <h2 className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] mb-6">Fulfillment Hub</h2>
+              <h2 className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] mb-6">{t('wh_tab_resources') || 'Fulfillment Hub'}</h2>
               {[
-                { id: 'DISPATCH', label: '1. Picking Queue', icon: <PackageCheck size={20} />, color: 'emerald' },
-                { id: 'INVENTORY', label: '2. Hub Directory', icon: <Database size={20} />, color: 'sky' },
-                { id: 'RESOURCES', label: '3. Asset Management', icon: <Package size={20} />, color: 'amber' },
+                { id: 'DISPATCH', label: `1. ${t('wh_title_dispatch')}`, icon: <PackageCheck size={20} />, color: 'emerald' },
+                { id: 'INVENTORY', label: `2. ${t('wh_title_inventory')}`, icon: <Database size={20} />, color: 'sky' },
+                { id: 'RESOURCES', label: `3. ${t('wh_title_resources')}`, icon: <Package size={20} />, color: 'amber' },
               ].map((stage) => (
                 <button
                   key={stage.id}
@@ -131,19 +140,19 @@ export function WarehouseView() {
 
            <div className="mt-auto space-y-6">
               <div className="bg-clinical-bg p-6 rounded-[32px] border border-clinical-border shadow-inner">
-                 <p className="text-[10px] font-black text-clinical-muted uppercase tracking-widest mb-4">Network Health</p>
-                 <div className="flex gap-4">
-                    <div className="flex flex-col">
-                       <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">Units Ready</span>
-                       <span className="text-xl font-black text-emerald-500">{inventory.length}</span>
-                    </div>
-                    <div className="w-px h-8 bg-clinical-bg mt-2" />
-                    <div className="flex flex-col">
-                       <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">Pending Orders</span>
-                       <span className="text-xl font-black text-sky-500">{orders.filter(o => o.status === 'APPROVED').length}</span>
-                    </div>
-                 </div>
-              </div>
+                  <p className="text-[10px] font-black text-clinical-muted uppercase tracking-widest">{t('wh_stock_status') || 'Hub Stock Status'}</p>
+                  <div className="flex gap-4 mt-4">
+                     <div className="flex flex-col">
+                        <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">{t('wh_units_available') || 'Units Available'}</span>
+                        <span className="text-xl font-black text-emerald-500">{inventory.length}</span>
+                     </div>
+                     <div className="w-px h-8 bg-clinical-bg mt-2" />
+                     <div className="flex flex-col">
+                        <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">{t('wh_pending_dispatch') || 'Pending Dispatch'}</span>
+                        <span className="text-xl font-black text-sky-500">{orders.filter(o => o.status === 'APPROVED').length}</span>
+                     </div>
+                  </div>
+               </div>
            </div>
         </div>
 
@@ -159,9 +168,9 @@ export function WarehouseView() {
                      <p className="text-clinical-muted text-[11px] font-black uppercase tracking-[0.5em]">VN-HUB-NODE-01</p>
                   </div>
                   <h1 className="premium-heading">
-                    {activeTab === 'DISPATCH' && 'Picking & Verification'}
-                    {activeTab === 'INVENTORY' && 'Inventory Directory'}
-                    {activeTab === 'RESOURCES' && 'Asset Oversight'}
+                    {activeTab === 'DISPATCH' && t('wh_title_dispatch')}
+                    {activeTab === 'INVENTORY' && t('wh_title_inventory')}
+                    {activeTab === 'RESOURCES' && t('wh_title_resources')}
                   </h1>
                </div>
                <div className="flex gap-4">
@@ -177,11 +186,11 @@ export function WarehouseView() {
                 <div className="flex flex-col lg:flex-row gap-12">
                    {/* Left: Queue */}
                    <div className="w-full lg:w-1/3 space-y-6">
-                      <h3 className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] mb-4">Pending Requests</h3>
+                      <h3 className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] mb-4">{t('wh_queue_title')}</h3>
                       <div className="space-y-4">
-                        {orders.map(order => (
+                        {orders.map((order, idx) => (
                           <button 
-                            key={order.id} 
+                            key={`${order.id}-${idx}`} 
                             onClick={() => {setSelectedOrder(order); setScanResult(null); setScannedCode("");}}
                             className={`w-full p-6 rounded-[32px] border text-left transition-all ${
                               selectedOrder?.id === order.id ? 'bg-clinical-card border-emerald-500 shadow-2xl scale-[1.02]' : 'bg-clinical-bg/30 border-clinical-border hover:border-clinical-border'
@@ -194,11 +203,11 @@ export function WarehouseView() {
                                 }`}>{order.status}</span>
                              </div>
                              <p className="text-clinical-text font-black uppercase italic tracking-tight text-lg mb-1">{order.hospital}</p>
-                             <p className="text-[10px] text-clinical-muted font-bold uppercase tracking-widest">{order.priority} PRIORITY</p>
+                             <p className="text-[10px] text-clinical-muted font-bold uppercase tracking-widest">{getPriorityLabel(order.priority)} {t('wh_priority_suffix') || 'Priority'}</p>
                           </button>
                         ))}
                         {orders.length === 0 && (
-                          <div className="p-20 text-center border-2 border-dashed border-clinical-border rounded-[40px] text-clinical-text uppercase font-black text-[10px] tracking-widest italic">Queue Empty</div>
+                          <div className="p-20 text-center border-2 border-dashed border-clinical-border rounded-[40px] text-clinical-text uppercase font-black text-[10px] tracking-widest italic">{t('wh_queue_empty')}</div>
                         )}
                       </div>
                    </div>
@@ -208,7 +217,7 @@ export function WarehouseView() {
                       {!selectedOrder ? (
                         <div className="h-full flex flex-col items-center justify-center border-2 border-dashed border-clinical-border rounded-[48px] p-20 text-clinical-text group">
                            <PackageCheck size={64} className="mb-6 opacity-20 group-hover:opacity-40 transition-opacity" />
-                           <p className="font-black uppercase tracking-widest text-[10px] italic">Select Order for Verification</p>
+                           <p className="font-black uppercase tracking-widest text-[10px] italic">{t('wh_station_select')}</p>
                         </div>
                       ) : (
                         <motion.div 
@@ -219,7 +228,7 @@ export function WarehouseView() {
                            <div className="flex justify-between items-start">
                               <div>
                                  <h2 className="text-3xl font-black text-clinical-text italic uppercase tracking-tight">{selectedOrder.id}</h2>
-                                 <p className="text-emerald-500 text-[10px] font-black uppercase tracking-[0.4em] mt-2 italic">Scanning Unit Handover</p>
+                                 <p className="text-emerald-500 text-[10px] font-black uppercase tracking-[0.4em] mt-2 italic">{t('wh_scanning_handover')}</p>
                               </div>
                               <div className="w-16 h-16 rounded-[24px] bg-clinical-bg border border-clinical-border flex items-center justify-center text-clinical-muted">
                                  <ScanBarcode size={32} />
@@ -227,9 +236,9 @@ export function WarehouseView() {
                            </div>
 
                            <div className="bg-clinical-bg/50 border border-clinical-border p-8 rounded-[32px] space-y-6">
-                              <h4 className="text-[10px] font-black text-clinical-muted uppercase tracking-widest">Required Components</h4>
-                              {selectedOrder.items.map(item => (
-                                <div key={item.id} className="flex flex-col gap-4">
+                              <h4 className="text-[10px] font-black text-clinical-muted uppercase tracking-widest">{t('wh_req_comp')}</h4>
+                              {selectedOrder.items.map((item, idx) => (
+                                <div key={`${item.id || item.product}-${idx}`} className="flex flex-col gap-4">
                                    <div className="flex justify-between items-end">
                                       <span className="text-2xl font-black text-clinical-text italic">{item.qty}x {item.product}</span>
                                       <span className="text-[10px] font-black text-clinical-muted uppercase tracking-widest">{item.abo} {item.rhd}</span>
@@ -244,7 +253,7 @@ export function WarehouseView() {
                                           onClick={() => setScannedCode(selectedOrder.allocatedUnits![0])}
                                           className="text-[10px] font-black text-emerald-500 hover:text-emerald-600 transition-colors uppercase tracking-widest"
                                         >
-                                          AUTO-FILL
+                                          {t('wh_btn_autofill_inline')}
                                         </button>
                                      </div>
                                    )}
@@ -256,8 +265,8 @@ export function WarehouseView() {
                              <div className="bg-emerald-500/10 border border-emerald-500/30 p-10 rounded-[32px] flex flex-col items-center gap-6">
                                 <CheckCircle size={48} className="text-emerald-500" />
                                 <div className="text-center">
-                                   <h3 className="text-2xl font-black text-clinical-text uppercase italic italic">Handover Complete</h3>
-                                   <p className="text-[10px] text-emerald-500 font-black uppercase tracking-widest mt-2">Transitioning to cold-chain logistics</p>
+                                   <h3 className="text-2xl font-black text-clinical-text uppercase italic italic">{t('wh_handover_complete')}</h3>
+                                   <p className="text-[10px] text-emerald-500 font-black uppercase tracking-widest mt-2">{t('wh_handover_complete_desc')}</p>
                                 </div>
                              </div>
                            ) : (
@@ -269,12 +278,12 @@ export function WarehouseView() {
                                      type="text"
                                      value={scannedCode}
                                      onChange={e => setScannedCode(e.target.value)}
-                                     placeholder="Scan ISBT-128 Unit Barcode..."
+                                     placeholder={t('wh_placeholder_scan')}
                                      className="clinical-input pl-16 py-8 text-2xl font-mono tracking-widest text-emerald-500"
                                    />
                                 </div>
                                 <button type="submit" className="clinical-btn-primary w-full py-8 text-lg">
-                                   Verify & Dispatch <ArrowRight size={24} />
+                                   {t('wh_btn_verify_dispatch')} <ArrowRight size={24} />
                                 </button>
                              </form>
                            )}
@@ -299,11 +308,11 @@ export function WarehouseView() {
                      <table className="w-full text-left text-sm">
                        <thead className="bg-clinical-bg/50 text-clinical-muted text-[10px] font-black uppercase tracking-[0.3em] border-b border-clinical-border">
                          <tr>
-                           <th className="p-8">ISBT Barcode</th>
-                           <th className="p-8">Blood Type</th>
-                           <th className="p-8">Product</th>
-                           <th className="p-8">Status</th>
-                           <th className="p-8 text-right">Expiry</th>
+                           <th className="p-8">{t('wh_tbl_barcode')}</th>
+                           <th className="p-8">{t('wh_tbl_blood')}</th>
+                           <th className="p-8">{t('wh_tbl_product')}</th>
+                           <th className="p-8">{t('wh_tbl_status')}</th>
+                           <th className="p-8 text-right">{t('wh_tbl_expiry')}</th>
                          </tr>
                        </thead>
                        <tbody className="divide-y divide-clinical-border">

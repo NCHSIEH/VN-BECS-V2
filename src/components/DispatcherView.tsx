@@ -2,13 +2,24 @@ import { useState, useEffect, useMemo } from "react";
 import { CheckCircle2, ShieldAlert, Activity, GitCommitHorizontal, AlertCircle, RefreshCw, Timer, TrendingUp } from "lucide-react";
 import { Order } from "../types";
 import { getDosColorLevel, COLOR_CLASSES } from "../lib/alertThresholds";
+import { useI18n } from "../lib/i18n";
 
 export function DispatcherView() {
+  const { t } = useI18n();
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeMTP, setActiveMTP] = useState<any | null>(null);
   const [inventory, setInventory] = useState<any[]>([]);
+
+  const getPriorityLabel = (priority: string) => {
+    const p = (priority || '').toUpperCase();
+    if (p === 'NORMAL' || p === 'ROUTINE') return t('wh_priority_routine') || 'Routine';
+    if (p === 'HIGH') return t('wh_priority_high') || 'High';
+    if (p === 'URGENT') return t('wh_priority_urgent') || 'Urgent';
+    if (p === 'CRITICAL' || p === 'STAT' || p === 'MTP') return t('wh_priority_critical') || 'Critical';
+    return priority;
+  };
 
   const fetchOrders = () => {
     setIsRefreshing(true);
@@ -173,12 +184,12 @@ export function DispatcherView() {
         {/* Order Queue */}
         <div className="col-span-12 lg:col-span-4 bg-clinical-bg border border-clinical-border rounded-xl p-4 flex flex-col gap-3 min-h-[500px]">
           <h2 className="text-sm font-bold text-clinical-muted uppercase tracking-widest border-b border-clinical-border pb-2 flex justify-between items-center">
-            <span>Triage Queue</span>
+            <span>{t('dh_triage_queue')}</span>
             <div className="flex gap-3 items-center">
               <button onClick={fetchOrders} className={`text-clinical-muted hover:text-lime-400 transition ${isRefreshing ? 'animate-spin' : ''}`}>
                 <RefreshCw size={14} />
               </button>
-              <span className="text-lime-400 bg-lime-950/50 px-2 rounded-full text-xs flex items-center">{orders.filter(o => o.status === 'SUBMITTED').length} Active</span>
+              <span className="text-lime-400 bg-lime-950/50 px-2 rounded-full text-xs flex items-center">{orders.filter(o => o.status === 'SUBMITTED').length} {t('cour_active_jobs')}</span>
             </div>
           </h2>
           <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
@@ -197,7 +208,7 @@ export function DispatcherView() {
                         order.priority === 'MTP' ? 'bg-rose-500/20 text-rose-600 border border-rose-500/30' : 
                         'bg-clinical-card/80 text-clinical-muted'}`}
                     >
-                      {order.priority}
+                      {getPriorityLabel(order.priority)}
                     </span>
                     <span className={`text-xs font-mono font-bold px-1.5 rounded ${order.hiciScore >= 80 ? 'text-rose-600 bg-rose-950/50' : 'text-lime-400 bg-lime-950/50'}`}>HICI: {order.hiciScore}</span>
                   </div>
@@ -205,7 +216,7 @@ export function DispatcherView() {
                 </div>
                 <div className="font-semibold text-clinical-text text-sm flex justify-between">
                   <span>{order.hospital}</span>
-                  {order.status === 'APPROVED' && <span className="text-lime-400 flex items-center gap-1 text-xs"><CheckCircle2 size={12}/> Approved</span>}
+                  {order.status === 'APPROVED' && <span className="text-lime-400 flex items-center gap-1 text-xs"><CheckCircle2 size={12}/> {t('wh_handover_complete') || 'Approved'}</span>}
                 </div>
                 <div className="text-clinical-muted text-xs mt-1 truncate">
                   {order.items.map(i => `${i.qty}x ${i.product}`).join(', ')}
@@ -221,34 +232,34 @@ export function DispatcherView() {
                 })()}
               </div>
             ))}
-            {orders.length === 0 && <div className="text-clinical-muted text-sm italic text-center py-8">Queue empty.</div>}
+            {orders.length === 0 && <div className="text-clinical-muted text-sm italic text-center py-8">{t('wh_queue_empty')}</div>}
           </div>
         </div>
 
         {/* Workspace / HITL */}
         <div className="col-span-12 lg:col-span-5 bg-clinical-bg border border-clinical-border rounded-xl p-4 flex flex-col">
           <h2 className="text-sm font-bold text-clinical-muted uppercase tracking-widest border-b border-clinical-border pb-2 mb-4 flex gap-2">
-            <Activity size={16}/> HITL Review Workspace
+            <Activity size={16}/> {t('dh_hitl_workspace')}
           </h2>
           
           {!selectedOrder ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-8 border border-clinical-border border-dashed rounded-lg bg-clinical-bg/50">
                <GitCommitHorizontal size={32} className="text-clinical-muted mb-3"/>
-               <p className="text-clinical-muted text-sm">Select an order from the triage queue to review AI allocation proposals and authorize dispatch.</p>
+               <p className="text-clinical-muted text-sm">{t('dh_hitl_select_desc')}</p>
             </div>
           ) : (
             <div className="flex-1 flex flex-col gap-4">
               <div className="bg-clinical-bg p-3 rounded-lg border border-clinical-border">
                 <div className="flex justify-between text-sm text-clinical-muted mb-1">
-                  <span>Reference: {selectedOrder.id}</span>
+                  <span>{t('dh_ref')}: {selectedOrder.id}</span>
                   <span>{new Date(selectedOrder.submittedAt || '').toLocaleTimeString()}</span>
                 </div>
                 <h3 className="text-lg font-bold text-clinical-text mb-2">{selectedOrder.hospital}</h3>
                 <div className="space-y-1">
-                  {selectedOrder.items.map(item => (
-                    <div key={item.id} className="flex justify-between items-center text-sm bg-clinical-bg p-2 rounded">
+                  {selectedOrder.items.map((item, idx) => (
+                    <div key={`${item.id || item.product}-${idx}`} className="flex justify-between items-center text-sm bg-clinical-bg p-2 rounded">
                        <span className="text-lime-400 font-semibold">{item.product}</span>
-                       <span className="text-clinical-muted">Requested: {item.qty} units</span>
+                       <span className="text-clinical-muted">{t('lims_col_volume') || 'Requested'}: {item.qty} {t('cour_units')}</span>
                     </div>
                   ))}
                 </div>
@@ -257,35 +268,35 @@ export function DispatcherView() {
               {/* AI Proposal */}
               <div className="bg-lime-950/20 p-3 rounded-lg border border-lime-900/40 mt-2">
                 <h4 className="text-xs font-bold text-lime-400 uppercase tracking-wider mb-2 flex items-center gap-1">
-                  <Activity size={12}/> AI Allocation Proposal (HICI {selectedOrder.hiciScore})
+                  <Activity size={12}/> {t('dh_ai_proposal', { score: String(selectedOrder.hiciScore) })}
                 </h4>
                 <div className="grid grid-cols-2 gap-2 mb-3 bg-clinical-bg/50 p-2 rounded border border-lime-900/30">
-                  <div className="text-xs text-clinical-muted">Demand Risk: <span className="text-clinical-text">{selectedOrder.rationale?.demandRisk || 'N/A'}</span></div>
-                  <div className="text-xs text-clinical-muted">Regional Scarcity: <span className="text-clinical-text">{selectedOrder.rationale?.regionalScarcityRisk || 'N/A'}</span></div>
-                  <div className="text-xs text-clinical-muted">Lead Time Risk: <span className="text-clinical-text">{selectedOrder.rationale?.leadTimeRisk || 'N/A'}</span></div>
-                  <div className="text-xs text-clinical-muted">Model Confidence: <span className="text-lime-400">{selectedOrder.rationale?.confidence || 'High'}</span></div>
+                  <div className="text-xs text-clinical-muted">{t('dh_demand_risk')}: <span className="text-clinical-text">{selectedOrder.rationale?.demandRisk || 'N/A'}</span></div>
+                  <div className="text-xs text-clinical-muted">{t('dh_scarcity_risk')}: <span className="text-clinical-text">{selectedOrder.rationale?.regionalScarcityRisk || 'N/A'}</span></div>
+                  <div className="text-xs text-clinical-muted">{t('dh_lead_time_risk')}: <span className="text-clinical-text">{selectedOrder.rationale?.leadTimeRisk || 'N/A'}</span></div>
+                  <div className="text-xs text-clinical-muted">{t('dh_confidence')}: <span className="text-lime-400">{selectedOrder.rationale?.confidence || 'High'}</span></div>
                 </div>
                 <div className="flex items-center gap-3 mb-3">
                    <div className={`h-1.5 flex-1 rounded-full bg-clinical-card overflow-hidden`}>
                       <div className={`h-full bg-lime-500`} style={{ width: '100%' }}></div>
                    </div>
-                   <span className="text-[10px] font-black text-lime-400 uppercase tracking-widest">FEFO Match</span>
+                   <span className="text-[10px] font-black text-lime-400 uppercase tracking-widest">{t('dh_fefo_match')}</span>
                 </div>
                 <p className="text-clinical-muted text-sm mb-3">
                    {selectedOrder.hiciScore >= 70 ? 'Critical priority detected. ' : ''}
                    Suggested fulfilling <strong>100%</strong> of requested amount from Central Hub reserve.
-                   <span className="text-rose-600 text-[10px] block mt-1 font-bold uppercase tracking-widest">⚠️ LOW EXPIRY RISK DETECTED IN ALLOCATED UNITS</span>
+                   <span className="text-rose-600 text-[10px] block mt-1 font-bold uppercase tracking-widest">{t('dh_fefo_risk_warning')}</span>
                 </p>
                 <div className="flex justify-between items-center border-t border-lime-900/40 pt-2 flex-wrap gap-2">
-                  <span className="text-xs text-clinical-muted hidden sm:inline-block">Approval Required</span>
+                  <span className="text-xs text-clinical-muted hidden sm:inline-block">{t('dh_approval_req')}</span>
                   {selectedOrder.status !== 'APPROVED' && selectedOrder.status !== 'DISPATCHED' ? (
                     <div className="flex gap-2">
                       <button className="px-3 py-1 bg-clinical-bg text-clinical-muted rounded text-xs hover:bg-clinical-card/80 transition">Partial...</button>
-                      <button onClick={handleApprove} className="px-3 py-1 bg-lime-400 hover:bg-lime-400 text-clinical-text rounded font-bold text-xs shadow transition">Approve Suggestion</button>
+                      <button onClick={handleApprove} className="px-3 py-1 bg-lime-400 hover:bg-lime-400 text-clinical-text rounded font-bold text-xs shadow transition">{t('dh_btn_approve')}</button>
                     </div>
                   ) : (
                     <div className="flex items-center gap-3">
-                      <span className="text-lime-400 font-bold text-sm flex items-center gap-1"><CheckCircle2 size={16}/> Authorized</span>
+                      <span className="text-lime-400 font-bold text-sm flex items-center gap-1"><CheckCircle2 size={16}/> {t('wh_handover_complete') || 'Authorized'}</span>
                       {selectedOrder.status === 'APPROVED' && (
                         <button 
                           onClick={handleRevert}
@@ -310,16 +321,16 @@ export function DispatcherView() {
                     onClick={handleEscalate}
                     className="w-full py-1.5 border border-orange-800 text-orange-600 rounded text-xs hover:bg-orange-900/40 transition"
                   >
-                    Override AI Proposal (Escalate to Medical Review)
+                    {t('dh_btn_escalate')}
                   </button>
                 </div>
               )}
               {selectedOrder.status === 'REVIEW_PENDING' && (
                 <div className="mt-auto bg-purple-950/20 p-3 rounded-lg border border-purple-900/30">
                   <div className="flex gap-2 items-center text-purple-600 text-sm font-bold mb-1">
-                     <Activity size={14}/> Escalated to Medical Reviewer
+                     <Activity size={14}/> {t('ui_idm_review') || 'Escalated to Medical Reviewer'}
                   </div>
-                  <p className="text-xs text-purple-300/80">Awaiting dual review approval. Reason: {selectedOrder.escalationReason}</p>
+                  <p className="text-xs text-purple-300/80">{t('dh_escalated_msg', { reason: selectedOrder.escalationReason || 'STAT Override' })}</p>
                 </div>
               )}
             </div>
@@ -329,7 +340,7 @@ export function DispatcherView() {
         {/* Regional Overview */}
         <div className="col-span-12 lg:col-span-3 bg-clinical-bg border border-clinical-border rounded-xl p-4 flex flex-col">
           <h2 className="text-sm font-bold text-clinical-muted uppercase tracking-widest border-b border-clinical-border pb-2 mb-4">
-            ABO×Rh Heatmap
+            {t('dh_heatmap_title')}
           </h2>
           <div className="grid grid-cols-2 gap-2">
             {heatmapData.map(item => {
@@ -340,7 +351,7 @@ export function DispatcherView() {
                   <div className={`${cls.text} font-mono text-lg font-bold`}>{item.count}</div>
                   <div className="flex justify-between items-center mt-1">
                      <span className="text-[8px] text-clinical-muted uppercase font-black">{item.dos.toFixed(1)} DOS</span>
-                     {item.expiryRisk > 20 && <span className="text-[8px] text-rose-500 font-black animate-pulse">EXP!</span>}
+                     {item.expiryRisk > 20 && <span className="text-[8px] text-rose-500 font-black animate-pulse">{t('dh_heatmap_exp')}</span>}
                   </div>
                 </div>
               );
@@ -351,10 +362,10 @@ export function DispatcherView() {
           {heatmapData.some(h => h.color === 'red') && (
              <div className="p-3 bg-rose-950/20 border border-rose-900/30 rounded-lg mt-3">
                 <div className="text-rose-600 text-xs font-bold uppercase tracking-wide mb-1 flex gap-1 items-center">
-                  <ShieldAlert size={14}/> Scarcity Alert
+                  <ShieldAlert size={14}/> {t('dh_scarcity_alert')}
                 </div>
                 <div className="text-sm text-rose-200">
-                  {heatmapData.filter(h => h.color === 'red').map(h => `${h.abo} ${h.rhd === 'Positive' ? '+' : '-'}`).join(', ')} critically low.
+                  {heatmapData.filter(h => h.color === 'red').map(h => `${h.abo} ${h.rhd === 'Positive' ? '+' : '-'}`).join(', ')} {t('dh_heatmap_alert')}
                 </div>
              </div>
           )}

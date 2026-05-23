@@ -12,9 +12,16 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { name, type, location } = await request.json();
+    const { name, type, location, chairsCount } = await request.json();
     const id = `ORG-${type.toUpperCase().substring(0,3)}-${Math.floor(Math.random() * 9000) + 1000}`;
-    await db.organizations.create({ id, name, type, location, createdAt: new Date().toISOString() });
+    await db.organizations.create({ 
+      id, 
+      name, 
+      type, 
+      location, 
+      chairsCount: type === 'BloodCenter' ? (chairsCount || 3) : undefined,
+      createdAt: new Date().toISOString() 
+    });
     return NextResponse.json({ success: true, id });
   } catch (error) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

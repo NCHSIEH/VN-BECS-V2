@@ -13,6 +13,7 @@ export function AdminMDMView({ onBack, initialTab }: { onBack: () => void; initi
   const [orgName, setOrgName] = useState('');
   const [orgType, setOrgType] = useState('Hospital');
   const [orgLoc, setOrgLoc] = useState('');
+  const [orgChairsCount, setOrgChairsCount] = useState(3);
 
   const [uName, setUName] = useState('');
   const [uPass, setUPass] = useState('');
@@ -67,9 +68,14 @@ export function AdminMDMView({ onBack, initialTab }: { onBack: () => void; initi
     await fetch('/api/v1/mdm/organizations', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ name: orgName, type: orgType, location: orgLoc })
+      body: JSON.stringify({ 
+        name: orgName, 
+        type: orgType, 
+        location: orgLoc,
+        chairsCount: orgType === 'BloodCenter' ? orgChairsCount : undefined
+      })
     });
-    setOrgName(''); setOrgLoc('');
+    setOrgName(''); setOrgLoc(''); setOrgChairsCount(3);
     fetchMDM();
   };
 
@@ -193,13 +199,16 @@ export function AdminMDMView({ onBack, initialTab }: { onBack: () => void; initi
                   <Building className="text-clinical-muted" /> {t('mdm_org_dir')}
                 </h2>
                 
-                <form onSubmit={handleAddOrg} className="grid grid-cols-4 gap-4 mb-8 bg-clinical-bg p-4 rounded-xl border border-clinical-border">
+                <form onSubmit={handleAddOrg} className={`grid ${orgType === 'BloodCenter' ? 'grid-cols-5' : 'grid-cols-4'} gap-4 mb-8 bg-clinical-bg p-4 rounded-xl border border-clinical-border`}>
                   <input required value={orgName} onChange={e=>setOrgName(e.target.value)} className="bg-clinical-bg border border-clinical-border rounded p-2 text-sm focus:border-indigo-500 outline-none" placeholder={t('mdm_name')} />
                   <select value={orgType} onChange={e=>setOrgType(e.target.value)} className="bg-clinical-bg border border-clinical-border rounded p-2 text-sm focus:border-indigo-500 outline-none">
                      <option value="Hospital">{t('org_type_hospital')}</option>
                      <option value="BloodCenter">{t('org_type_bloodcenter')}</option>
                      <option value="Hub">{t('org_type_hub')}</option>
                   </select>
+                  {orgType === 'BloodCenter' && (
+                    <input type="number" min={1} max={6} required value={orgChairsCount} onChange={e=>setOrgChairsCount(parseInt(e.target.value) || 3)} className="bg-clinical-bg border border-clinical-border rounded p-2 text-sm focus:border-indigo-500 outline-none" placeholder="Active Chairs (1-6)" title="Number of active phlebotomy chairs" />
+                  )}
                   <input required value={orgLoc} onChange={e=>setOrgLoc(e.target.value)} className="bg-clinical-bg border border-clinical-border rounded p-2 text-sm focus:border-indigo-500 outline-none" placeholder={t('mdm_location')} />
                   <button type="submit" className="bg-indigo-600 hover:bg-indigo-500 text-clinical-text font-bold py-2 rounded flex justify-center items-center gap-1 transition-colors">
                     <Plus size={16} /> {t('mdm_add_org')}
@@ -224,7 +233,7 @@ export function AdminMDMView({ onBack, initialTab }: { onBack: () => void; initi
                           <td className="p-3 font-bold text-clinical-text">{o.name}</td>
                           <td className="p-3">
                              <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-clinical-bg text-clinical-muted">
-                                {o.type === 'Hospital' ? t('org_type_hospital') : o.type === 'BloodCenter' ? t('org_type_bloodcenter') : o.type === 'Hub' ? t('org_type_hub') : o.type}
+                                {o.type === 'Hospital' ? t('org_type_hospital') : o.type === 'BloodCenter' ? `${t('org_type_bloodcenter')} (${o.chairsCount || 3} Chairs)` : o.type === 'Hub' ? t('org_type_hub') : o.type}
                              </span>
                           </td>
                           <td className="p-3 text-clinical-muted">{o.location}</td>
@@ -265,6 +274,12 @@ export function AdminMDMView({ onBack, initialTab }: { onBack: () => void; initi
                                 <input value={editingOrg.location} onChange={e=>setEditingOrg({...editingOrg, location: e.target.value})} className="bg-clinical-bg border border-clinical-border rounded-xl p-3 text-xs text-clinical-text outline-none focus:border-rose-500 transition-all" />
                              </div>
                           </div>
+                          {editingOrg.type === 'BloodCenter' && (
+                            <div className="flex flex-col gap-2">
+                                <label className="text-[10px] font-black text-clinical-muted uppercase tracking-widest">Active Phlebotomy Chairs (1-6)</label>
+                                <input type="number" min={1} max={6} value={editingOrg.chairsCount || 3} onChange={e=>setEditingOrg({...editingOrg, chairsCount: parseInt(e.target.value) || 3})} className="bg-clinical-bg border border-clinical-border rounded-xl p-3 text-xs text-clinical-text outline-none focus:border-rose-500 transition-all" />
+                             </div>
+                          )}
                        </div>
                        <div className="p-6 bg-clinical-bg/50 border-t border-clinical-border flex justify-end gap-3">
                           <button type="button" onClick={() => setEditingOrg(null)} className="px-6 py-2 text-[10px] font-black text-clinical-muted hover:text-clinical-text uppercase tracking-widest transition-colors">{t('mdm_cancel')}</button>

@@ -24,7 +24,7 @@ async function main() {
   const content = fs.readFileSync(i18nFilePath, 'utf8');
 
   // Locate the dict block
-  const dictStartIndex = content.indexOf('const dict: Record<Language, Record<string, string>> = {');
+  const dictStartIndex = content.indexOf('const fallbackDict: Record<Language, Record<string, string>> = {');
   if (dictStartIndex === -1) {
     console.error('Could not find dict block in i18n.tsx');
     process.exit(1);
@@ -66,13 +66,13 @@ async function main() {
     }
 
     // Regular expression to parse "key: 'value'" or "key: \"value\"" (handling double and single quotes and backslash escapes)
-    const entryRegex = /([a-zA-Z0-9_-]+):\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)')/g;
+    const entryRegex = /(?:"([a-zA-Z0-9_-]+)"|([a-zA-Z0-9_-]+)):\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)')/g;
     let match;
     let count = 0;
 
     while ((match = entryRegex.exec(blockContent)) !== null) {
-      const key = match[1];
-      let value = match[2] !== undefined ? match[2] : match[3];
+      const key = match[1] || match[2];
+      let value = match[3] !== undefined ? match[3] : match[4];
       
       // Clean up escape characters
       value = value.replace(/\\"/g, '"').replace(/\\'/g, "'").replace(/\\n/g, '\n');

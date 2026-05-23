@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useI18n } from '../lib/i18n';
 import { motion, AnimatePresence } from 'framer-motion';
+import { TaskQueue } from './TaskQueue';
 
 interface PortalViewProps {
   user: User;
@@ -28,6 +29,7 @@ interface PortalViewProps {
   onOpenDocs?: () => void;
   onOpenSwitcher?: () => void;
   onOpenThemeSwitcher?: () => void;
+  onLaunchMission?: (role: Role) => void;
 }
 
 export function PortalView({ 
@@ -37,10 +39,52 @@ export function PortalView({
   onLogout, 
   onOpenDocs, 
   onOpenSwitcher,
-  onOpenThemeSwitcher
+  onOpenThemeSwitcher,
+  onLaunchMission
 }: PortalViewProps) {
   const { lang, setLang, t } = useI18n();
   const [showManual, setShowManual] = useState(false);
+  const [showTaskQueue, setShowTaskQueue] = useState(true);
+
+  const getMissionsForRole = (r: Role) => {
+    const allMissions = [
+      { id: 'M-1', priority: 'Urgent', roleTarget: 'HospitalOperator' },
+      { id: 'M-2', priority: 'High', roleTarget: 'LIMS_Simulator' },
+      { id: 'M-3', priority: 'High', roleTarget: 'WarehouseIssuer' },
+      { id: 'M-4', priority: 'Urgent', roleTarget: 'Dispatcher' },
+      { id: 'M-5', priority: 'Urgent', roleTarget: 'Nurse' },
+      { id: 'M-6', priority: 'Routine', roleTarget: 'Admin' }
+    ];
+    if (r === 'Admin') return allMissions;
+    return allMissions.filter(m => m.roleTarget === r);
+  };
+
+  const userMissions = getMissionsForRole(user.role);
+  const hasUrgent = userMissions.some(m => m.priority === 'Urgent');
+  const hasHigh = userMissions.some(m => m.priority === 'High');
+  const hasRoutine = userMissions.some(m => m.priority === 'Routine');
+
+  let pulseColorClass = 'bg-emerald-500 shadow-emerald-500/50';
+  let pulseAnimationClass = '';
+  let indicatorLabel = 'Clear';
+
+  if (hasUrgent) {
+    pulseColorClass = 'bg-rose-500 shadow-rose-500/50';
+    pulseAnimationClass = 'animate-ping';
+    indicatorLabel = 'Urgent Alerts';
+  } else if (hasHigh) {
+    pulseColorClass = 'bg-sky-500 shadow-sky-500/50';
+    pulseAnimationClass = 'animate-pulse';
+    indicatorLabel = 'High Priority';
+  } else if (hasRoutine) {
+    pulseColorClass = 'bg-emerald-500 shadow-emerald-500/50';
+    pulseAnimationClass = '';
+    indicatorLabel = 'Active Tasks';
+  } else {
+    pulseColorClass = 'bg-emerald-500 shadow-emerald-500/50';
+    pulseAnimationClass = '';
+    indicatorLabel = 'Queue Clear';
+  }
 
   const stations = [
     {
@@ -63,7 +107,7 @@ export function PortalView({
       description: t('portal_station_lab_desc'),
       color: 'sky',
       status: 'Optimized',
-      system: 'LIMS' as SystemType
+      system: 'LAB' as SystemType
     },
     {
       id: 'HUB',
@@ -172,16 +216,45 @@ export function PortalView({
           <div className="flex flex-col items-end gap-6 w-full md:w-auto shrink-0">
              {/* Controls Group */}
              <div className="flex flex-wrap items-center gap-8 justify-end w-full">
+                {/* My Task Queue Toggle Button */}
+                <div className="flex flex-col items-end gap-3">
+                   <p className="text-[9px] font-black text-clinical-muted uppercase tracking-[0.4em] italic">Missions & Reminders</p>
+                   <button 
+                     onClick={() => setShowTaskQueue(!showTaskQueue)}
+                     className={`flex items-center gap-3 px-6 py-2.5 rounded-[20px] border transition-all group shadow-sm active:scale-95 duration-200 ${
+                       showTaskQueue 
+                         ? 'bg-rose-600 border-rose-600 text-white shadow-lg shadow-rose-900/40' 
+                         : 'bg-clinical-card border-clinical-border text-clinical-text hover:bg-clinical-primary hover:text-white'
+                     }`}
+                   >
+                      <div className="relative flex items-center justify-center mr-1">
+                        <Activity size={16} className={`group-hover:rotate-12 transition-transform ${showTaskQueue ? 'text-white animate-pulse' : 'text-clinical-primary group-hover:text-white'}`} />
+                        {/* Dynamic status indicator light */}
+                        <span className={`absolute -top-1 -right-1.5 w-2.5 h-2.5 rounded-full border border-white ${pulseColorClass} ${pulseAnimationClass}`} />
+                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em]">
+                         {showTaskQueue ? 'Hide Queue' : 'My Task Queue'}
+                      </span>
+                      {userMissions.length > 0 && (
+                        <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${
+                          showTaskQueue ? 'bg-white/20 text-white' : 'bg-clinical-primary/10 text-clinical-primary'
+                        }`}>
+                          {userMissions.length}
+                        </span>
+                      )}
+                   </button>
+                </div>
+
                 {/* Theme Switcher Button */}
                 {onOpenThemeSwitcher && (
                   <div className="flex flex-col items-end gap-3">
-                     <p className="text-[9px] font-black text-clinical-muted uppercase tracking-[0.4em] italic">Visual Theme</p>
+                     <p className="text-[9px] font-black text-clinical-muted uppercase tracking-[0.4em] italic">{t('ui_visual_theme')}</p>
                      <button 
                        onClick={onOpenThemeSwitcher}
                        className="flex items-center gap-3 px-6 py-2.5 bg-clinical-card border border-clinical-border text-clinical-text rounded-[20px] hover:bg-clinical-primary hover:text-white transition-all group shadow-sm active:scale-95 duration-200"
                      >
                         <Palette size={16} className="group-hover:rotate-12 transition-transform text-clinical-primary group-hover:text-white" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">樣式切換 (Theme)</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">{t('ui_theme_switcher_btn')}</span>
                      </button>
                   </div>
                 )}
@@ -248,6 +321,24 @@ export function PortalView({
              </div>
           </div>
         </header>
+
+        {/* Task Queue (Collapsible) */}
+        <AnimatePresence>
+          {showTaskQueue && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.4, ease: 'easeInOut' }}
+              className="overflow-hidden bg-clinical-card/40 border border-clinical-border rounded-[40px] p-8 lg:p-10 shadow-lg backdrop-blur-xl mb-6"
+            >
+              <TaskQueue 
+                role={user.role} 
+                onNavigate={(roleTarget) => onLaunchMission?.(roleTarget)} 
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
  
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 relative z-10">
           {stations.map((station, idx) => {

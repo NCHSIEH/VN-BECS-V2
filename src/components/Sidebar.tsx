@@ -69,6 +69,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { t } = useI18n();
   const [badgeCounts, setBadgeCounts] = useState<LimsBadgeCounts>({ DONOR: 0, LAB: 0, PROCESS: 0, RELEASE: 0 });
   const [hoveredLocked, setHoveredLocked] = useState<string | null>(null);
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<number, boolean>>({
+    0: true,
+    1: true,
+    2: true
+  });
+
+  const getRoleNameForDisplay = (roleId: string): string => {
+    switch (roleId) {
+      case 'Dashboard': return t('role_Admin') || 'All Roles';
+      case 'Nurse': return t('role_nurse_bedside') || 'Nurse (Bedside)';
+      case 'Nurse_Hemovigilance': return t('role_hemovigilance') || 'QA / Hemovigilance';
+      case 'HospitalOperator': return t('role_hospital_order') || 'Hospital Operator';
+      case 'Nurse_MTP': return 'Nurse (MTP)';
+      case 'LabTech_Crossmatch': return t('role_crossmatch') || 'Lab Technician';
+      case 'MedicalReviewer': return t('role_med_review') || 'Medical Reviewer';
+      case 'SOP11_RareDonor': return t('role_rare_donor') || 'Rare Donor Screener';
+      case 'WarehouseIssuer': return t('role_warehouse') || 'Warehouse Issuer';
+      case 'Warehouse_IssueReturn': return t('role_issue_return') || 'Issue & Return Clerk';
+      case 'Dispatcher': return t('role_dispatcher') || 'Dispatcher';
+      case 'Courier': return t('role_courier') || 'Courier / Logistics';
+      case 'Resource': return t('role_Resource') || 'Resource Manager';
+      case 'Manager': return t('mdm_role_mgr_desc') ? t('mdm_role_mgr_desc').split(' (')[0] : 'Manager';
+      case 'Auditor': return t('role_auditor') || 'Compliance Auditor';
+      case 'NationalCommander': return t('role_NationalCommander') || 'National Commander';
+      default: return roleId;
+    }
+  };
 
   const fetchLimsBadges = useCallback(async () => {
     if (currentSystem !== 'LIMS') return;
@@ -154,7 +181,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <BloodDropLogo size={24} />
           <div>
             <h2 className="text-[14px] font-black text-clinical-text uppercase tracking-[0.4em] italic leading-none group-hover:text-clinical-primary transition-colors">VN-BECS</h2>
-            <p className="text-[9px] text-clinical-muted font-black uppercase tracking-[0.25em] mt-2 opacity-80 italic">Enterprise Command V1.0</p>
+            <p className="text-[9px] text-clinical-muted font-black uppercase tracking-[0.25em] mt-2 opacity-80 italic">
+              {currentSystem === 'HUB' ? 'Supply Hub' :
+               currentSystem === 'LIMS' ? 'Blood Center LIMS' :
+               currentSystem === 'LAB' ? 'Clinical Laboratory' :
+               currentSystem === 'HOSPITAL' ? 'Hospital Node' :
+               currentSystem === 'NATIONAL' ? 'National Command' :
+               'V2.0 Enterprise'}
+            </p>
           </div>
         </div>
 
@@ -283,6 +317,46 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           )}
 
+          {/* LAB MODE */}
+          {currentSystem === 'LAB' && (
+            <div className="space-y-4">
+               <div className="flex items-center gap-3 px-2">
+                  <div className="text-clinical-primary bg-clinical-primary/10 p-2 rounded-xl border border-clinical-primary/20 shadow-inner">
+                    <FlaskConical size={20} />
+                  </div>
+                  <span className="text-[11px] font-black text-clinical-text uppercase tracking-[0.25em]">Laboratory Flow</span>
+               </div>
+               <div className="space-y-2">
+                 {[
+                   { id: 'Dashboard', label: t('ui_mission_control'), icon: <Activity size={18} /> },
+                   { id: 'LabTech_Crossmatch', label: t('ui_precision_crossmatch'), icon: <FlaskConical size={18} /> },
+                   { id: 'MedicalReviewer', label: t('ui_idm_review'), icon: <ClipboardList size={18} /> },
+                   { id: 'SOP11_RareDonor', label: t('ui_rare_registry'), icon: <Users size={18} /> },
+                 ].map((flow) => (
+                   <button
+                     key={flow.id}
+                     onClick={() => setRole(flow.id as Role)}
+                     className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all group relative ${
+                       currentRole === flow.id
+                         ? 'bg-clinical-bg text-clinical-text border border-clinical-border shadow-md scale-[1.02]'
+                         : 'text-clinical-muted hover:text-clinical-text hover:bg-clinical-bg/50'
+                     }`}
+                   >
+                     <div className="flex items-center gap-4">
+                        <div className={`transition-colors ${currentRole === flow.id ? 'text-clinical-primary' : 'text-clinical-muted group-hover:text-clinical-text'}`}>
+                           {flow.icon}
+                        </div>
+                        <span className="text-[12px] font-black tracking-tight uppercase italic text-left">{flow.label}</span>
+                     </div>
+                     {currentRole === flow.id && (
+                       <div className="w-1.5 h-1.5 rounded-full bg-clinical-primary shadow-[0_0_10px_var(--clinical-primary)]" />
+                     )}
+                   </button>
+                 ))}
+               </div>
+            </div>
+          )}
+
           {/* HUB MODE */}
           {currentSystem === 'HUB' && (
             <>
@@ -292,21 +366,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <div className="text-clinical-primary bg-clinical-primary/10 p-2 rounded-xl border border-clinical-primary/20 shadow-inner"><Activity size={20} /></div>
                     <span className="text-[11px] font-black text-clinical-text uppercase tracking-[0.25em]">Operational Flow</span>
                  </div>
-                 {/* Version Tag */}
-                 <div className="fixed bottom-8 right-8 text-[10px] font-black text-clinical-muted uppercase tracking-[0.5em] italic">
-                   VN-BECS V1.0 Enterprise
-                 </div>
                  <button
-                    onClick={() => setRole('Dashboard' as Role)}
+                    onClick={() => setRole('Dashboard')}
                     className={`w-full flex flex-col items-start px-6 py-5 rounded-[24px] transition-all group relative overflow-hidden ${
-                      currentRole === ('Dashboard' as Role)
+                      currentRole === 'Dashboard'
                         ? 'bg-clinical-bg text-clinical-text border border-clinical-border shadow-xl scale-[1.02]'
                         : 'text-clinical-muted hover:text-clinical-text hover:bg-clinical-bg/50'
                     }`}
                  >
                    <span className="text-[14px] font-black tracking-[0.1em] uppercase italic mb-1">My Task Queue</span>
                    <span className="text-[9px] font-bold text-clinical-muted uppercase tracking-widest">Driven by AI Dispatch</span>
-                   {currentRole === ('Dashboard' as Role) && (
+                   {currentRole === 'Dashboard' && (
                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-clinical-primary" />
                    )}
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-clinical-card border border-clinical-border flex items-center justify-center shadow-sm">
@@ -318,26 +388,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
               {/* Operational Hub Groups */}
               {[
                 {
-                  title: t('ui_frontline_ops'),
-                  icon: <Activity size={18} className="text-rose-500" />,
-                  items: [
-                    { id: 'Dashboard', label: t('ui_mission_control'), icon: <Activity size={18} /> },
-                    { id: 'Nurse', label: t('ui_bedside_verif'), icon: <ShieldCheck size={18} /> },
-                    { id: 'Nurse_Hemovigilance', label: t('ui_hemo_pulse'), icon: <Activity size={18} /> },
-                    { id: 'HospitalOperator', label: t('ui_emergency_req'), icon: <Stethoscope size={18} /> },
-                    { id: 'Nurse_MTP', label: t('ui_mtp_tactical'), icon: <Zap size={18} /> },
-                  ]
-                },
-                {
-                  title: t('ui_clinical_lab'),
-                  icon: <FlaskConical size={18} className="text-sky-500" />,
-                  items: [
-                    { id: 'LabTech_Crossmatch', label: t('ui_precision_crossmatch'), icon: <FlaskConical size={18} /> },
-                    { id: 'MedicalReviewer', label: t('ui_idm_review'), icon: <ClipboardList size={18} /> },
-                    { id: 'SOP11_RareDonor', label: t('ui_rare_registry'), icon: <Users size={18} /> },
-                  ]
-                },
-                {
                   title: t('ui_supply_chain'),
                   icon: <Package size={18} className="text-emerald-500" />,
                   items: [
@@ -347,27 +397,54 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     { id: 'Courier', label: t('ui_cold_chain_delivery'), icon: <MapPin size={18} /> },
                     { id: 'Resource', label: t('ui_resource_mgmt'), icon: <Database size={18} /> },
                   ]
-                },
-                {
-                  title: t('ui_strategic_intel'),
-                  icon: <Globe size={18} className="text-amber-500" />,
-                  items: [
-                    { id: 'Manager', label: t('ui_executive_kpi'), icon: <Activity size={18} /> },
-                    { id: 'Auditor', label: t('ui_compliance_audit'), icon: <ShieldCheck size={18} /> },
-                    { id: 'NationalCommander', label: t('ui_national_inv'), icon: <Globe size={18} /> },
-                  ]
                 }
               ].map((group, idx) => {
                 const visibleItems = group.items.filter(item => allowedRoles.includes(item.id as Role) || item.id === 'Dashboard');
                 if (visibleItems.length === 0) return null;
 
+                const isCollapsed = collapsedGroups[idx] ?? false;
+                const toggleGroup = () => {
+                  setCollapsedGroups(prev => ({
+                    ...prev,
+                    [idx]: !isCollapsed
+                  }));
+                };
+
                 return (
                   <div key={idx} className="space-y-4">
-                    <div className="flex items-center gap-3 px-2">
-                       <div className="p-2 rounded-xl bg-clinical-bg border border-clinical-border shadow-sm">{group.icon}</div>
-                       <span className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.2em]">{group.title}</span>
-                    </div>
-                    <div className="space-y-2">
+                    <button
+                      onClick={toggleGroup}
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 group/header border ${
+                        !isCollapsed 
+                          ? 'bg-clinical-bg border-clinical-primary/20 shadow-md text-clinical-text font-black' 
+                          : 'bg-transparent border-transparent text-clinical-muted hover:bg-clinical-bg/30 hover:text-clinical-text'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                         <div className={`p-2.5 rounded-xl bg-clinical-bg border shadow-sm transition-all duration-300 ${
+                           !isCollapsed
+                             ? 'border-clinical-primary/30 text-clinical-primary scale-[1.05]'
+                             : 'border-clinical-border text-clinical-muted group-hover/header:text-clinical-text group-hover/header:border-clinical-muted'
+                         }`}>
+                           {group.icon}
+                         </div>
+                         <span className={`text-[12px] font-black uppercase tracking-[0.08em] transition-all duration-300 ${
+                           !isCollapsed ? 'text-clinical-text' : 'text-clinical-muted group-hover/header:text-clinical-text'
+                         }`}>{group.title}</span>
+                      </div>
+                      <ChevronRight 
+                        size={16} 
+                        className={`transition-all duration-300 ${
+                          !isCollapsed ? 'text-clinical-primary rotate-90 scale-110' : 'text-clinical-muted group-hover/header:text-clinical-text'
+                        }`} 
+                      />
+                    </button>
+                    
+                    <div className={`space-y-2 overflow-hidden transition-all duration-500 origin-top ${
+                      isCollapsed 
+                        ? 'max-h-0 opacity-0 scale-95 pointer-events-none' 
+                        : 'max-h-[500px] opacity-100 scale-100'
+                    }`}>
                       {visibleItems.map((item) => (
                         <button
                           key={item.id}
@@ -382,7 +459,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                              <div className={`transition-colors ${currentRole === item.id ? 'text-clinical-primary' : 'text-clinical-muted group-hover:text-clinical-text'}`}>
                                 {item.icon}
                              </div>
-                             <span className="text-[12px] font-black tracking-tight uppercase italic text-left">{item.label}</span>
+                             <div className="flex flex-col items-start">
+                                <span className="text-[12px] font-black tracking-tight uppercase italic text-left">{item.label}</span>
+                                <span className="text-[8px] font-black text-clinical-muted uppercase tracking-[0.1em] mt-1 opacity-70 group-hover:text-clinical-primary transition-colors">
+                                  Role: {getRoleNameForDisplay(item.id)}
+                                </span>
+                             </div>
                           </div>
                           {currentRole === item.id && (
                             <div className="w-1.5 h-1.5 rounded-full bg-clinical-primary shadow-[0_0_10px_var(--clinical-primary)]" />

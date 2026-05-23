@@ -59,8 +59,12 @@ import { offlineStore } from './lib/offlineStore';
 import { ThemeSwitcher, ThemeType } from './components/ThemeSwitcher';
 
 function getSubRoles(mainRole: string): Role[] {
-  if (mainRole === 'Admin') return ['HospitalOperator', 'Nurse', 'WarehouseIssuer', 'Dispatcher', 'Courier', 'Admin'];
-  if (mainRole === 'Manager') return ['Admin'];
+  if (mainRole === 'Admin' || mainRole === 'Manager') return [
+    'HospitalOperator', 'Nurse', 'Nurse_Hemovigilance', 'Nurse_MTP',
+    'WarehouseIssuer', 'Warehouse_IssueReturn', 'Dispatcher', 'Courier', 'Resource',
+    'LabTech_Crossmatch', 'MedicalReviewer', 'SOP11_RareDonor',
+    'Manager', 'Auditor', 'NationalCommander', 'QA_Officer', 'Admin'
+  ] as Role[];
   return [mainRole as Role];
 }
 
@@ -124,13 +128,36 @@ function AppContent() {
 
   const handleLogin = (u: User) => {
     setUser(u);
-    setRole('Dashboard' as Role);
+    setRole('Dashboard');
     if (u.permittedSystems.length === 1) setCurrentSystem(u.permittedSystems[0]);
   };
 
   const handleLogout = () => {
     setUser(null);
     setCurrentSystem(null);
+  };
+
+  const handleLaunchMission = (roleTarget: Role) => {
+    let system: SystemType | null = null;
+    
+    if (['WarehouseIssuer', 'Warehouse_IssueReturn', 'Dispatcher', 'Courier', 'Resource', 'Manager', 'QA_Officer', 'Auditor'].includes(roleTarget)) {
+      system = 'HUB';
+    } else if (['HospitalOperator', 'Nurse', 'Nurse_MTP', 'Nurse_Hemovigilance'].includes(roleTarget)) {
+      system = 'HOSPITAL';
+    } else if (['LabTech_Crossmatch', 'MedicalReviewer', 'SOP11_RareDonor'].includes(roleTarget)) {
+      system = 'LAB';
+    } else if (['LIMS_Simulator', 'DonorScreener'].includes(roleTarget)) {
+      system = 'LIMS';
+    } else if (['NationalCommander'].includes(roleTarget)) {
+      system = 'NATIONAL';
+    } else if (roleTarget === 'Admin') {
+      system = 'NATIONAL';
+    }
+    
+    if (system) {
+      setCurrentSystem(system);
+      setRole(roleTarget);
+    }
   };
 
   const handleResetSystem = async () => {
@@ -196,22 +223,43 @@ function AppContent() {
         <DonorCenterSimulatorView 
           activeTab={limsTab} 
           onTabChange={setLimsTab} 
+          user={user!}
         />
       );
+    }
+
+    if (currentSystem === 'LAB') {
+       return (
+         <div className="flex-1 flex flex-col overflow-hidden">
+            <FlowIndicator role={role} />
+            <main className="flex-1 p-4 lg:p-6 overflow-y-auto bg-clinical-bg">
+               {role === 'Dashboard' && <TaskQueue role={user!.role} onNavigate={setRole} />}
+               {role === 'LabTech_Crossmatch' && <CrossmatchView />}
+               {role === 'MedicalReviewer' && <MedicalReviewerView />}
+               {role === 'SOP11_RareDonor' && <RareDonorView />}
+               {role !== 'Dashboard' && role !== 'LabTech_Crossmatch' && role !== 'MedicalReviewer' && role !== 'SOP11_RareDonor' && <CrossmatchView />}
+            </main>
+         </div>
+       );
     }
     
     if (currentSystem === 'HOSPITAL') {
        return (
-         <div className="flex-1 p-4 lg:p-6 overflow-y-auto bg-clinical-bg">
-            {(role === ('Dashboard' as Role) || role === 'HospitalOperator') && (
-              <HospitalOperatorView 
-                 user={user!} inventory={inventory} isOffline={isOffline} 
-                 localEventsCount={localEventsCount} onSync={fetchInventory} onLogout={handleLogout} 
-                 onOfflineRelease={handleOfflineRelease} 
-              />
-            )}
-            {role === 'Nurse' && <BedsideVerificationView />}
-            {role === ('Nurse_MTP' as Role) && <MtpEmergencyView />}
+         <div className="flex-1 flex flex-col overflow-hidden">
+            <FlowIndicator role={role} />
+            <main className="flex-1 p-4 lg:p-6 overflow-y-auto bg-clinical-bg">
+               {role === 'Dashboard' && <TaskQueue role={user!.role} onNavigate={setRole} />}
+               {role === 'HospitalOperator' && (
+                 <HospitalOperatorView 
+                    user={user!} inventory={inventory} isOffline={isOffline} 
+                    localEventsCount={localEventsCount} onSync={fetchInventory} onLogout={handleLogout} 
+                    onOfflineRelease={handleOfflineRelease} 
+                 />
+               )}
+               {role === 'Nurse' && <BedsideVerificationView />}
+               {role === 'Nurse_MTP' && <MtpEmergencyView />}
+               {role === 'Nurse_Hemovigilance' && <HemovigilanceView />}
+            </main>
          </div>
        );
     }
@@ -221,28 +269,17 @@ function AppContent() {
          <div className="flex-1 flex flex-col overflow-hidden">
             <FlowIndicator role={role} />
             <main className="flex-1 p-4 lg:p-6 overflow-y-auto bg-clinical-bg">
-               {role === ('Dashboard' as Role) && <TaskQueue role={user!.role} onNavigate={setRole} />}
-               {role === 'HospitalOperator' && (
-                <HospitalOperatorView 
-                  user={user!} inventory={inventory} isOffline={isOffline} 
-                  localEventsCount={localEventsCount} onSync={fetchInventory} onLogout={handleLogout} 
-                  onOfflineRelease={handleOfflineRelease} 
-                />
-              )}
-               {role === 'Nurse' && <BedsideVerificationView />}
-               {role === 'QA_Officer' && <HemovigilanceView />}
-               {role === 'LIMS_Simulator' && <CrossmatchView />}
+               {role === 'Dashboard' && <TaskQueue role={user!.role} onNavigate={setRole} />}
                {role === 'Dispatcher' && <DispatcherView />}
                {role === 'WarehouseIssuer' && <WarehouseView />}
-               {role === 'WarehouseIssuer' && <IssueReturnView />}
+               {role === 'Warehouse_IssueReturn' && <IssueReturnView />}
                {role === 'Courier' && <CourierView />}
-               {role === 'QA_Officer' && <AuditLogViewer />}
-               {role === 'QA_Officer' && <MedicalReviewerView />}
+               {role === 'Resource' && <ResourceManagementView />}
+               {role === 'Manager' && <ManagerKPIView />}
                {role === 'Admin' && <ManagerKPIView />}
-               {role === 'Admin' && <HospitalInventoryView />}
-               {role === 'Nurse' && <MtpEmergencyView />}
-               {role === 'DonorScreener' && <RareDonorView />}
-               {role === ('Admin' as Role) && <ResourceManagementView />}
+               {role === 'NationalCommander' && <NationalDashboardView />}
+               {role === 'Auditor' && <AuditLogViewer />}
+               {role === 'QA_Officer' && <AuditLogViewer />}
             </main>
          </div>
        );
@@ -256,6 +293,7 @@ function AppContent() {
       onOpenDocs={() => setShowDocs(true)} 
       onOpenSwitcher={() => setShowSwitcher(true)} 
       onOpenThemeSwitcher={() => setShowThemeSwitcher(true)} 
+      onLaunchMission={handleLaunchMission}
     />;
   };
 
@@ -272,11 +310,11 @@ function AppContent() {
         onOpenSwitcher={() => setShowSwitcher(true)}
         onOpenThemeSwitcher={() => setShowThemeSwitcher(true)}
         unreadMessages={unreadCount}
-        systemName={currentSystem ? `VN-BECS V1.0 ${currentSystem} COMMAND` : "VN-BECS V1.0 ENTERPRISE COMMAND"}
+        systemName={currentSystem ? `VN-BECS · ${currentSystem === 'HUB' ? 'Supply Hub' : currentSystem === 'LIMS' ? 'Blood Center LIMS' : currentSystem === 'LAB' ? 'Clinical Laboratory' : currentSystem === 'HOSPITAL' ? 'Hospital Node' : currentSystem === 'NATIONAL' ? 'National Command' : currentSystem} Command` : "VN-BECS V2.0 Enterprise"}
       />
       
       <div className="flex flex-1 overflow-hidden relative">
-        {currentSystem && ['LIMS', 'HOSPITAL', 'HUB'].includes(currentSystem) && (
+        {currentSystem && ['LIMS', 'LAB', 'HOSPITAL', 'HUB'].includes(currentSystem) && (
           <Sidebar 
             currentRole={role} 
             setRole={setRole} 

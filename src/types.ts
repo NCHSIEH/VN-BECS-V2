@@ -15,32 +15,52 @@ export interface ValidationResult {
 
 /** User roles. */
 export type Role =
+  | 'Dashboard'
   | 'DonorScreener'
   | 'LIMS_Simulator'
   | 'WarehouseIssuer'
+  | 'Warehouse_IssueReturn'
   | 'Dispatcher'
   | 'Courier'
   | 'HospitalOperator'
   | 'Nurse'
+  | 'Nurse_Hemovigilance'
+  | 'Nurse_MTP'
+  | 'LabTech_Crossmatch'
+  | 'MedicalReviewer'
+  | 'SOP11_RareDonor'
+  | 'Resource'
+  | 'Auditor'
+  | 'NationalCommander'
   | 'QA_Officer'
   | 'Manager'
   | 'Admin';
 
 /** Subsystems the user can access from the Portal. */
-export type SystemType = 'HUB' | 'LIMS' | 'MDM' | 'HOSPITAL' | 'NATIONAL' | 'IAM' | 'DASHBOARD';
+export type SystemType = 'HUB' | 'LIMS' | 'MDM' | 'HOSPITAL' | 'NATIONAL' | 'IAM' | 'DASHBOARD' | 'LAB';
 
 /** Default subsystem access permissions for each role. */
 export const DEFAULT_ROLE_MATRIX: Record<Role, SystemType[]> = {
+  Dashboard: [],
   DonorScreener: ['LIMS'],
   Nurse: ['LIMS'],
   LIMS_Simulator: ['LIMS'],
   QA_Officer: ['LIMS'],
   HospitalOperator: ['HOSPITAL'],
   WarehouseIssuer: ['HUB'],
+  Warehouse_IssueReturn: ['HUB'],
   Dispatcher: ['HUB'],
   Courier: ['HUB'],
-  Manager: ['LIMS', 'HOSPITAL', 'HUB', 'DASHBOARD'],
-  Admin: ['LIMS', 'HOSPITAL', 'HUB', 'MDM', 'DASHBOARD', 'NATIONAL', 'IAM'],
+  Nurse_Hemovigilance: ['HOSPITAL'],
+  Nurse_MTP: ['HOSPITAL'],
+  LabTech_Crossmatch: ['LAB'],
+  MedicalReviewer: ['LAB'],
+  SOP11_RareDonor: ['LAB'],
+  Resource: ['HUB'],
+  Auditor: ['NATIONAL'],
+  NationalCommander: ['NATIONAL'],
+  Manager: ['LIMS', 'HOSPITAL', 'HUB', 'DASHBOARD', 'NATIONAL', 'LAB'],
+  Admin: ['LIMS', 'HOSPITAL', 'HUB', 'MDM', 'DASHBOARD', 'NATIONAL', 'IAM', 'LAB'],
 };
 
 /** Organization classification. */
@@ -134,6 +154,7 @@ export interface Organization {
   location: string;
   active?: boolean;
   createdAt?: string;
+  chairsCount?: number;
 }
 
 /** System user bound to an organization. */

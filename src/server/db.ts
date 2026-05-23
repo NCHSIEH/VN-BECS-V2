@@ -23,6 +23,7 @@ const fallbackStores = {
   organizations: [] as any[],
   users: [] as any[],
   donors: [] as any[],
+  lims_queues: [] as any[],
   questionnaires: [] as any[],
   donations: [] as any[],
   lab_tests: [] as any[],
@@ -77,6 +78,112 @@ export const organizations = {
     } catch (e: any) {
       if (isTableMissingError(e)) {
         fallbackStores.organizations.push(data);
+        return;
+      }
+      throw e;
+    }
+  },
+  async update(id: string, data: any) {
+    try {
+      const { error } = await supabase.from('organizations').update(data).eq('id', id);
+      if (error) {
+        if (isTableMissingError(error)) {
+          const org = fallbackStores.organizations.find(o => o.id === id);
+          if (org) Object.assign(org, data);
+          return;
+        }
+        throw error;
+      }
+    } catch (e: any) {
+      if (isTableMissingError(e)) {
+        const org = fallbackStores.organizations.find(o => o.id === id);
+        if (org) Object.assign(org, data);
+        return;
+      }
+      throw e;
+    }
+  }
+};
+
+export const limsQueues = {
+  async getAll() {
+    try {
+      const { data, error } = await supabase.from('lims_queues').select('*');
+      if (error) {
+        if (isTableMissingError(error)) return fallbackStores.lims_queues;
+        throw error;
+      }
+      return data;
+    } catch (e: any) {
+      if (isTableMissingError(e)) return fallbackStores.lims_queues;
+      throw e;
+    }
+  },
+  async getByOrg(orgId: string) {
+    try {
+      const { data, error } = await supabase.from('lims_queues').select('*').eq('orgId', orgId);
+      if (error) {
+        if (isTableMissingError(error)) return fallbackStores.lims_queues.filter(q => q.orgId === orgId);
+        throw error;
+      }
+      return data;
+    } catch (e: any) {
+      if (isTableMissingError(e)) return fallbackStores.lims_queues.filter(q => q.orgId === orgId);
+      throw e;
+    }
+  },
+  async create(entry: any) {
+    try {
+      const { error } = await supabase.from('lims_queues').insert(entry);
+      if (error) {
+        if (isTableMissingError(error)) {
+          fallbackStores.lims_queues.push(entry);
+          return entry;
+        }
+        throw error;
+      }
+      return entry;
+    } catch (e: any) {
+      if (isTableMissingError(e)) {
+        fallbackStores.lims_queues.push(entry);
+        return entry;
+      }
+      throw e;
+    }
+  },
+  async update(id: string, updates: any) {
+    try {
+      const { error } = await supabase.from('lims_queues').update(updates).eq('id', id);
+      if (error) {
+        if (isTableMissingError(error)) {
+          const entry = fallbackStores.lims_queues.find(q => q.id === id);
+          if (entry) Object.assign(entry, updates);
+          return;
+        }
+        throw error;
+      }
+    } catch (e: any) {
+      if (isTableMissingError(e)) {
+        const entry = fallbackStores.lims_queues.find(q => q.id === id);
+        if (entry) Object.assign(entry, updates);
+        return;
+      }
+      throw e;
+    }
+  },
+  async remove(id: string) {
+    try {
+      const { error } = await supabase.from('lims_queues').delete().eq('id', id);
+      if (error) {
+        if (isTableMissingError(error)) {
+          fallbackStores.lims_queues = fallbackStores.lims_queues.filter(q => q.id !== id);
+          return;
+        }
+        throw error;
+      }
+    } catch (e: any) {
+      if (isTableMissingError(e)) {
+        fallbackStores.lims_queues = fallbackStores.lims_queues.filter(q => q.id !== id);
         return;
       }
       throw e;

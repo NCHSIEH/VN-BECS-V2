@@ -11,17 +11,19 @@ interface DonorCenterSimulatorViewProps {
   activeTab?: 'DONOR' | 'LAB' | 'PROCESS' | 'RELEASE';
   onTabChange?: (tab: 'DONOR' | 'LAB' | 'PROCESS' | 'RELEASE') => void;
   initialTab?: 'DONOR' | 'LAB' | 'PROCESS' | 'RELEASE';
+  user?: any;
 }
 
 export function DonorCenterSimulatorView({ 
   activeTab: controlledActiveTab, 
   onTabChange, 
-  initialTab = 'DONOR' 
+  initialTab = 'DONOR',
+  user
 }: DonorCenterSimulatorViewProps) {
   const { t } = useI18n();
   const [catalog, setCatalog] = useState<ProductCatalog[]>([]);
-  const [localActiveTab, setLocalActiveTab] = useState<'DONOR' | 'LAB' | 'PROCESS' | 'RELEASE'>(initialTab);
-
+  const [localActiveTab, setLocalActiveTab] = useState<'DONOR' | 'LAB' | 'PROCESS' | 'RELEASE'>(controlledActiveTab || initialTab);
+  
   const activeTab = controlledActiveTab !== undefined ? controlledActiveTab : localActiveTab;
   const setActiveTab = (tab: 'DONOR' | 'LAB' | 'PROCESS' | 'RELEASE') => {
     if (onTabChange) {
@@ -34,6 +36,15 @@ export function DonorCenterSimulatorView({
   const [gatingError, setGatingError] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [limsToast, setLimsToast] = useState<{ title: string; message: string; nextStage?: 'DONOR' | 'LAB' | 'PROCESS' | 'RELEASE'; nextLabel?: string } | null>(null);
+
+  // MDM & Database Queue States
+  const [orgs, setOrgs] = useState<any[]>([]);
+  const [queues, setQueues] = useState<any[]>([]);
+  const [dispatchMode, setDispatchMode] = useState<'Auto' | 'Shared' | 'Direct'>('Shared');
+  const [dispatchChairId, setDispatchChairId] = useState<string>('Chair 1');
+  const [selectedQueueDonor, setSelectedQueueDonor] = useState<any | null>(null);
+  const [isDispatchModalOpen, setIsDispatchModalOpen] = useState(false);
+  const [simulatedChairDesk, setSimulatedChairDesk] = useState<string>('Chair 1');
 
   const [isDonorModalOpen, setIsDonorModalOpen] = useState(false);
   const [donorForm, setDonorForm] = useState({
@@ -83,6 +94,16 @@ export function DonorCenterSimulatorView({
       .then(res => res.ok ? res.json() : [])
       .then(d => setResources(Array.isArray(d) ? d : []))
       .catch(() => setResources([]));
+
+    fetch('/api/v1/mdm/organizations')
+      .then(res => res.ok ? res.json() : [])
+      .then(d => setOrgs(Array.isArray(d) ? d : []))
+      .catch(() => setOrgs([]));
+
+    fetch('/api/v1/lims/queues')
+      .then(res => res.ok ? res.json() : [])
+      .then(d => setQueues(Array.isArray(d) ? d : []))
+      .catch(() => setQueues([]));
 
     // Notify Sidebar to refresh workload badges
     window.dispatchEvent(new Event('lims-data-updated'));
@@ -267,15 +288,72 @@ export function DonorCenterSimulatorView({
 
       loadData();
       setIsDonorModalOpen(false);
-      // Toast: Guide to LAB stage next
-      setLimsToast({
-        title: t('lims_toast_stage1_title'),
-        message: t('lims_toast_stage1_msg'),
-        nextStage: 'LAB',
-        nextLabel: t('lims_toast_stage1_btn')
-      });
+      
+      // If the donor is NOT deferred, open the Dispatch Modal so they can send the donor to Phlebotomy Chairs!
+      if (finalDeferralStatus !== 'Active') {
+        setSelectedQueueDonor({ id: data.id || donorForm.id || 'D-TEMP', name: donorForm.name });
+        setIsDispatchModalOpen(true);
+      } else {
+        setLimsToast({
+          title: 'Donor Registered (Deferred)',
+          message: 'Donor successfully logged with an active safety deferral status.',
+          nextStage: 'DONOR',
+          nextLabel: 'Close'
+        });
+      }
     } catch(e: any) {
       setDonorFormError(e.message || "Network Error");
+    }
+  };
+
+  const handleConfirmDispatch = async () => {
+    if (!selectedQueueDonor) return;
+    
+    // User's active center ID (or fallback)
+    const currentOrgId = user?.orgId || 'BC-HN-01';
+    
+    let targetChair = dispatchChairId;
+    if (dispatchMode === 'Auto') {
+      const orgQueues = queues.filter(q => q.orgId === currentOrgId && q.status === 'ASSIGNED');
+      const org = orgs.find(o => o.id === currentOrgId);
+      const chairsCount = org?.chairsCount || 3;
+      
+      let minCount = Infinity;
+      let selectedChair = 'Chair 1';
+      for (let i = 1; i <= chairsCount; i++) {
+        const chairName = `Chair ${i}`;
+        const chairLength = orgQueues.filter(q => q.chairId === chairName).length;
+        if (chairLength < minCount) {
+          minCount = chairLength;
+          selectedChair = chairName;
+        }
+      }
+      targetChair = selectedChair;
+    }
+    
+    try {
+      const res = await fetch('/api/v1/lims/queues', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          donorId: selectedQueueDonor.id,
+          donorName: selectedQueueDonor.name,
+          orgId: currentOrgId,
+          status: dispatchMode === 'Shared' ? 'WAITING' : 'ASSIGNED',
+          dispatchMode: dispatchMode,
+          chairId: dispatchMode === 'Shared' ? '' : targetChair
+        })
+      });
+      
+      if (res.ok) {
+        setStatus({ type: 'success', msg: `Donor dispatched successfully via ${dispatchMode} mode!` });
+        loadData();
+      }
+    } catch (err) {
+      console.error("Dispatch error:", err);
+    } finally {
+      setIsDispatchModalOpen(false);
+      setSelectedQueueDonor(null);
     }
   };
 
@@ -299,10 +377,46 @@ export function DonorCenterSimulatorView({
         setCollectFormError(data.message || data.error);
         return;
       }
+
+      // Remove from LIMS queue on successful collection
+      const currentOrgId = user?.orgId || 'BC-HN-01';
+      const queueEntry = queues.find(q => q.donorId === collectForm.donorId && q.orgId === currentOrgId);
+      if (queueEntry) {
+        await fetch(`/api/v1/lims/queues/${queueEntry.id}`, { method: 'DELETE' });
+      }
+
       loadData();
       setIsCollectModalOpen(false);
     } catch(e: any) {
       setCollectFormError(e.message || "Network Error");
+    }
+  };
+
+  const handleCallNext = async (chairName: string) => {
+    const currentOrgId = user?.orgId || 'BC-HN-01';
+    const waitingList = queues.filter(q => q.orgId === currentOrgId && q.status === 'WAITING');
+    if (waitingList.length === 0) {
+      setStatus({ type: 'error', msg: t('lims_triage_empty_pool_warning') });
+      return;
+    }
+    const nextDonor = waitingList[0];
+    
+    try {
+      const res = await fetch(`/api/v1/lims/queues/${nextDonor.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'ASSIGNED',
+          chairId: chairName
+        })
+      });
+      
+      if (res.ok) {
+        setStatus({ type: 'success', msg: `${t('lims_triage_call_next')}: ${nextDonor.donorName} ➔ ${chairName}` });
+        loadData();
+      }
+    } catch (err) {
+      console.error("Call next error:", err);
     }
   };
 
@@ -410,45 +524,48 @@ export function DonorCenterSimulatorView({
     <div className="flex flex-col h-full bg-clinical-bg selection:bg-rose-500/30 overflow-hidden">
       {/* LIMS Stage Navigation Toast */}
       {limsToast && (
-        <div className="fixed bottom-8 right-8 z-[200] max-w-sm w-full animate-in slide-in-from-bottom-4 duration-500">
-          <div className="bg-clinical-card/95 backdrop-blur-2xl border border-clinical-border rounded-3xl shadow-2xl overflow-hidden">
-            {/* Toast accent bar */}
-            <div className="h-1 w-full bg-gradient-to-r from-clinical-primary via-sky-400 to-emerald-400" />
-            <div className="p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <p className="text-[13px] font-black text-clinical-text uppercase tracking-tight mb-1">{limsToast.title}</p>
-                  <p className="text-[11px] text-clinical-muted leading-relaxed">{limsToast.message}</p>
-                </div>
-                <button
-                  onClick={() => setLimsToast(null)}
-                  className="p-1.5 text-clinical-muted hover:text-clinical-text transition-colors rounded-lg hover:bg-clinical-bg shrink-0"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-              {limsToast.nextStage && (
-                <div className="mt-4 flex gap-3">
-                  <button
-                    onClick={() => {
-                      setActiveTab(limsToast.nextStage!);
-                      setLimsToast(null);
-                    }}
-                    className="flex-1 px-4 py-2.5 bg-clinical-primary hover:opacity-90 text-white rounded-xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-clinical-primary/30"
-                  >
-                    {limsToast.nextLabel || '前往下一步 →'}
-                  </button>
+        <>
+          <div className="fixed inset-0 bg-slate-950/25 backdrop-blur-[2px] z-[190]" onClick={() => setLimsToast(null)} />
+          <div className="fixed top-32 left-1/2 -translate-x-1/2 z-[200] max-w-md w-full animate-in slide-in-from-top-4 duration-500 px-4">
+            <div className="bg-clinical-card/95 backdrop-blur-2xl border border-clinical-border rounded-3xl shadow-2xl overflow-hidden">
+              {/* Toast accent bar */}
+              <div className="h-1.5 w-full bg-gradient-to-r from-clinical-primary via-sky-400 to-emerald-400" />
+              <div className="p-8">
+                <div className="flex items-start justify-between gap-6">
+                  <div className="flex-1">
+                    <p className="text-[14px] font-black text-clinical-text uppercase tracking-tight mb-2 italic">{limsToast.title}</p>
+                    <p className="text-[12px] text-clinical-muted leading-relaxed uppercase tracking-wide font-medium">{limsToast.message}</p>
+                  </div>
                   <button
                     onClick={() => setLimsToast(null)}
-                    className="px-4 py-2.5 text-clinical-muted hover:text-clinical-text rounded-xl text-[11px] font-black uppercase tracking-widest transition-all"
+                    className="p-2 text-clinical-muted hover:text-clinical-text transition-colors rounded-full hover:bg-clinical-bg shrink-0 border border-clinical-border/50 shadow-sm"
                   >
-                    稍後
+                    <X size={16} />
                   </button>
                 </div>
-              )}
+                {limsToast.nextStage && (
+                  <div className="mt-6 flex gap-4">
+                    <button
+                      onClick={() => {
+                        setActiveTab(limsToast.nextStage!);
+                        setLimsToast(null);
+                      }}
+                      className="flex-grow px-6 py-3.5 bg-clinical-primary hover:opacity-90 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-xl shadow-clinical-primary/20"
+                    >
+                      {limsToast.nextLabel || '前往下一步 →'}
+                    </button>
+                    <button
+                      onClick={() => setLimsToast(null)}
+                      className="px-6 py-3.5 bg-clinical-bg hover:bg-clinical-bg/60 border border-clinical-border text-clinical-muted hover:text-clinical-text rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-sm"
+                    >
+                      {t('ui_later')}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* Top Decorative Bar */}
@@ -545,8 +662,8 @@ export function DonorCenterSimulatorView({
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-clinical-border">
-                        {donors.map(d => (
-                          <tr key={d.id} className="hover:bg-clinical-bg transition-all group duration-500">
+                        {donors.map((d, idx) => (
+                          <tr key={`${d.id}-${idx}`} className="hover:bg-clinical-bg transition-all group duration-500">
                             <td className="p-8">
                                <div className="flex items-center gap-4">
                                  <div className="w-10 h-10 rounded-xl bg-clinical-bg flex items-center justify-center text-clinical-muted group-hover:bg-rose-500/20 group-hover:text-rose-600 transition-all">
@@ -633,13 +750,14 @@ export function DonorCenterSimulatorView({
                           <th className="p-8">{t('lims_col_don_id')}</th>
                           <th className="p-8">{t('lims_col_name')}</th>
                           <th className="p-8 text-center">{t('lims_col_blood_type')}</th>
+                          <th className="p-8">{t('lims_col_collected_at')}</th>
                           <th className="p-8">{t('lims_col_idm')}</th>
                           <th className="p-8 text-right">{t('lims_col_action')}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-clinical-border">
-                        {donations.filter(d => Boolean(d.idmStatus)).map(donation => (
-                          <tr key={donation.id} className="hover:bg-clinical-bg transition-all duration-500 group">
+                        {donations.filter(d => Boolean(d.idmStatus)).map((donation, idx) => (
+                          <tr key={`${donation.id}-${idx}`} className="hover:bg-clinical-bg transition-all duration-500 group">
                             <td className="p-8 font-mono font-black text-sky-400 tracking-tighter text-lg italic">{donation.id}</td>
                             <td className="p-8">
                                <div className="flex flex-col">
@@ -651,6 +769,12 @@ export function DonorCenterSimulatorView({
                               <span className="bg-clinical-bg text-clinical-muted px-4 py-2 rounded-2xl text-[11px] font-black tracking-widest border border-clinical-border">
                                 {donation.donorAbo}{donation.donorRhd === 'Positive' ? '+' : '-'}
                               </span>
+                            </td>
+                            <td className="p-8">
+                               <div className="flex flex-col">
+                                 <span className="text-clinical-muted font-bold text-[13px]">{new Date(donation.collectedAt).toLocaleDateString()}</span>
+                                 <span className="text-[10px] text-clinical-muted font-mono uppercase">{new Date(donation.collectedAt).toLocaleTimeString()}</span>
+                               </div>
                             </td>
                             <td className="p-8">
                                {donation.idmStatus === 'PENDING' && (
@@ -691,7 +815,160 @@ export function DonorCenterSimulatorView({
               )}
 
               {activeTab === 'PROCESS' && (
-                <div className="space-y-8 animate-in fade-in duration-700">
+                <div className="space-y-12 animate-in fade-in duration-700">
+                   
+                   {/* Phlebotomy Chairs Triage Board */}
+                   <div className="space-y-6">
+                      <div className="flex justify-between items-center">
+                         <div className="flex items-center gap-4">
+                            <Droplet className="text-rose-500 animate-pulse" size={24} />
+                            <div>
+                               <h2 className="text-2xl font-black text-clinical-text uppercase italic tracking-tighter">{t('lims_triage_board_title')}</h2>
+                               <p className="text-[10px] text-clinical-muted uppercase font-black tracking-widest mt-1">{t('lims_triage_board_sub')}</p>
+                            </div>
+                         </div>
+                         <div className="flex items-center gap-6">
+                            <span className="text-[10px] font-black text-clinical-muted uppercase tracking-widest bg-clinical-card px-4 py-2 rounded-2xl border border-clinical-border">
+                               {t('lims_triage_active_chairs')}: <span className="text-rose-500 font-mono font-black">{(orgs.find(o => o.id === (user?.orgId || 'BC-HN-01'))?.chairsCount || 3)}</span>
+                            </span>
+                         </div>
+                      </div>
+
+                      {/* Layout: Left Column = Waiting Pool, Right Column = Phlebotomy Chairs Grid */}
+                      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                         
+                         {/* Shared Waiting Pool Panel (1/4 width) */}
+                         <div className="lg:col-span-1 glass-station p-8 bg-clinical-card border-clinical-border rounded-[32px] flex flex-col h-[400px] shadow-sm">
+                            <div className="flex justify-between items-center border-b border-clinical-border pb-4 mb-6 shrink-0">
+                               <div className="flex items-center gap-3">
+                                  <Users className="text-sky-400" size={18} />
+                                  <span className="font-black text-sm uppercase italic tracking-tight text-clinical-text">{t('lims_triage_waiting_pool')}</span>
+                                </div>
+                                <span className="bg-sky-500/10 text-sky-400 px-3 py-1 rounded-full text-[9px] font-mono font-black border border-sky-500/20 shadow-sm animate-pulse">
+                                   {queues.filter(q => q.orgId === (user?.orgId || 'BC-HN-01') && q.status === 'WAITING').length}
+                                </span>
+                            </div>
+                            
+                            <div className="flex-grow overflow-y-auto custom-scrollbar space-y-4 pr-1">
+                               {queues.filter(q => q.orgId === (user?.orgId || 'BC-HN-01') && q.status === 'WAITING').length === 0 ? (
+                                  <div className="h-full flex flex-col items-center justify-center text-center p-6 border border-dashed border-clinical-border/50 rounded-2xl">
+                                     <Activity size={24} className="text-clinical-muted/40 mb-3" />
+                                     <p className="text-[10px] font-black uppercase text-clinical-muted tracking-widest">{t('lims_triage_empty_pool')}</p>
+                                  </div>
+                               ) : (
+                                  queues.filter(q => q.orgId === (user?.orgId || 'BC-HN-01') && q.status === 'WAITING').map((q, idx) => (
+                                     <div key={`wait-${q.id}-${idx}`} className="p-5 bg-clinical-bg border border-clinical-border rounded-2xl hover:border-slate-500 transition-all flex items-center justify-between group">
+                                        <div className="flex flex-col">
+                                           <span className="text-xs font-black uppercase italic text-clinical-text">{q.donorName}</span>
+                                           <span className="text-[8px] font-mono text-clinical-muted mt-1 uppercase">ID: {q.donorId}</span>
+                                        </div>
+                                        <span className="text-[8px] font-mono bg-clinical-card px-2 py-1 rounded-md text-clinical-muted border border-clinical-border uppercase shrink-0">
+                                           Wait #{idx + 1}
+                                        </span>
+                                     </div>
+                                  ))
+                               )}
+                            </div>
+                         </div>
+
+                         {/* Active Chairs Dynamic Grid (3/4 width) */}
+                         <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6 h-[400px] overflow-y-auto pr-1 custom-scrollbar">
+                            {Array.from({ length: orgs.find(o => o.id === (user?.orgId || 'BC-HN-01'))?.chairsCount || 3 }).map((_, idx) => {
+                               const chairName = `Chair ${idx + 1}`;
+                               const assignedDonor = queues.find(q => q.orgId === (user?.orgId || 'BC-HN-01') && q.chairId === chairName && q.status === 'ASSIGNED');
+                               const chairNumber = idx + 1;
+
+                               return (
+                                  <div key={`desk-${chairName}`} className={`p-8 rounded-[32px] border flex flex-col justify-between transition-all duration-500 h-[380px] shadow-sm ${assignedDonor ? 'bg-rose-500/5 border-rose-500/30' : 'bg-clinical-card border-clinical-border'}`}>
+                                     
+                                     {/* Header */}
+                                     <div className="flex justify-between items-start">
+                                        <div>
+                                           <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-clinical-muted">Phlebotomy Desk</span>
+                                           <h4 className="text-xl font-black text-clinical-text italic uppercase">CHAIR {chairNumber}</h4>
+                                        </div>
+                                        {assignedDonor ? (
+                                           <span className="flex items-center gap-2 text-[8px] font-black uppercase tracking-widest text-rose-500 bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/20">
+                                              <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
+                                              {t('lims_triage_busy')}
+                                           </span>
+                                        ) : (
+                                           <span className="text-[8px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                                              {t('lims_triage_idle')}
+                                           </span>
+                                        )}
+                                     </div>
+
+                                     {/* Center Patient Card or Empty State */}
+                                     <div className="my-6 flex-grow flex flex-col justify-center">
+                                        {assignedDonor ? (
+                                           <div className="bg-clinical-bg p-5 rounded-2xl border border-clinical-border/80 shadow-inner">
+                                              <p className="text-[8px] font-black text-clinical-muted uppercase tracking-widest mb-1">{t('lims_triage_current_donor')}</p>
+                                              <p className="text-lg font-black text-clinical-text italic uppercase leading-none">{assignedDonor.donorName}</p>
+                                              <p className="text-[9px] font-mono text-rose-500 mt-1.5 uppercase">ID: {assignedDonor.donorId}</p>
+                                              {/* Show donor blood type if we can match it from donors list */}
+                                              {(() => {
+                                                 const dInfo = donors.find(d => d.id === assignedDonor.donorId);
+                                                 if (dInfo) {
+                                                    return (
+                                                       <span className="inline-block mt-3 bg-rose-950/20 border border-rose-900/30 text-rose-500 px-3 py-1 rounded-lg text-[9px] font-black font-mono">
+                                                          {dInfo.bloodType}{dInfo.rhd === 'Positive' ? '+' : '-'}
+                                                       </span>
+                                                    );
+                                                 }
+                                                 return null;
+                                              })()}
+                                           </div>
+                                        ) : (
+                                           <div className="border border-dashed border-clinical-border/60 rounded-2xl p-6 flex flex-col items-center justify-center text-center bg-clinical-bg/30">
+                                              <Users size={20} className="text-clinical-muted/30 mb-2" />
+                                              <p className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">{t('lims_triage_no_occupied')}</p>
+                                           </div>
+                                        )}
+                                     </div>
+
+                                     {/* Action Footer */}
+                                     <div className="shrink-0">
+                                        {assignedDonor ? (
+                                           <button 
+                                             onClick={() => openCollectModal(assignedDonor.donorId)}
+                                             className="w-full py-4 rounded-[18px] bg-rose-600 hover:bg-rose-500 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-rose-950/40 hover:scale-102 active:scale-98 transition-all flex items-center justify-center gap-2 italic"
+                                           >
+                                              <Droplet size={14} /> {t('lims_triage_collect_blood')}
+                                           </button>
+                                        ) : (
+                                           <button 
+                                             onClick={() => handleCallNext(chairName)}
+                                             className="w-full py-4 rounded-[18px] bg-clinical-bg hover:bg-clinical-bg/60 border border-clinical-border text-clinical-text font-black text-[10px] uppercase tracking-widest shadow-sm hover:scale-102 active:scale-98 transition-all flex items-center justify-center gap-2 italic"
+                                           >
+                                              <ArrowRight size={14} /> {t('lims_triage_call_next')}
+                                           </button>
+                                        )}
+                                     </div>
+
+                                  </div>
+                               );
+                            })}
+                         </div>
+
+                      </div>
+                   </div>
+
+                   {/* Separator line */}
+                   <div className="border-t border-clinical-border/50 pt-10" />
+
+                   {/* 原有的 Component Fabrication 表格標題 */}
+                   <div className="space-y-4">
+                      <div className="flex items-center gap-4">
+                         <Beaker className="text-sky-400" size={24} />
+                         <div>
+                            <h2 className="text-2xl font-black text-clinical-text uppercase italic tracking-tighter">{t('lims_centrifugation_title')}</h2>
+                            <p className="text-[10px] text-clinical-muted uppercase font-black tracking-widest mt-1">{t('lims_centrifugation_sub')}</p>
+                         </div>
+                      </div>
+                   </div>
+
+                   {/* 原有的 Component Fabrication 表格 */}
                    <div className="overflow-hidden rounded-[40px] border border-clinical-border bg-clinical-card shadow-sm">
                     <table className="w-full text-left text-sm">
                       <thead className="bg-clinical-bg text-clinical-muted text-sm font-black uppercase tracking-wider border-b border-clinical-border">
@@ -699,13 +976,14 @@ export function DonorCenterSimulatorView({
                           <th className="p-8">Unit ID</th>
                           <th className="p-8">Serology</th>
                           <th className="p-8 text-center">Abo/Rh</th>
+                          <th className="p-8">{t('lims_col_collected_at')}</th>
                           <th className="p-8">Volume</th>
                           <th className="p-8 text-right">Ops</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-clinical-border">
-                        {donations.filter(d => Boolean(d.idmStatus) && d.componentCount === 0).map(donation => (
-                          <tr key={donation.id} className="hover:bg-clinical-bg transition-all group">
+                        {donations.filter(d => Boolean(d.idmStatus) && d.componentCount === 0).map((donation, idx) => (
+                          <tr key={`${donation.id}-${idx}`} className="hover:bg-clinical-bg transition-all group">
                             <td className="p-8 font-mono font-black text-clinical-text tracking-tighter text-lg italic">{donation.id}</td>
                             <td className="p-8">
                                {donation.idmStatus === 'CLEARED' ? (
@@ -718,6 +996,12 @@ export function DonorCenterSimulatorView({
                               <span className="bg-clinical-bg text-clinical-muted px-4 py-2 rounded-2xl text-[11px] font-black tracking-widest border border-clinical-border">
                                 {donation.donorAbo}{donation.donorRhd === 'Positive' ? '+' : '-'}
                               </span>
+                            </td>
+                            <td className="p-8">
+                               <div className="flex flex-col">
+                                 <span className="text-clinical-muted font-bold text-[13px]">{new Date(donation.collectedAt).toLocaleDateString()}</span>
+                                 <span className="text-[10px] text-clinical-muted font-mono uppercase">{new Date(donation.collectedAt).toLocaleTimeString()}</span>
+                               </div>
                             </td>
                             <td className="p-8 text-clinical-muted font-mono text-[13px]">{donation.volume} ml</td>
                             <td className="p-8 text-right">
@@ -749,19 +1033,26 @@ export function DonorCenterSimulatorView({
                           <th className="p-8">Global ID</th>
                           <th className="p-8">Product Class</th>
                           <th className="p-8 text-center">Abo/Rh</th>
+                          <th className="p-8">{t('lims_col_fabricated_at')}</th>
                           <th className="p-8">Custody Status</th>
                           <th className="p-8 text-right">Dispatch</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-clinical-border">
-                        {components.filter(c => c.status !== 'QUARANTINE' && c.status !== 'DISCARDED').map(comp => (
-                          <tr key={comp.id} className="hover:bg-clinical-bg transition-all group">
+                        {components.filter(c => c.status !== 'QUARANTINE' && c.status !== 'DISCARDED').map((comp, idx) => (
+                          <tr key={`${comp.id}-${comp.productCode}-${idx}`} className="hover:bg-clinical-bg transition-all group">
                             <td className="p-8 font-mono font-black text-clinical-text tracking-tighter text-xl italic">{comp.id}</td>
                             <td className="p-8 text-clinical-muted font-black uppercase italic tracking-tight">{getProductName(comp.productCode)}</td>
                             <td className="p-8 text-center">
                               <span className="bg-clinical-bg text-clinical-text px-4 py-2 rounded-2xl text-[11px] font-black tracking-widest border border-clinical-border">
                                 {comp.abo}{comp.rhd === 'Positive' ? '+' : '-'}
                               </span>
+                            </td>
+                            <td className="p-8">
+                               <div className="flex flex-col">
+                                 <span className="text-clinical-muted font-bold text-[13px]">{new Date(comp.createdAt).toLocaleDateString()}</span>
+                                 <span className="text-[10px] text-clinical-muted font-mono uppercase">{new Date(comp.createdAt).toLocaleTimeString()}</span>
+                               </div>
                             </td>
                             <td className="p-8">
                                {comp.status === 'AVAILABLE' ? (
@@ -1003,6 +1294,105 @@ export function DonorCenterSimulatorView({
                 <button type="submit" className="clinical-btn-primary min-w-[300px]">{t('lims_modal_start_run')}</button>
              </div>
           </motion.form>
+        </div>
+      )}
+
+      {/* Smart Workflow Dispatcher Modal */}
+      {isDispatchModalOpen && selectedQueueDonor && (
+        <div className="fixed inset-0 bg-clinical-bg/95 backdrop-blur-3xl z-[100] flex items-center justify-center p-8 animate-in fade-in duration-500">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="glass-station bg-clinical-bg border-rose-500/20 w-full max-w-2xl overflow-hidden shadow-[0_0_150px_rgba(225,29,72,0.1)]"
+          >
+             <div className="p-12 border-b border-clinical-border flex justify-between items-center bg-rose-500/5">
+                <div>
+                   <h3 className="text-3xl font-black text-clinical-text uppercase italic tracking-tighter">{t('lims_triage_dispatch_title')}</h3>
+                   <p className="text-rose-500 text-[10px] font-black uppercase tracking-[0.4em] mt-2 italic">{t('lims_triage_dispatch_sub')}</p>
+                </div>
+                <div className="w-16 h-16 rounded-[24px] bg-rose-600 flex items-center justify-center text-white shadow-2xl shadow-rose-900/40">
+                   <Users size={32} />
+                </div>
+             </div>
+             
+             <div className="p-12 space-y-8">
+                <div className="bg-clinical-bg p-6 rounded-[24px] border border-clinical-border">
+                   <p className="text-[10px] font-black text-clinical-muted uppercase tracking-widest mb-1">{t('lims_triage_selected_donor')}</p>
+                   <p className="text-2xl font-black text-clinical-text italic uppercase">{selectedQueueDonor.name}</p>
+                   <p className="text-xs text-rose-500 font-mono mt-1">ID: {selectedQueueDonor.id}</p>
+                </div>
+
+                <div className="space-y-4">
+                   <label className="clinical-label">{t('lims_triage_dispatch_mode')}</label>
+                   <div className="grid grid-cols-3 gap-4">
+                      {/* Auto Card */}
+                      <button 
+                        type="button" 
+                        onClick={() => setDispatchMode('Auto')}
+                        className={`p-6 rounded-2xl border text-left transition-all ${dispatchMode === 'Auto' ? 'bg-rose-500/10 border-rose-500 text-rose-500' : 'bg-clinical-bg border-clinical-border text-clinical-muted hover:border-slate-500'}`}
+                      >
+                         <div className="font-black text-sm uppercase mb-1">{t('lims_triage_mode_auto')}</div>
+                         <div className="text-[9px] uppercase tracking-wider opacity-80">Auto Load-Balance</div>
+                      </button>
+
+                      {/* Shared Card */}
+                      <button 
+                        type="button" 
+                        onClick={() => setDispatchMode('Shared')}
+                        className={`p-6 rounded-2xl border text-left transition-all ${dispatchMode === 'Shared' ? 'bg-rose-500/10 border-rose-500 text-rose-500' : 'bg-clinical-bg border-clinical-border text-clinical-muted hover:border-slate-500'}`}
+                      >
+                         <div className="font-black text-sm uppercase mb-1">{t('lims_triage_mode_shared')}</div>
+                         <div className="text-[9px] uppercase tracking-wider opacity-80">Shared Waiting Pool</div>
+                      </button>
+
+                      {/* Direct Card */}
+                      <button 
+                        type="button" 
+                        onClick={() => setDispatchMode('Direct')}
+                        className={`p-6 rounded-2xl border text-left transition-all ${dispatchMode === 'Direct' ? 'bg-rose-500/10 border-rose-500 text-rose-500' : 'bg-clinical-bg border-clinical-border text-clinical-muted hover:border-slate-500'}`}
+                      >
+                         <div className="font-black text-sm uppercase mb-1">{t('lims_triage_mode_direct')}</div>
+                         <div className="text-[9px] uppercase tracking-wider opacity-80">Direct Chair</div>
+                      </button>
+                   </div>
+                </div>
+
+                {dispatchMode === 'Direct' && (
+                   <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
+                      <label className="clinical-label">{t('lims_triage_assign_chair')}</label>
+                      <select 
+                        value={dispatchChairId} 
+                        onChange={e => setDispatchChairId(e.target.value)} 
+                        className="clinical-input py-8 appearance-none text-center italic uppercase font-black tracking-widest text-sky-400"
+                      >
+                         {Array.from({ length: orgs.find(o => o.id === (user?.orgId || 'BC-HN-01'))?.chairsCount || 3 }).map((_, i) => (
+                            <option key={`chair-${i+1}`} value={`Chair ${i+1}`}>CHAIR {i+1}</option>
+                         ))}
+                      </select>
+                   </div>
+                )}
+             </div>
+
+             <div className="p-12 bg-clinical-bg/60 border-t border-clinical-border flex justify-end gap-6">
+                <button 
+                  type="button" 
+                  onClick={() => {
+                     setIsDispatchModalOpen(false);
+                     setSelectedQueueDonor(null);
+                  }} 
+                  className="px-10 py-6 rounded-[20px] text-clinical-muted font-black text-[11px] uppercase tracking-[0.3em] hover:text-clinical-text transition-colors"
+                >
+                   {t('lims_triage_btn_cancel')}
+                </button>
+                <button 
+                  type="button" 
+                  onClick={handleConfirmDispatch}
+                  className="clinical-btn-primary min-w-[240px]"
+                >
+                   {t('lims_triage_btn_confirm')}
+                </button>
+             </div>
+          </motion.div>
         </div>
       )}
     </div>

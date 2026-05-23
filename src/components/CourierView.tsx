@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Truck, MapPin, Thermometer, CheckCircle, Navigation, ShieldCheck, AlertTriangle, TrendingUp, History, Package } from "lucide-react";
 import { Order } from "../types";
+import { useI18n } from "../lib/i18n";
 
 /** Mini sparkline for temperature history */
 function TempSparkline({ data }: { data: number[] }) {
@@ -16,11 +17,21 @@ function TempSparkline({ data }: { data: number[] }) {
 }
 
 export function CourierView() {
+  const { t } = useI18n();
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [temperature, setTemperature] = useState(4.2);
-   const [tempHistory, setTempHistory] = useState<number[]>([4.0, 4.1, 4.2, 4.3, 4.2]);
-   const [violationMinutes, setViolationMinutes] = useState(0);
+  const [tempHistory, setTempHistory] = useState<number[]>([4.0, 4.1, 4.2, 4.3, 4.2]);
+  const [violationMinutes, setViolationMinutes] = useState(0);
+
+  const getPriorityLabel = (priority: string) => {
+    const p = (priority || '').toUpperCase();
+    if (p === 'NORMAL' || p === 'ROUTINE') return t('wh_priority_routine') || 'Routine';
+    if (p === 'HIGH') return t('wh_priority_high') || 'High';
+    if (p === 'URGENT') return t('wh_priority_urgent') || 'Urgent';
+    if (p === 'CRITICAL' || p === 'STAT' || p === 'MTP') return t('wh_priority_critical') || 'Critical';
+    return priority;
+  };
 
    const wastageProbability = useMemo(() => {
       if (violationMinutes === 0 && temperature <= 6.0) return 2;
@@ -115,9 +126,9 @@ export function CourierView() {
       <div className="w-full lg:w-1/3 bg-clinical-bg border border-clinical-border rounded-2xl p-6 flex flex-col gap-4 shadow-2xl">
         <div className="flex items-center justify-between border-b border-clinical-border pb-4">
            <h2 className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] flex gap-3 items-center">
-             <Truck size={16} className="text-sky-500"/> Transport Ops
+             <Truck size={16} className="text-sky-500"/> {t('cour_ops_title') || 'Transport Ops'}
            </h2>
-           <span className="bg-sky-500/10 text-sky-500 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">{orders.length} Active</span>
+           <span className="bg-sky-500/10 text-sky-500 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">{orders.length} {t('cour_active_jobs') || 'Active'}</span>
         </div>
         <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar">
           {orders.map(order => (
@@ -139,10 +150,10 @@ export function CourierView() {
               <h4 className="font-black text-white text-sm uppercase tracking-tight group-hover:text-sky-400 transition-colors">{order.hospital}</h4>
               <div className="flex items-center gap-4 mt-4">
                  <div className="flex items-center gap-1.5 text-[9px] text-clinical-muted font-bold uppercase tracking-widest">
-                    <Package size={12} /> {order.allocatedUnits?.length || 1} units
+                    <Package size={12} /> {order.allocatedUnits?.length || 1} {t('cour_units') || 'units'}
                  </div>
                  <div className="flex items-center gap-1.5 text-[9px] text-clinical-muted font-bold uppercase tracking-widest">
-                    <History size={12} /> {order.priority}
+                    <History size={12} /> {getPriorityLabel(order.priority)}
                  </div>
               </div>
             </div>
@@ -150,7 +161,7 @@ export function CourierView() {
           {orders.length === 0 && (
              <div className="flex flex-col items-center justify-center py-12 text-clinical-muted border border-clinical-border border-dashed rounded-3xl">
                 <Truck size={32} className="mb-2 opacity-20" />
-                <p className="text-[10px] font-black uppercase tracking-widest italic">No active transport jobs</p>
+                <p className="text-[10px] font-black uppercase tracking-widest italic">{t('cour_empty_jobs') || 'No active transport jobs'}</p>
              </div>
           )}
         </div>
@@ -163,20 +174,20 @@ export function CourierView() {
              <div className="w-20 h-20 bg-clinical-card rounded-[32px] flex items-center justify-center text-clinical-text mb-6 border border-clinical-border">
                 <MapPin size={40} />
              </div>
-             <h3 className="text-xl font-black text-clinical-muted uppercase italic tracking-tighter">Telematics Standby</h3>
-             <p className="text-clinical-muted text-xs font-medium mt-2 max-w-xs uppercase tracking-widest">Select a transport job to initiate real-time telemetry monitoring.</p>
+             <h3 className="text-xl font-black text-clinical-muted uppercase italic tracking-tighter">{t('cour_telematics_standby') || 'Telematics Standby'}</h3>
+             <p className="text-clinical-muted text-xs font-medium mt-2 max-w-xs uppercase tracking-widest">{t('cour_telematics_desc') || 'Select a transport job to initiate real-time telemetry monitoring.'}</p>
           </div>
         ) : (
           <div className="flex flex-col h-full mx-auto w-full max-w-3xl">
              <div className="flex justify-between items-start mb-8 border-b border-clinical-border pb-8">
                <div>
                   <div className="flex items-center gap-3 mb-2">
-                     <span className="px-3 py-1 bg-sky-500/10 text-sky-500 border border-sky-500/30 rounded-full text-[9px] font-black uppercase tracking-widest">Live Courier Feed</span>
+                     <span className="px-3 py-1 bg-sky-500/10 text-sky-500 border border-sky-500/30 rounded-full text-[9px] font-black uppercase tracking-widest">{t('cour_live_feed') || 'Live Courier Feed'}</span>
                      <span className="text-clinical-text">•</span>
                      <span className="font-mono text-[10px] text-clinical-muted font-black">{selectedOrder.id}</span>
                   </div>
                   <h2 className="text-4xl font-black text-white tracking-tighter uppercase italic">{selectedOrder.hospital}</h2>
-                  <p className="text-clinical-muted text-sm flex items-center gap-2 mt-2 font-bold uppercase tracking-widest"><MapPin size={16} className="text-sky-500"/> Vietnam National Transit Network</p>
+                  <p className="text-clinical-muted text-sm flex items-center gap-2 mt-2 font-bold uppercase tracking-widest"><MapPin size={16} className="text-sky-500"/> {t('cour_national_network') || 'Vietnam National Transit Network'}</p>
                </div>
                
                <div className={`p-6 rounded-[32px] border flex flex-col items-center justify-center min-w-[180px] shadow-2xl transition-all duration-500 ${
@@ -190,7 +201,7 @@ export function CourierView() {
                   <div className="flex items-center gap-2 mt-3 mb-4">
                      <TempSparkline data={tempHistory} />
                   </div>
-                  <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">Cold Chain Integrity</div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">{t('cour_cold_chain_integrity') || 'Cold Chain Integrity'}</div>
                </div>
              </div>
 
@@ -199,16 +210,16 @@ export function CourierView() {
                 <div className="mb-8 p-6 bg-rose-500 rounded-3xl text-white flex items-center gap-6 animate-in shake duration-500 shadow-xl shadow-rose-900/40">
                    <AlertTriangle size={40} className="shrink-0" />
                    <div className="flex-1">
-                      <p className="font-black text-[10px] uppercase tracking-[0.3em] italic mb-1 opacity-80">Safety Violation</p>
-                      <h4 className="font-black text-lg leading-tight">CRITICAL TEMPERATURE BREACH</h4>
+                      <p className="font-black text-[10px] uppercase tracking-[0.3em] italic mb-1 opacity-80">{t('cour_safety_violation') || 'Safety Violation'}</p>
+                      <h4 className="font-black text-lg leading-tight">{t('cour_temp_breach') || 'CRITICAL TEMPERATURE BREACH'}</h4>
                       <p className="text-xs font-bold opacity-90 mt-1">
-                         Current value {temperature.toFixed(1)}°C is outside RBC safe range (2°C - 6°C). 
-                         {violationMinutes > 0 && ` Duration: ${violationMinutes}s.`}
+                         {t('cour_temp_breach_desc', { temp: temperature.toFixed(1) }) || `Current value ${temperature.toFixed(1)}°C is outside RBC safe range (2°C - 6°C).`}
+                         {violationMinutes > 0 && ` ${t('cour_duration') || 'Duration'}: ${violationMinutes}s.`}
                       </p>
                    </div>
                    {isWasted && (
                       <div className="bg-clinical-bg px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">
-                         WASTAGE IMMINENT
+                         {t('cour_wastage_imminent') || 'WASTAGE IMMINENT'}
                       </div>
                    )}
                 </div>
@@ -217,16 +228,16 @@ export function CourierView() {
              {/* Telemetry Grid */}
              <div className="grid grid-cols-2 gap-6 mb-8">
                 <div className="bg-clinical-card/20 border border-clinical-border p-6 rounded-3xl flex flex-col justify-center">
-                   <p className="text-[10px] font-black text-clinical-muted uppercase tracking-widest mb-2 flex items-center gap-2"><TrendingUp size={12}/> Route Efficiency</p>
-                   <p className="text-2xl font-black text-white italic tracking-tighter">98.4% <span className="text-[10px] text-emerald-500 not-italic">Optimal</span></p>
+                   <p className="text-[10px] font-black text-clinical-muted uppercase tracking-widest mb-2 flex items-center gap-2"><TrendingUp size={12}/> {t('cour_route_efficiency') || 'Route Efficiency'}</p>
+                   <p className="text-2xl font-black text-white italic tracking-tighter">98.4% <span className="text-[10px] text-emerald-500 not-italic">{t('cour_optimal') || 'Optimal'}</span></p>
                 </div>
                 <div className="bg-clinical-card/20 border border-clinical-border p-6 rounded-3xl flex flex-col justify-center">
-                   <p className="text-[10px] font-black text-clinical-muted uppercase tracking-widest mb-2 flex items-center gap-2"><Navigation size={12}/> Estimated Arrival</p>
-                   <p className="text-2xl font-black text-white italic tracking-tighter">14 <span className="text-[10px] text-clinical-muted not-italic">MINUTES</span></p>
+                   <p className="text-[10px] font-black text-clinical-muted uppercase tracking-widest mb-2 flex items-center gap-2"><Navigation size={12}/> {t('cour_eta') || 'Estimated Arrival'}</p>
+                   <p className="text-2xl font-black text-white italic tracking-tighter">14 <span className="text-[10px] text-clinical-muted not-italic">{t('cour_minutes') || 'MINUTES'}</span></p>
                 </div>
                 <div className="bg-clinical-card/20 border border-clinical-border p-6 rounded-3xl flex flex-col justify-center col-span-2">
                    <div className="flex justify-between items-center mb-2">
-                      <p className="text-[10px] font-black text-clinical-muted uppercase tracking-widest flex items-center gap-2"><AlertTriangle size={12}/> AI Wastage Probability</p>
+                      <p className="text-[10px] font-black text-clinical-muted uppercase tracking-widest flex items-center gap-2"><AlertTriangle size={12}/> {t('cour_ai_wastage_prob') || 'AI Wastage Probability'}</p>
                       <span className={`text-[10px] font-black uppercase ${wastageProbability > 50 ? 'text-rose-500' : wastageProbability > 20 ? 'text-amber-500' : 'text-emerald-500'}`}>
                          {wastageProbability > 50 ? 'High Risk' : wastageProbability > 20 ? 'Elevated' : 'Safe'}
                       </span>

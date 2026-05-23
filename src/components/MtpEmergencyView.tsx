@@ -237,8 +237,8 @@ export function MtpEmergencyView() {
                                 <div className="text-[11px] text-slate-400 mt-0.5 font-bold uppercase">{p.name} <span className="text-slate-600 mx-1">•</span> <span className="text-blue-400">{p.bloodType}</span></div>
                              </div>
                              <div className="flex gap-2">
-                                {p.specimenExpired && <ShieldAlert size={16} className="text-rose-500" title="Specimen Expired" />}
-                                {p.hasAntibody && <AlertTriangle size={16} className="text-orange-500" title="Antibodies Present" />}
+                                {p.specimenExpired && <span title="Specimen Expired"><ShieldAlert size={16} className="text-rose-500" /></span>}
+                                {p.hasAntibody && <span title="Antibodies Present"><AlertTriangle size={16} className="text-orange-500" /></span>}
                              </div>
                           </div>
                         ))}
