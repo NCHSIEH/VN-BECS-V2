@@ -19,35 +19,76 @@ function isTableMissingError(error: any): boolean {
 
 // Fallback in-memory stores to ensure 100% system resilience
 // even if the remote Supabase database has not been fully seeded or migrated yet.
-const fallbackStores = {
-  organizations: [] as any[],
-  users: [] as any[],
-  donors: [] as any[],
+export const fallbackStores = {
+  organizations: [
+    { id: 'BC-HN-01', name: '哈內中央血液中心 (Hanoi Blood Center)', type: 'BloodCenter', location: 'Hanoi, Vietnam', chairsCount: 4, createdAt: '2026-01-10T08:00:00Z' },
+    { id: 'HOSP-HCM-02', name: '胡志明市人民第一醫院 (HCM People Hospital #1)', type: 'Hospital', location: 'HCM City, Vietnam', chairsCount: 3, createdAt: '2026-01-15T09:30:00Z' },
+    { id: 'HUB-DN-03', name: '峴港醫療中轉物流樞紐 (Danang Supply Hub)', type: 'Hub', location: 'Danang, Vietnam', chairsCount: 3, createdAt: '2026-02-01T10:00:00Z' }
+  ] as any[],
+  users: [
+    { id: 'USR-ADMIN', username: 'admin', password: 'admin123', role: 'Admin', orgId: 'HUB-DN-03', permitted_systems: 'MDM,IAM,HUB,LIMS,LAB,HOSPITAL,NATIONAL,DASHBOARD', photo_url: '', details: '{}', isActive: 1, createdAt: '2026-01-01T00:00:00Z' },
+    { id: 'USR-OPERATOR', username: 'operator', password: 'password123', role: 'HospitalOperator', orgId: 'HOSP-HCM-02', permitted_systems: 'HOSPITAL,HUB', photo_url: '', details: '{}', isActive: 1, createdAt: '2026-01-20T11:00:00Z' }
+  ] as any[],
+  donors: [
+    { id: 'DNR-HCM-01', name: '陳明英 (Tran Minh Anh)', nationalId: '001095001234', dob: '1995-05-15', gender: 'Male', weight: 68, bloodType: 'O', rhd: 'Positive', registeredAt: '2026-05-24T08:00:00Z' },
+    { id: 'DNR-HN-02', name: '黎氏花 (Le Thi Hoa)', nationalId: '002097005678', dob: '1997-09-20', gender: 'Female', weight: 52, bloodType: 'A', rhd: 'Negative', registeredAt: '2026-05-24T08:30:00Z' }
+  ] as any[],
   lims_queues: [] as any[],
-  questionnaires: [] as any[],
-  donations: [] as any[],
-  lab_tests: [] as any[],
-  components: [] as any[],
+  questionnaires: [
+    { id: 'QST-HCM-01', donorId: 'DNR-HCM-01', answersJson: '{"hadTattooRecently":false,"traveledToMalariaZone":false,"feelingUnwell":false,"hasHighRiskCondition":false}', isPassed: 1, createdAt: '2026-05-24T08:05:00Z', deferralReason: '', deferralUntil: '' },
+    { id: 'QST-HN-02', donorId: 'DNR-HN-02', answersJson: '{"hadTattooRecently":true,"traveledToMalariaZone":false,"feelingUnwell":false,"hasHighRiskCondition":false}', isPassed: 0, createdAt: '2026-05-24T08:35:00Z', deferralReason: 'Tattoo within 6 months', deferralUntil: '2026-11-24T08:35:00Z' }
+  ] as any[],
+  donations: [
+    { id: 'DON-HCM-01', donorId: 'DNR-HCM-01', questionnaireId: 'QST-HCM-01', collectedAt: '2026-05-24T08:15:00Z', volume: 350, donationType: 'WholeBlood' }
+  ] as any[],
+  lab_tests: [
+    { id: 'TST-HCM-01', donationId: 'DON-HCM-01', abo: 'O', rhd: 'Positive', idmStatus: 'CLEARED', testedAt: '2026-05-24T08:45:00Z' }
+  ] as any[],
+  components: [
+    { id: 'CMP-HCM-01-RBC', donationId: 'DON-HCM-01', productCode: 'P-RBC-01', type: 'RBC', status: 'AVAILABLE', abo: 'O', rhd: 'Positive', expiryDate: '2026-07-05T08:15:00Z', createdAt: '2026-05-24T09:00:00Z' },
+    { id: 'CMP-HCM-01-FFP', donationId: 'DON-HCM-01', productCode: 'P-FFP-02', type: 'FFP', status: 'AVAILABLE', abo: 'O', rhd: 'Positive', expiryDate: '2027-05-24T08:15:00Z', createdAt: '2026-05-24T09:00:00Z' }
+  ] as any[],
   audit_events: [] as any[],
-  orders: [] as any[],
+  orders: [
+    { id: 'ORD-HCM-901', hospital: 'HOSP-HCM-02', priority: 'EMERGENCY', status: 'IN_TRANSIT', hiciScore: 8.5, type: 'RBC', items: '[{"productCode":"P-RBC-01","quantity":1}]', patientId: 'MRN-HCM-887766', clinicalIndication: 'Acute Bleeding', specialRequirements: 'None', allocatedUnits: '["CMP-HCM-01-RBC"]', escalationReason: '', submittedAt: '2026-05-24T09:10:00Z' }
+  ] as any[],
   mtp_cases: [] as any[],
-  product_catalog: [] as any[],
-  inventory: [] as any[],
-  transport_jobs: [] as any[],
-  resources: [] as any[],
+  product_catalog: [
+    { productCode: 'P-RBC-01', alias: '紅血球濃縮液 (Red Blood Cells)', componentClass: 'RBC', aboRequired: 1, rhdRequired: 1 },
+    { productCode: 'P-FFP-02', alias: '新鮮冷凍血漿 (Fresh Frozen Plasma)', componentClass: 'FFP', aboRequired: 1, rhdRequired: 0 },
+    { productCode: 'P-PLT-03', alias: '單採血小板濃縮液 (Platelets)', componentClass: 'PLT', aboRequired: 0, rhdRequired: 0 }
+  ] as any[],
+  inventory: [
+    { unitId: 'CMP-HCM-01-RBC', productCode: 'P-RBC-01', abo: 'O', rhd: 'Positive', expiryDate: '2026-07-05T08:15:00Z', status: 'ALLOCATED', location: 'TEMP-FRIDGE-01', isIrradiated: false, isCmvNegative: true }
+  ] as any[],
+  transport_jobs: [
+    { orderId: 'ORD-HCM-901', sensorId: 'SNS-COLD-554', readings: '[{"time":"09:12","temp":4.2},{"time":"09:22","temp":4.5}]', coldChainViolation: 0, updatedAt: '2026-05-24T09:25:00Z' }
+  ] as any[],
+  resources: [
+    { id: 'RES-01', name: '配血微管卡片 (Gel Cards)', type: 'Consumable', lotNumber: 'LOT-GEL-8899', expiryDate: '2026-12-31', lastMaintenance: '', nextMaintenance: '', status: 'Active', stockLevel: 250, minStockLevel: 50, orgId: 'BC-HN-01' },
+    { id: 'RES-02', name: 'IDM自動化核酸分析儀 (NAT PCR System)', type: 'Equipment', lotNumber: 'SER-NAT-7766', expiryDate: '', lastMaintenance: '2026-04-10', nextMaintenance: '2026-10-10', status: 'Active', stockLevel: 1, minStockLevel: 1, orgId: 'BC-HN-01' }
+  ] as any[],
   patients: [
     { id: 'MRN-HCM-887766', mrn: 'MRN-HCM-887766', name: 'Nguyễn Văn A', bloodType: 'O Positive', abo: 'O', rhd: '+', hasAntibody: true, antibodyType: 'Anti-E', specimenExpired: true, specimenHours: 73, antibodyHistory: '[]' },
     { id: 'MRN-HN-112233', mrn: 'MRN-HN-112233', name: 'Trần Thị B', bloodType: 'A Negative', abo: 'A', rhd: '-', hasAntibody: false, specimenExpired: false, specimenHours: 12, antibodyHistory: '[]' },
     { id: 'MRN-DN-445566', mrn: 'MRN-DN-445566', name: 'Lê Văn C', bloodType: 'B Positive', abo: 'B', rhd: '+', hasAntibody: true, antibodyType: 'Anti-Kell', specimenExpired: false, specimenHours: 24, antibodyHistory: '[]' },
     { id: 'MRN-CT-998877', mrn: 'MRN-CT-998877', name: 'Phạm Thị D', bloodType: 'AB Positive', abo: 'AB', rhd: '+', hasAntibody: false, specimenExpired: true, specimenHours: 96, antibodyHistory: '[]' }
   ] as any[],
-  transfusions: [] as any[],
+  transfusions: [
+    { id: 'TF-901-01', componentId: 'CMP-HCM-01-RBC', patientId: 'MRN-HCM-887766', verifier1: 'Nurse Le', verifier2Pin: '9988', consentVerified: 1, preVitalsChecked: 1, status: 'COMPLETED', startedAt: '2026-05-24T09:20:00Z', completedAt: '2026-05-24T09:45:00Z' }
+  ] as any[],
   offline_events: [] as any[],
   reconciliation_reports: [] as any[],
-  crossmatch: [] as any[],
+  crossmatch: [
+    { id: 'XM-901-01', componentId: 'CMP-HCM-01-RBC', patientId: 'MRN-HCM-887766', method: 'Coomb_Test', result: 'COMPATIBLE', testedBy: 'Tech Nguyen', specimenDate: '2026-05-24T09:05:00Z', createdAt: '2026-05-24T09:15:00Z' }
+  ] as any[],
   issue_records: [] as any[],
-  adverse_reactions: [] as any[],
-  rare_donors: [] as any[]
+  adverse_reactions: [
+    { id: 'AR-901-01', transfusionId: 'TF-901-01', patientId: 'MRN-HCM-887766', reactionType: 'Allergic', severity: 'Mild', description: 'Patient developed mild skin hives 15 minutes post transfusion.', actionsTaken: 'Transfusion slowed down, antihistamines administered.', lookbackTriggered: 0, allTransfusionsPaused: 0, reportedBy: 'Dr. Pham', reportedAt: '2026-05-24T09:50:00Z' }
+  ] as any[],
+  rare_donors: [
+    { id: 'RD-01', name: '阮小龍 (Nguyen Tieu Long)', nationalId: '001099008877', bloodType: 'O', rhd: 'Negative', phenotype: 'Bombay O (h/h)', hlaTyping: '{"A":"02, 24","B":"46, 54"}', hpaTyping: '{"1":"a,a"}', location: 'Hanoi', contact: '+84901234567', status: 'Available', lastDonationDate: '2026-02-15', orgId: 'BC-HN-01' }
+  ] as any[]
 };
 
 // Exported API (Matches the interface used by the application)
@@ -59,6 +100,7 @@ export const organizations = {
         if (isTableMissingError(error)) return fallbackStores.organizations;
         throw error;
       }
+      if (!data || data.length === 0) return fallbackStores.organizations;
       return data;
     } catch (e: any) {
       if (isTableMissingError(e)) return fallbackStores.organizations;
@@ -98,6 +140,24 @@ export const organizations = {
       if (isTableMissingError(e)) {
         const org = fallbackStores.organizations.find(o => o.id === id);
         if (org) Object.assign(org, data);
+        return;
+      }
+      throw e;
+    }
+  },
+  async remove(id: string) {
+    try {
+      const { error } = await supabase.from('organizations').delete().eq('id', id);
+      if (error) {
+        if (isTableMissingError(error)) {
+          fallbackStores.organizations = fallbackStores.organizations.filter(o => o.id !== id);
+          return;
+        }
+        throw error;
+      }
+    } catch (e: any) {
+      if (isTableMissingError(e)) {
+        fallbackStores.organizations = fallbackStores.organizations.filter(o => o.id !== id);
         return;
       }
       throw e;
@@ -253,6 +313,8 @@ export const users = {
         throw error;
       }
       
+      if (!rows || rows.length === 0) return fallbackStores.users;
+      
       return rows.map((r: any) => ({ 
         ...r, 
         orgName: r.organizations?.name,
@@ -363,6 +425,24 @@ export const users = {
       throw e;
     }
     return { success: true };
+  },
+  async remove(id: string) {
+    try {
+      const { error } = await supabase.from('users').delete().eq('id', id);
+      if (error) {
+        if (isTableMissingError(error)) {
+          fallbackStores.users = fallbackStores.users.filter(u => u.id !== id);
+          return;
+        }
+        throw error;
+      }
+    } catch (e: any) {
+      if (isTableMissingError(e)) {
+        fallbackStores.users = fallbackStores.users.filter(u => u.id !== id);
+        return;
+      }
+      throw e;
+    }
   }
 };
 
@@ -376,6 +456,7 @@ export const donors = {
         }
         throw error;
       }
+      if (!data || data.length === 0) return fallbackStores.donors;
       return data;
     } catch (e: any) {
       if (isTableMissingError(e)) {
@@ -426,6 +507,24 @@ export const donors = {
       }
       throw e;
     }
+  },
+  async remove(id: string) {
+    try {
+      const { error } = await supabase.from('donors').delete().eq('id', id);
+      if (error) {
+        if (isTableMissingError(error)) {
+          fallbackStores.donors = fallbackStores.donors.filter(d => d.id !== id);
+          return;
+        }
+        throw error;
+      }
+    } catch (e: any) {
+      if (isTableMissingError(e)) {
+        fallbackStores.donors = fallbackStores.donors.filter(d => d.id !== id);
+        return;
+      }
+      throw e;
+    }
   }
 };
 
@@ -437,6 +536,7 @@ export const questionnaires = {
         if (isTableMissingError(error)) return fallbackStores.questionnaires;
         throw error;
       }
+      if (!data || data.length === 0) return fallbackStores.questionnaires;
       return data;
     } catch (e: any) {
       if (isTableMissingError(e)) return fallbackStores.questionnaires;
@@ -456,6 +556,24 @@ export const questionnaires = {
     } catch (e: any) {
       if (isTableMissingError(e)) {
         fallbackStores.questionnaires.push(data);
+        return;
+      }
+      throw e;
+    }
+  },
+  async remove(id: string) {
+    try {
+      const { error } = await supabase.from('questionnaires').delete().eq('id', id);
+      if (error) {
+        if (isTableMissingError(error)) {
+          fallbackStores.questionnaires = fallbackStores.questionnaires.filter(q => q.id !== id);
+          return;
+        }
+        throw error;
+      }
+    } catch (e: any) {
+      if (isTableMissingError(e)) {
+        fallbackStores.questionnaires = fallbackStores.questionnaires.filter(q => q.id !== id);
         return;
       }
       throw e;
@@ -481,6 +599,15 @@ export const donations = {
           }));
         }
         throw error;
+      }
+      
+      if (!rows || rows.length === 0) {
+        return fallbackStores.donations.map((r: any) => ({
+          ...r,
+          donorName: 'Donor ' + r.donorId,
+          idmStatus: r.idmStatus || 'PENDING',
+          componentCount: 0
+        }));
       }
       
       return rows.map((r: any) => ({
@@ -519,10 +646,42 @@ export const donations = {
       }
       throw e;
     }
+  },
+  async remove(id: string) {
+    try {
+      const { error } = await supabase.from('donations').delete().eq('id', id);
+      if (error) {
+        if (isTableMissingError(error)) {
+          fallbackStores.donations = fallbackStores.donations.filter(d => d.id !== id);
+          return;
+        }
+        throw error;
+      }
+    } catch (e: any) {
+      if (isTableMissingError(e)) {
+        fallbackStores.donations = fallbackStores.donations.filter(d => d.id !== id);
+        return;
+      }
+      throw e;
+    }
   }
 };
 
 export const labTests = {
+  async getAll() {
+    try {
+      const { data, error } = await supabase.from('lab_tests').select('*');
+      if (error) {
+        if (isTableMissingError(error)) return fallbackStores.lab_tests;
+        throw error;
+      }
+      if (!data || data.length === 0) return fallbackStores.lab_tests;
+      return data;
+    } catch (e: any) {
+      if (isTableMissingError(e)) return fallbackStores.lab_tests;
+      throw e;
+    }
+  },
   async updateByDonationId(donationId: string, data: any) {
     try {
       const { error } = await supabase.from('lab_tests').update(data).eq('donationId', donationId);
@@ -577,6 +736,24 @@ export const labTests = {
       }
       throw e;
     }
+  },
+  async remove(id: string) {
+    try {
+      const { error } = await supabase.from('lab_tests').delete().eq('id', id);
+      if (error) {
+        if (isTableMissingError(error)) {
+          fallbackStores.lab_tests = fallbackStores.lab_tests.filter(t => t.id !== id);
+          return;
+        }
+        throw error;
+      }
+    } catch (e: any) {
+      if (isTableMissingError(e)) {
+        fallbackStores.lab_tests = fallbackStores.lab_tests.filter(t => t.id !== id);
+        return;
+      }
+      throw e;
+    }
   }
 };
 export const lab_tests = labTests;
@@ -595,6 +772,14 @@ export const components = {
           }));
         }
         throw error;
+      }
+      if (!rows || rows.length === 0) {
+        return fallbackStores.components.map((r: any) => ({
+          ...r,
+          abo: r.abo || 'O',
+          rhd: r.rhd || '+',
+          status: r.status || 'AVAILABLE'
+        }));
       }
       return rows.map((r: any) => ({
         ...r,
@@ -688,6 +873,24 @@ export const components = {
       }
       throw e;
     }
+  },
+  async remove(id: string) {
+    try {
+      const { error } = await supabase.from('components').delete().eq('id', id);
+      if (error) {
+        if (isTableMissingError(error)) {
+          fallbackStores.components = fallbackStores.components.filter(c => c.id !== id);
+          return;
+        }
+        throw error;
+      }
+    } catch (e: any) {
+      if (isTableMissingError(e)) {
+        fallbackStores.components = fallbackStores.components.filter(c => c.id !== id);
+        return;
+      }
+      throw e;
+    }
   }
 };
 
@@ -740,6 +943,14 @@ export const orders = {
           }));
         }
         throw error;
+      }
+      
+      if (!rows || rows.length === 0) {
+        return fallbackStores.orders.map(r => ({ 
+          ...r, 
+          items: typeof r.items === 'string' ? JSON.parse(r.items) : (r.items || []),
+          allocatedUnits: typeof r.allocatedUnits === 'string' ? JSON.parse(r.allocatedUnits) : (r.allocatedUnits || [])
+        }));
       }
       
       return rows.map(r => ({ 
@@ -891,6 +1102,7 @@ export const productCatalog = {
         if (isTableMissingError(error)) return fallbackStores.product_catalog;
         throw error;
       }
+      if (!data || data.length === 0) return fallbackStores.product_catalog;
       return data;
     } catch (e: any) {
       if (isTableMissingError(e)) return fallbackStores.product_catalog;
@@ -951,6 +1163,7 @@ export const inventory = {
         if (isTableMissingError(error)) return fallbackStores.inventory;
         throw error;
       }
+      if (!data || data.length === 0) return fallbackStores.inventory;
       return data;
     } catch (e: any) {
       if (isTableMissingError(e)) return fallbackStores.inventory;
@@ -982,6 +1195,20 @@ export const inventory = {
 };
 
 export const transportJobs = {
+  async getAll() {
+    try {
+      const { data, error } = await supabase.from('transport_jobs').select('*');
+      if (error) {
+        if (isTableMissingError(error)) return fallbackStores.transport_jobs;
+        throw error;
+      }
+      if (!data || data.length === 0) return fallbackStores.transport_jobs;
+      return data;
+    } catch (e: any) {
+      if (isTableMissingError(e)) return fallbackStores.transport_jobs;
+      throw e;
+    }
+  },
   async getByOrderId(orderId: string) {
     try {
       const { data, error } = await supabase.from('transport_jobs').select('*').eq('orderId', orderId).maybeSingle();
@@ -1084,6 +1311,7 @@ export const resources = {
         if (isTableMissingError(error)) return fallbackStores.resources;
         throw error;
       }
+      if (!data || data.length === 0) return fallbackStores.resources;
       return data || [];
     } catch (e: any) {
       if (isTableMissingError(e)) return fallbackStores.resources;
@@ -1173,6 +1401,7 @@ export const patients = {
         }
         throw error;
       }
+      if (!data || data.length === 0) return fallbackStores.patients;
       return data || [];
     } catch (e: any) {
       if (isTableMissingError(e)) {
@@ -1213,6 +1442,7 @@ export const transfusions = {
         if (isTableMissingError(error)) return fallbackStores.transfusions;
         throw error;
       }
+      if (!data || data.length === 0) return fallbackStores.transfusions;
       return data;
     } catch (e: any) {
       if (isTableMissingError(e)) return fallbackStores.transfusions;
@@ -1373,6 +1603,7 @@ export const crossmatch = {
         if (isTableMissingError(error)) return fallbackStores.crossmatch;
         throw error;
       }
+      if (!data || data.length === 0) return fallbackStores.crossmatch;
       return data;
     } catch (e: any) {
       if (isTableMissingError(e)) return fallbackStores.crossmatch;
@@ -1475,6 +1706,7 @@ export const adverseReactions = {
         if (isTableMissingError(error)) return fallbackStores.adverse_reactions;
         throw error;
       }
+      if (!data || data.length === 0) return fallbackStores.adverse_reactions;
       return data;
     } catch (e: any) {
       if (isTableMissingError(e)) return fallbackStores.adverse_reactions;
@@ -1515,6 +1747,7 @@ export const rareDonors = {
         if (isTableMissingError(error)) return fallbackStores.rare_donors;
         throw error;
       }
+      if (!data || data.length === 0) return fallbackStores.rare_donors;
       return data;
     } catch (e: any) {
       if (isTableMissingError(e)) return fallbackStores.rare_donors;

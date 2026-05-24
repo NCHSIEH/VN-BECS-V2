@@ -54,7 +54,10 @@ export function DonorCenterSimulatorView({
     hadTattooRecently: false,
     traveledToMalariaZone: false,
     feelingUnwell: false,
-    hasHighRiskCondition: false
+    hasHighRiskCondition: false,
+    recentVaccine: false,
+    recentDentalSurgery: false,
+    pregnancyOrLactation: false
   });
   const [donorFormError, setDonorFormError] = useState("");
   const [donorLookupMessage, setDonorLookupMessage] = useState("");
@@ -68,6 +71,8 @@ export function DonorCenterSimulatorView({
   const [donations, setDonations] = useState<any[]>([]);
   const [components, setComponents] = useState<any[]>([]);
   const [resources, setResources] = useState<any[]>([]);
+  const [questionnaires, setQuestionnaires] = useState<any[]>([]);
+  const [viewingQuestionnaire, setViewingQuestionnaire] = useState<any | null>(null);
 
   const loadData = () => {
     fetch('/api/v1/catalog/products')
@@ -94,6 +99,11 @@ export function DonorCenterSimulatorView({
       .then(res => res.ok ? res.json() : [])
       .then(d => setResources(Array.isArray(d) ? d : []))
       .catch(() => setResources([]));
+      
+    fetch('/api/v1/lims/questionnaires')
+      .then(res => res.ok ? res.json() : [])
+      .then(d => setQuestionnaires(Array.isArray(d) ? d : []))
+      .catch(() => setQuestionnaires([]));
 
     fetch('/api/v1/mdm/organizations')
       .then(res => res.ok ? res.json() : [])
@@ -189,18 +199,27 @@ export function DonorCenterSimulatorView({
     if (donor) {
        // Replace dashes with slashes for YYYY/MM/DD input format
        const formattedDob = donor.dob ? donor.dob.replace(/-/g, '/') : '';
+       const quest = questionnaires.find(q => q.donorId === donor.id);
+       const ans = quest ? JSON.parse(quest.answersJson || '{}') : {};
        setDonorForm({
          id: donor.id, name: donor.name, nationalId: donor.nationalId, dob: formattedDob,
          gender: donor.gender || 'Male', weight: donor.weight?.toString() || '',
          bloodType: donor.bloodType, rhd: donor.rhd,
-         hadTattooRecently: false, traveledToMalariaZone: false, feelingUnwell: false, hasHighRiskCondition: false
+         hadTattooRecently: ans.hadTattooRecently || false,
+         traveledToMalariaZone: ans.traveledToMalariaZone || false,
+         feelingUnwell: ans.feelingUnwell || false,
+         hasHighRiskCondition: ans.hasHighRiskCondition || false,
+         recentVaccine: ans.recentVaccine || false,
+         recentDentalSurgery: ans.recentDentalSurgery || false,
+         pregnancyOrLactation: ans.pregnancyOrLactation || false
        });
     } else {
        setDonorForm({
          id: '', name: '', nationalId: '', dob: '',
          gender: 'Male', weight: '',
          bloodType: 'O', rhd: 'Positive',
-         hadTattooRecently: false, traveledToMalariaZone: false, feelingUnwell: false, hasHighRiskCondition: false
+         hadTattooRecently: false, traveledToMalariaZone: false, feelingUnwell: false, hasHighRiskCondition: false,
+         recentVaccine: false, recentDentalSurgery: false, pregnancyOrLactation: false
        });
     }
     setIsDonorModalOpen(true);
@@ -248,7 +267,10 @@ export function DonorCenterSimulatorView({
       hadTattooRecently: donorForm.hadTattooRecently,
       traveledToMalariaZone: donorForm.traveledToMalariaZone,
       feelingUnwell: donorForm.feelingUnwell,
-      hasHighRiskCondition: donorForm.hasHighRiskCondition
+      hasHighRiskCondition: donorForm.hasHighRiskCondition,
+      recentVaccine: donorForm.recentVaccine,
+      recentDentalSurgery: donorForm.recentDentalSurgery,
+      pregnancyOrLactation: donorForm.pregnancyOrLactation
     });
 
     const finalDeferralStatus = deferralCheck.deferred ? 'Active' : 'None';
@@ -691,6 +713,36 @@ export function DonorCenterSimulatorView({
                             </td>
                             <td className="p-8 text-right">
                                <div className="flex gap-4 justify-end">
+                                 <button 
+                                   onClick={() => {
+                                     const quest = questionnaires.find(q => q.donorId === d.id);
+                                     if (quest) {
+                                       setViewingQuestionnaire(quest);
+                                     } else {
+                                       setViewingQuestionnaire({
+                                         id: 'QST-MOCK',
+                                         donorId: d.id,
+                                         answersJson: JSON.stringify({
+                                           hadTattooRecently: false,
+                                           traveledToMalariaZone: false,
+                                           feelingUnwell: false,
+                                           hasHighRiskCondition: false,
+                                           recentVaccine: false,
+                                           recentDentalSurgery: false,
+                                           pregnancyOrLactation: false
+                                         }),
+                                         isPassed: d.deferralStatus === 'Active' ? 0 : 1,
+                                         createdAt: d.registeredAt,
+                                         deferralReason: d.deferralReason || '',
+                                         deferralUntil: d.deferralUntil || ''
+                                       });
+                                     }
+                                   }} 
+                                   className="p-3 rounded-2xl bg-clinical-bg border border-clinical-border text-clinical-muted hover:text-sky-400 hover:border-sky-500/45 transition-all shadow-inner"
+                                   title={t('qst_btn_view')}
+                                 >
+                                    <ClipboardList size={20} />
+                                 </button>
                                  <button onClick={() => openDonorModal(d)} className="p-3 rounded-2xl bg-clinical-bg border border-clinical-border text-clinical-muted hover:text-clinical-text hover:border-slate-600 transition-all shadow-inner">
                                     <Activity size={20} />
                                  </button>
@@ -1215,26 +1267,67 @@ export function DonorCenterSimulatorView({
                 </div>
 
                 <div className="bg-clinical-bg p-6 rounded-[24px] border border-clinical-border mt-6">
-                   <h4 className="text-rose-500 text-[10px] font-black uppercase tracking-widest mb-4">Vietnam Ministry of Health Questionnaire</h4>
-                   <div className="space-y-4">
-                      <label className="flex items-center gap-4 text-sm text-clinical-text bg-clinical-bg p-4 rounded-xl border border-clinical-border cursor-pointer">
-                         <input type="checkbox" checked={donorForm.hadTattooRecently} onChange={e => setDonorForm({...donorForm, hadTattooRecently: e.target.checked})} className="rounded bg-clinical-card border-clinical-border text-rose-500 focus:ring-rose-500 w-5 h-5" />
-                         <span className="font-bold text-[11px] uppercase tracking-wider">Had a tattoo or piercing within the last 6 months?</span>
-                      </label>
-                      <label className="flex items-center gap-4 text-sm text-clinical-text bg-clinical-bg p-4 rounded-xl border border-clinical-border cursor-pointer">
-                         <input type="checkbox" checked={donorForm.traveledToMalariaZone} onChange={e => setDonorForm({...donorForm, traveledToMalariaZone: e.target.checked})} className="rounded bg-clinical-card border-clinical-border text-rose-500 focus:ring-rose-500 w-5 h-5" />
-                         <span className="font-bold text-[11px] uppercase tracking-wider">Traveled to a malaria endemic zone within the last 12 months?</span>
-                      </label>
-                      <label className="flex items-center gap-4 text-sm text-clinical-text bg-clinical-bg p-4 rounded-xl border border-clinical-border cursor-pointer">
-                         <input type="checkbox" checked={donorForm.feelingUnwell} onChange={e => setDonorForm({...donorForm, feelingUnwell: e.target.checked})} className="rounded bg-clinical-card border-clinical-border text-rose-500 focus:ring-rose-500 w-5 h-5" />
-                         <span className="font-bold text-[11px] uppercase tracking-wider">Currently feeling unwell, taking medication, or having a fever?</span>
-                      </label>
-                      <label className="flex items-center gap-4 text-sm text-clinical-text bg-clinical-bg p-4 rounded-xl border border-clinical-border cursor-pointer">
-                         <input type="checkbox" checked={donorForm.hasHighRiskCondition} onChange={e => setDonorForm({...donorForm, hasHighRiskCondition: e.target.checked})} className="rounded bg-clinical-card border-clinical-border text-rose-500 focus:ring-rose-500 w-5 h-5" />
-                         <span className="font-bold text-[11px] uppercase tracking-wider">Have any high-risk conditions (e.g. HIV, Hepatitis)?</span>
-                      </label>
-                   </div>
-                </div>
+                    <h4 className="text-rose-500 text-[10px] font-black uppercase tracking-widest mb-4">{t('qst_title')}</h4>
+                    <div className="space-y-4">
+                       <label className="flex items-center gap-4 text-sm text-clinical-text bg-clinical-bg p-4 rounded-xl border border-clinical-border cursor-pointer">
+                          <input type="checkbox" checked={donorForm.hadTattooRecently} onChange={e => setDonorForm({...donorForm, hadTattooRecently: e.target.checked})} className="rounded bg-clinical-card border-clinical-border text-rose-500 focus:ring-rose-500 w-5 h-5" />
+                          <span className="font-bold text-[11px] uppercase tracking-wider">{t('qst_recent_tattoo')}</span>
+                       </label>
+                       <label className="flex items-center gap-4 text-sm text-clinical-text bg-clinical-bg p-4 rounded-xl border border-clinical-border cursor-pointer">
+                          <input type="checkbox" checked={donorForm.traveledToMalariaZone} onChange={e => setDonorForm({...donorForm, traveledToMalariaZone: e.target.checked})} className="rounded bg-clinical-card border-clinical-border text-rose-500 focus:ring-rose-500 w-5 h-5" />
+                          <span className="font-bold text-[11px] uppercase tracking-wider">{t('qst_malaria_travel')}</span>
+                       </label>
+                       <label className="flex items-center gap-4 text-sm text-clinical-text bg-clinical-bg p-4 rounded-xl border border-clinical-border cursor-pointer">
+                          <input type="checkbox" checked={donorForm.feelingUnwell} onChange={e => setDonorForm({...donorForm, feelingUnwell: e.target.checked})} className="rounded bg-clinical-card border-clinical-border text-rose-500 focus:ring-rose-500 w-5 h-5" />
+                          <span className="font-bold text-[11px] uppercase tracking-wider">{t('qst_feeling_unwell')}</span>
+                       </label>
+                       <label className="flex items-center gap-4 text-sm text-clinical-text bg-clinical-bg p-4 rounded-xl border border-clinical-border cursor-pointer">
+                          <input type="checkbox" checked={donorForm.recentVaccine} onChange={e => setDonorForm({...donorForm, recentVaccine: e.target.checked})} className="rounded bg-clinical-card border-clinical-border text-rose-500 focus:ring-rose-500 w-5 h-5" />
+                          <span className="font-bold text-[11px] uppercase tracking-wider">{t('qst_recent_vaccine')}</span>
+                       </label>
+                       <label className="flex items-center gap-4 text-sm text-clinical-text bg-clinical-bg p-4 rounded-xl border border-clinical-border cursor-pointer">
+                          <input type="checkbox" checked={donorForm.recentDentalSurgery} onChange={e => setDonorForm({...donorForm, recentDentalSurgery: e.target.checked})} className="rounded bg-clinical-card border-clinical-border text-rose-500 focus:ring-rose-500 w-5 h-5" />
+                          <span className="font-bold text-[11px] uppercase tracking-wider">{t('qst_recent_dental')}</span>
+                       </label>
+                       {donorForm.gender === 'Female' && (
+                         <label className="flex items-center gap-4 text-sm text-clinical-text bg-clinical-bg p-4 rounded-xl border border-clinical-border cursor-pointer">
+                            <input type="checkbox" checked={donorForm.pregnancyOrLactation} onChange={e => setDonorForm({...donorForm, pregnancyOrLactation: e.target.checked})} className="rounded bg-clinical-card border-clinical-border text-rose-500 focus:ring-rose-500 w-5 h-5" />
+                            <span className="font-bold text-[11px] uppercase tracking-wider">{t('qst_pregnancy_lactation')}</span>
+                         </label>
+                       )}
+                       <label className="flex items-center gap-4 text-sm text-clinical-text bg-clinical-bg p-4 rounded-xl border border-clinical-border cursor-pointer">
+                          <input type="checkbox" checked={donorForm.hasHighRiskCondition} onChange={e => setDonorForm({...donorForm, hasHighRiskCondition: e.target.checked})} className="rounded bg-clinical-card border-clinical-border text-rose-500 focus:ring-rose-500 w-5 h-5" />
+                          <span className="font-bold text-[11px] uppercase tracking-wider">{t('qst_high_risk_cond')}</span>
+                       </label>
+                    </div>
+
+                    {(() => {
+                       const liveDeferral = validateVietnamDeferralRules({
+                         hadTattooRecently: donorForm.hadTattooRecently,
+                         traveledToMalariaZone: donorForm.traveledToMalariaZone,
+                         feelingUnwell: donorForm.feelingUnwell,
+                         hasHighRiskCondition: donorForm.hasHighRiskCondition,
+                         recentVaccine: donorForm.recentVaccine,
+                         recentDentalSurgery: donorForm.recentDentalSurgery,
+                         pregnancyOrLactation: donorForm.pregnancyOrLactation
+                       });
+                       if (!liveDeferral.deferred) return null;
+                       return (
+                         <div className="mt-6 p-6 rounded-3xl bg-rose-500/10 border border-rose-500/20 text-rose-500 flex flex-col gap-2 animate-pulse">
+                           <h5 className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 text-rose-400">
+                             {t('qst_warning_title')}
+                           </h5>
+                           <p className="text-[11px] font-bold leading-relaxed">
+                             {t('qst_warning_deferred')}
+                           </p>
+                           <div className="text-[10px] opacity-90 font-mono mt-1 space-y-1">
+                             <div>• {t('qst_warning_reason')}: <span className="font-black italic">{liveDeferral.reason}</span></div>
+                             <div>• {t('qst_warning_until')}: <span className="font-black italic">{liveDeferral.until ? new Date(liveDeferral.until).toLocaleDateString() : t('qst_warning_permanent')}</span></div>
+                           </div>
+                         </div>
+                       );
+                    })()}
+                 </div>
              </div>
              <div className="p-12 bg-clinical-bg/60 border-t border-clinical-border flex justify-end gap-6">
                 <button type="button" onClick={() => setIsDonorModalOpen(false)} className="px-10 py-6 rounded-[20px] text-clinical-muted font-black text-[11px] uppercase tracking-[0.3em] hover:text-clinical-text transition-colors">Abort</button>

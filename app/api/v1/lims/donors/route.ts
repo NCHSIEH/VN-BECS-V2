@@ -42,11 +42,37 @@ export async function POST(request: Request) {
       registeredAt: new Date().toISOString()
     };
 
+    // Save pre-donation health questionnaire answers to questionnaires table
+    const questionnaireId = `QST-${Math.floor(Math.random() * 9000) + 1000}`;
+    const answersJson = JSON.stringify({
+      hadTattooRecently: !!data.hadTattooRecently,
+      traveledToMalariaZone: !!data.traveledToMalariaZone,
+      feelingUnwell: !!data.feelingUnwell,
+      hasHighRiskCondition: !!data.hasHighRiskCondition,
+      recentVaccine: !!data.recentVaccine,
+      recentDentalSurgery: !!data.recentDentalSurgery,
+      pregnancyOrLactation: !!data.pregnancyOrLactation
+    });
+    const isPassed = (data.deferralStatus === 'Active') ? 0 : 1;
+
+    await db.questionnaires.create({
+      id: questionnaireId,
+      donorId: id,
+      answersJson,
+      isPassed,
+      createdAt: new Date().toISOString(),
+      deferralReason: data.deferralReason || '',
+      deferralUntil: data.deferralUntil || ''
+    }).catch(e => console.error("Error creating questionnaire:", e));
+
     // Remove transient questionnaire fields from donor record if needed, though they might just be ignored by db layer if not in schema.
     delete donorData.hadTattooRecently;
     delete donorData.traveledToMalariaZone;
     delete donorData.feelingUnwell;
     delete donorData.hasHighRiskCondition;
+    delete donorData.recentVaccine;
+    delete donorData.recentDentalSurgery;
+    delete donorData.pregnancyOrLactation;
 
     await db.donors.create(donorData);
     return NextResponse.json({ success: true, id });

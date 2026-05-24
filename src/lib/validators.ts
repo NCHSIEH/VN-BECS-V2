@@ -114,6 +114,21 @@ export function validateVietnamDeferralRules(answers: Record<string, boolean | s
   if (answers.hasHighRiskCondition) {
     return { deferred: true, reason: 'Permanent deferral due to high-risk condition (e.g. HIV, Hepatitis)' };
   }
+  if (answers.recentVaccine) {
+    const deferralDate = new Date(now);
+    deferralDate.setDate(deferralDate.getDate() + 28);
+    return { deferred: true, reason: 'Recent live vaccine (within 4 weeks)', until: deferralDate.toISOString() };
+  }
+  if (answers.recentDentalSurgery) {
+    const deferralDate = new Date(now);
+    deferralDate.setDate(deferralDate.getDate() + 7);
+    return { deferred: true, reason: 'Recent dental or minor surgery (within 7 days)', until: deferralDate.toISOString() };
+  }
+  if (answers.pregnancyOrLactation) {
+    const deferralDate = new Date(now);
+    deferralDate.setMonth(deferralDate.getMonth() + 6);
+    return { deferred: true, reason: 'Recent pregnancy or current lactation (within 6 months)', until: deferralDate.toISOString() };
+  }
   return { deferred: false };
 }
 

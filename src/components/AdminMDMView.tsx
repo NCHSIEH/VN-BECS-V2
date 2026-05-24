@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Building, Users, ArrowLeft, Plus, Edit2, Camera, Trash2, X, Lock, CheckCircle, Key } from 'lucide-react';
+import { Shield, Building, Users, ArrowLeft, Plus, Edit2, Camera, Trash2, X, Lock, Unlock, CheckCircle, Key } from 'lucide-react';
 import { useI18n } from '../lib/i18n';
+import { SuperuserDBConsole } from './SuperuserDBConsole';
 
 export function AdminMDMView({ onBack, initialTab }: { onBack: () => void; initialTab?: 'Orgs' | 'MSD' | 'Catalog' | 'RBAC' }) {
   const { t, lang, setLang } = useI18n();
   const [tab, setTab] = useState<'Orgs' | 'MSD' | 'Catalog' | 'RBAC'>(initialTab || 'MSD');
+  const [showSuperuserTerminal, setShowSuperuserTerminal] = useState(false);
   const [orgs, setOrgs] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
@@ -155,6 +157,10 @@ export function AdminMDMView({ onBack, initialTab }: { onBack: () => void; initi
     }
   };
 
+  if (showSuperuserTerminal) {
+    return <SuperuserDBConsole onBack={() => setShowSuperuserTerminal(false)} />;
+  }
+
   return (
     <div className="flex flex-col h-full bg-clinical-bg text-clinical-text">
       <header className="p-4 border-b border-indigo-200 bg-clinical-bg flex items-center justify-between shadow-lg">
@@ -175,21 +181,46 @@ export function AdminMDMView({ onBack, initialTab }: { onBack: () => void; initi
       </header>
 
       <div className="flex flex-1 overflow-hidden p-6 gap-6">
-         {/* Sidebar MDM */}
-         <div className="w-64 flex flex-col gap-2">
-            <button onClick={() => setTab('Orgs')} className={`p-4 rounded-xl flex items-center gap-3 transition-all ${tab === 'Orgs' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-clinical-bg text-clinical-muted hover:bg-clinical-bg'}`}>
-               <Building size={18} /> <span className="text-xs font-bold uppercase tracking-widest">{t('mdm_orgs')}</span>
-            </button>
-            <button onClick={() => setTab('MSD')} className={`p-4 rounded-xl flex items-center gap-3 transition-all ${tab === 'MSD' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-clinical-bg text-clinical-muted hover:bg-clinical-bg'}`}>
-               <Users size={18} /> <span className="text-xs font-bold uppercase tracking-widest">{t('mdm_msd')}</span>
-            </button>
-            <button onClick={() => setTab('Catalog')} className={`p-4 rounded-xl flex items-center gap-3 transition-all ${tab === 'Catalog' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-clinical-bg text-clinical-muted hover:bg-clinical-bg'}`}>
-               <Shield size={18} /> <span className="text-xs font-bold uppercase tracking-widest">{t('mdm_catalog')}</span>
-            </button>
-            <button onClick={() => setTab('RBAC')} className={`p-4 rounded-xl flex items-center gap-3 transition-all ${tab === 'RBAC' ? 'bg-fuchsia-600 text-white shadow-lg' : 'bg-clinical-bg text-clinical-muted hover:bg-clinical-bg'}`}>
-               <Key size={18} /> <span className="text-xs font-bold uppercase tracking-widest">{t('mdm_rbac')}</span>
-            </button>
-         </div>
+          <div className="w-64 flex flex-col gap-2 justify-between">
+             <div className="flex flex-col gap-2">
+                <button onClick={() => setTab('Orgs')} className={`p-4 rounded-xl flex items-center gap-3 transition-all ${tab === 'Orgs' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-clinical-bg text-clinical-muted hover:bg-clinical-bg'}`}>
+                   <Building size={18} /> <span className="text-xs font-bold uppercase tracking-widest">{t('mdm_orgs')}</span>
+                </button>
+                <button onClick={() => setTab('MSD')} className={`p-4 rounded-xl flex items-center gap-3 transition-all ${tab === 'MSD' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-clinical-bg text-clinical-muted hover:bg-clinical-bg'}`}>
+                   <Users size={18} /> <span className="text-xs font-bold uppercase tracking-widest">{t('mdm_msd')}</span>
+                </button>
+                <button onClick={() => setTab('Catalog')} className={`p-4 rounded-xl flex items-center gap-3 transition-all ${tab === 'Catalog' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-clinical-bg text-clinical-muted hover:bg-clinical-bg'}`}>
+                   <Shield size={18} /> <span className="text-xs font-bold uppercase tracking-widest">{t('mdm_catalog')}</span>
+                </button>
+                <button onClick={() => setTab('RBAC')} className={`p-4 rounded-xl flex items-center gap-3 transition-all ${tab === 'RBAC' ? 'bg-fuchsia-600 text-white shadow-lg' : 'bg-clinical-bg text-clinical-muted hover:bg-clinical-bg'}`}>
+                   <Key size={18} /> <span className="text-xs font-bold uppercase tracking-widest">{t('mdm_rbac')}</span>
+                </button>
+             </div>
+             
+             {/* Glowing Cyber-Style Superuser Entrance Card Button */}
+             <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-slate-200">
+                <button 
+                   onClick={() => setShowSuperuserTerminal(true)} 
+                   className="group relative p-4 rounded-2xl border border-violet-500/30 bg-violet-950/5 text-violet-600 hover:text-white transition-all shadow-[0_0_15px_rgba(139,92,246,0.1)] hover:shadow-[0_0_25px_rgba(139,92,246,0.25)] hover:scale-[1.03] active:scale-95 duration-300 flex flex-col gap-2 items-start overflow-hidden text-left cursor-pointer"
+                >
+                   {/* Glowing neon hover gradient */}
+                   <div className="absolute inset-0 bg-gradient-to-tr from-violet-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
+                   
+                   <div className="flex items-center gap-1.5">
+                      <div className="p-1 bg-violet-500/10 group-hover:bg-white/20 rounded-lg border border-violet-500/20 group-hover:border-transparent transition-colors">
+                         <Lock size={12} className="group-hover:hidden" />
+                         <Unlock size={12} className="hidden group-hover:block" />
+                      </div>
+                      <span className="text-[9px] font-black uppercase tracking-widest text-violet-500 group-hover:text-violet-200">超級使用者終端</span>
+                   </div>
+                   
+                   <div>
+                      <p className="text-[10px] font-black text-slate-800 group-hover:text-white uppercase leading-none">⚡ ENTER SUPERUSER CONSOLE</p>
+                      <p className="text-[8px] text-slate-500 group-hover:text-white/80 mt-1 leading-tight font-medium">關聯安全認證與試算表編輯器</p>
+                   </div>
+                </button>
+             </div>
+          </div>
 
          {/* Content */}
          <div className="flex-1 bg-clinical-bg border border-clinical-border rounded-2xl p-6 overflow-y-auto">
