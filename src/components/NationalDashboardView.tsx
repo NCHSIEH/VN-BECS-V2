@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Globe, TrendingUp, ShieldCheck, AlertTriangle, Download, Database, MapPin, Activity, Zap, Droplets, ChevronRight, Search, Bell, User, Truck, Settings } from 'lucide-react';
+import { Globe, TrendingUp, ShieldCheck, AlertTriangle, Download, Database, MapPin, Activity, Zap, Droplets, ChevronRight, Search, Bell, User, Truck, Settings, ArrowLeft } from 'lucide-react';
 import { useI18n } from '../lib/i18n';
 import { VietnamMap } from './VietnamMap';
 
-export function NationalDashboardView() {
+export function NationalDashboardView({ onBack }: { onBack?: () => void } = {}) {
   const { t } = useI18n();
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -38,6 +38,18 @@ export function NationalDashboardView() {
 
   return (
     <div className="flex-1 p-4 md:p-8 lg:p-10 space-y-8 md:space-y-12 animate-in fade-in duration-1000 overflow-x-hidden">
+      {onBack && (
+        <div className="flex items-center gap-4 border-b border-clinical-border pb-4 mb-6">
+          <button 
+            onClick={onBack} 
+            className="p-2 hover:bg-slate-700/10 rounded-lg text-clinical-muted hover:text-clinical-text transition-all flex items-center gap-2 text-xs font-black uppercase tracking-wider cursor-pointer"
+          >
+            <ArrowLeft size={16} /> {t('back_to_portal') || 'Back to Portal'}
+          </button>
+          <div className="h-4 w-px bg-clinical-border"></div>
+          <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest">{t('dashboard_strategic') || 'Strategic Analytics'}</span>
+        </div>
+      )}
       
       {/* Top Level Summary Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 md:gap-8">
