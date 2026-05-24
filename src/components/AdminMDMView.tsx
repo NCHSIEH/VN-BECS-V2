@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Building, Users, ArrowLeft, Plus, Edit2, Camera, Trash2, X, Lock, Unlock, CheckCircle, Key } from 'lucide-react';
+import { Shield, Building, Users, ArrowLeft, Plus, Edit2, Camera, Trash2, X, Lock, Unlock, CheckCircle, Key, Database } from 'lucide-react';
 import { useI18n } from '../lib/i18n';
 import { SuperuserDBConsole } from './SuperuserDBConsole';
 
-export function AdminMDMView({ onBack, initialTab }: { onBack: () => void; initialTab?: 'Orgs' | 'MSD' | 'Catalog' | 'RBAC' }) {
+export function AdminMDMView({ onBack, initialTab, mode = 'MDM' }: { onBack: () => void; initialTab?: 'Orgs' | 'MSD' | 'Catalog' | 'RBAC'; mode?: 'MDM' | 'IAM' }) {
   const { t, lang, setLang } = useI18n();
-  const [tab, setTab] = useState<'Orgs' | 'MSD' | 'Catalog' | 'RBAC'>(initialTab || 'MSD');
+  const defaultTab = initialTab || (mode === 'MDM' ? 'Orgs' : 'MSD');
+  const [tab, setTab] = useState<'Orgs' | 'MSD' | 'Catalog' | 'RBAC'>(defaultTab);
   const [showSuperuserTerminal, setShowSuperuserTerminal] = useState(false);
   const [orgs, setOrgs] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
@@ -163,38 +164,64 @@ export function AdminMDMView({ onBack, initialTab }: { onBack: () => void; initi
 
   return (
     <div className="flex flex-col h-full bg-clinical-bg text-clinical-text">
-      <header className="p-4 border-b border-indigo-200 bg-clinical-bg flex items-center justify-between shadow-lg">
-         <div className="flex items-center gap-4">
-           <button onClick={onBack} className="p-2 bg-clinical-bg hover:bg-slate-700 rounded-lg text-clinical-muted transition-colors">
-              <ArrowLeft size={18} />
-           </button>
-           <div className="flex items-center gap-3">
-              <div className="p-2 bg-indigo-500/20 rounded-lg border border-indigo-500/30">
-                 <Shield className="text-indigo-600" size={20} />
-              </div>
-              <div>
-                 <h1 className="font-bold text-indigo-600 uppercase tracking-widest text-sm">{t('mdm_title')}</h1>
-                 <p className="text-[10px] text-clinical-muted uppercase tracking-wide">{t('mdm_subtitle')}</p>
-              </div>
+      {mode === 'MDM' ? (
+        <header className="p-4 border-b border-indigo-200 bg-clinical-bg flex items-center justify-between shadow-lg">
+           <div className="flex items-center gap-4">
+             <button onClick={onBack} className="p-2 bg-clinical-bg hover:bg-slate-700 rounded-lg text-clinical-muted transition-colors">
+                <ArrowLeft size={18} />
+             </button>
+             <div className="flex items-center gap-3">
+                <div className="p-2 bg-indigo-500/20 rounded-lg border border-indigo-500/30">
+                   <Database className="text-indigo-600" size={20} />
+                </div>
+                <div>
+                   <h1 className="font-bold text-indigo-600 uppercase tracking-widest text-sm">{t('portal_station_mdm_title')}</h1>
+                   <p className="text-[10px] text-clinical-muted uppercase tracking-wide">{t('portal_station_mdm_sub')}</p>
+                </div>
+             </div>
            </div>
-         </div>
-      </header>
+        </header>
+      ) : (
+        <header className="p-4 border-b border-fuchsia-500/20 bg-clinical-bg flex items-center justify-between shadow-lg">
+           <div className="flex items-center gap-4">
+             <button onClick={onBack} className="p-2 bg-clinical-bg hover:bg-slate-700 rounded-lg text-clinical-muted transition-colors">
+                <ArrowLeft size={18} />
+             </button>
+             <div className="flex items-center gap-3">
+                <div className="p-2 bg-fuchsia-500/20 rounded-lg border border-fuchsia-500/30">
+                   <Key className="text-fuchsia-600" size={20} />
+                </div>
+                <div>
+                   <h1 className="font-bold text-fuchsia-600 uppercase tracking-widest text-sm">Identity & Access (IAM)</h1>
+                   <p className="text-[10px] text-clinical-muted uppercase tracking-wide">人員目錄、身分認證與角色存取控制 (RBAC)</p>
+                </div>
+             </div>
+           </div>
+        </header>
+      )}
 
       <div className="flex flex-1 overflow-hidden p-6 gap-6">
           <div className="w-64 flex flex-col gap-2 justify-between">
              <div className="flex flex-col gap-2">
-                <button onClick={() => setTab('Orgs')} className={`p-4 rounded-xl flex items-center gap-3 transition-all ${tab === 'Orgs' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-clinical-bg text-clinical-muted hover:bg-clinical-bg'}`}>
-                   <Building size={18} /> <span className="text-xs font-bold uppercase tracking-widest">{t('mdm_orgs')}</span>
-                </button>
-                <button onClick={() => setTab('MSD')} className={`p-4 rounded-xl flex items-center gap-3 transition-all ${tab === 'MSD' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-clinical-bg text-clinical-muted hover:bg-clinical-bg'}`}>
-                   <Users size={18} /> <span className="text-xs font-bold uppercase tracking-widest">{t('mdm_msd')}</span>
-                </button>
-                <button onClick={() => setTab('Catalog')} className={`p-4 rounded-xl flex items-center gap-3 transition-all ${tab === 'Catalog' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-clinical-bg text-clinical-muted hover:bg-clinical-bg'}`}>
-                   <Shield size={18} /> <span className="text-xs font-bold uppercase tracking-widest">{t('mdm_catalog')}</span>
-                </button>
-                <button onClick={() => setTab('RBAC')} className={`p-4 rounded-xl flex items-center gap-3 transition-all ${tab === 'RBAC' ? 'bg-fuchsia-600 text-white shadow-lg' : 'bg-clinical-bg text-clinical-muted hover:bg-clinical-bg'}`}>
-                   <Key size={18} /> <span className="text-xs font-bold uppercase tracking-widest">{t('mdm_rbac')}</span>
-                </button>
+                {mode === 'MDM' ? (
+                  <>
+                     <button onClick={() => setTab('Orgs')} className={`p-4 rounded-xl flex items-center gap-3 transition-all ${tab === 'Orgs' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-clinical-bg text-clinical-muted hover:bg-clinical-bg'}`}>
+                        <Building size={18} /> <span className="text-xs font-bold uppercase tracking-widest">{t('mdm_orgs')}</span>
+                     </button>
+                     <button onClick={() => setTab('Catalog')} className={`p-4 rounded-xl flex items-center gap-3 transition-all ${tab === 'Catalog' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-clinical-bg text-clinical-muted hover:bg-clinical-bg'}`}>
+                        <Shield size={18} /> <span className="text-xs font-bold uppercase tracking-widest">{t('mdm_catalog')}</span>
+                     </button>
+                  </>
+                ) : (
+                  <>
+                     <button onClick={() => setTab('MSD')} className={`p-4 rounded-xl flex items-center gap-3 transition-all ${tab === 'MSD' ? 'bg-fuchsia-600 text-white shadow-lg' : 'bg-clinical-bg text-clinical-muted hover:bg-clinical-bg'}`}>
+                        <Users size={18} /> <span className="text-xs font-bold uppercase tracking-widest">{t('mdm_msd')}</span>
+                     </button>
+                     <button onClick={() => setTab('RBAC')} className={`p-4 rounded-xl flex items-center gap-3 transition-all ${tab === 'RBAC' ? 'bg-fuchsia-600 text-white shadow-lg' : 'bg-clinical-bg text-clinical-muted hover:bg-clinical-bg'}`}>
+                        <Key size={18} /> <span className="text-xs font-bold uppercase tracking-widest">{t('mdm_rbac')}</span>
+                     </button>
+                  </>
+                )}
              </div>
              
              {/* Glowing Cyber-Style Superuser Entrance Card Button */}

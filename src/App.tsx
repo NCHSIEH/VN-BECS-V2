@@ -186,8 +186,8 @@ function AppContent() {
   };
 
   const renderSystemView = () => {
-    if (currentSystem === 'MDM') return <AdminMDMView onBack={() => setCurrentSystem(null)} />;
-    if (currentSystem === 'IAM') return <AdminMDMView onBack={() => setCurrentSystem(null)} initialTab="MSD" />;
+    if (currentSystem === 'MDM') return <AdminMDMView onBack={() => setCurrentSystem(null)} mode="MDM" />;
+    if (currentSystem === 'IAM') return <AdminMDMView onBack={() => setCurrentSystem(null)} mode="IAM" />;
     if (currentSystem === 'DASHBOARD') return <NationalDashboardView onBack={() => setCurrentSystem(null)} />;
     
     if (currentSystem === 'NATIONAL') {
