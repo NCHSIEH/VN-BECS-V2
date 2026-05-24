@@ -427,7 +427,10 @@ export function SuperuserDBConsole({ onBack }: { onBack: () => void }) {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/v1/mdm/relational');
+      const token = sessionStorage.getItem('superuser_token');
+      const response = await fetch('/api/v1/mdm/relational', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       const json = await response.json();
       if (json.success) {
         setDbData(json.data);
@@ -467,11 +470,15 @@ export function SuperuserDBConsole({ onBack }: { onBack: () => void }) {
       const data = await response.json();
 
       if (response.ok && data.success) {
+        sessionStorage.setItem('superuser_token', data.token);
         setIsAuthenticated(true);
         // Record login audit event
         await fetch('/api/v1/audit-events', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${data.token}`
+          },
           body: JSON.stringify({
             actorRole: 'Admin',
             eventType: 'SUPERUSER_LOGIN',
@@ -493,9 +500,13 @@ export function SuperuserDBConsole({ onBack }: { onBack: () => void }) {
   const executeMutation = async (type: 'insert' | 'update' | 'delete', table: string, rowId: string, payload?: any) => {
     setSyncStatus('SAVING');
     try {
+      const token = sessionStorage.getItem('superuser_token');
       const response = await fetch('/api/v1/mdm/relational', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           action: 'mutation',
           type,

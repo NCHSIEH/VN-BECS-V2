@@ -1,6 +1,25 @@
 import { NextResponse } from 'next/server';
 import * as db from '@/src/server/db';
 import { supabase } from '@/src/lib/supabaseClient';
+import { verifyPassword } from '@/src/server/crypto';
+
+function isValidToken(token: string | null): boolean {
+  if (!token) return false;
+  try {
+    const rawToken = token.replace('Bearer ', '').trim();
+    if (!rawToken.startsWith('SESSION-')) return false;
+    const base64Str = rawToken.replace('SESSION-', '');
+    const decoded = Buffer.from(base64Str, 'base64').toString('utf8');
+    const [username, timestamp] = decoded.split(':');
+    if (!username || !timestamp) return false;
+    // Expiration: 2 hours
+    const elapsed = Date.now() - parseInt(timestamp);
+    if (elapsed < 0 || elapsed > 2 * 60 * 60 * 1000) return false;
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
 
 function isTableMissingError(error: any): boolean {
   if (!error) return false;
@@ -22,8 +41,13 @@ function getPkField(table: string): string {
   return 'id';
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const authHeader = request.headers.get('Authorization') || request.headers.get('x-superuser-token');
+    if (!isValidToken(authHeader)) {
+      return NextResponse.json({ error: 'UNAUTHORIZED', message: 'Access Denied: Missing or expired Superuser session token.' }, { status: 401 });
+    }
+
     const [
       organizations, users, resources, rare_donors,
       donors, questionnaires, donations, labTests, components,
@@ -92,8 +116,10 @@ export async function POST(request: Request) {
 
       // Emergency fallback credentials
       if (username.toLowerCase() === 'admin' && password === 'admin123') {
+        const token = 'SESSION-' + Buffer.from(`admin:${Date.now()}`).toString('base64');
         return NextResponse.json({
           success: true,
+          token,
           user: {
             id: 'USR-EMERGENCY',
             username: 'admin',
@@ -109,7 +135,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'User not found or database unreachable' }, { status: 401 });
       }
 
-      if (user.password !== password) {
+      if (!verifyPassword(password, user.password)) {
         return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
       }
 
@@ -119,8 +145,10 @@ export async function POST(request: Request) {
         }, { status: 403 });
       }
 
+      const token = 'SESSION-' + Buffer.from(`${user.username}:${Date.now()}`).toString('base64');
       return NextResponse.json({
         success: true,
+        token,
         user: {
           id: user.id,
           username: user.username,
@@ -132,6 +160,11 @@ export async function POST(request: Request) {
 
     // 2. Relational Transactional Mutation Engine (insert, update, delete)
     if (action === 'mutation') {
+      const authHeader = request.headers.get('Authorization') || request.headers.get('x-superuser-token');
+      if (!isValidToken(authHeader)) {
+        return NextResponse.json({ error: 'UNAUTHORIZED', message: 'Access Denied: Missing or expired Superuser session token.' }, { status: 401 });
+      }
+
       const { type, table, rowId, data } = body;
 
       if (!type || !table || !rowId) {

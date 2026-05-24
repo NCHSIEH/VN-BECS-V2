@@ -310,7 +310,7 @@ function AppContent() {
         onOpenSwitcher={() => setShowSwitcher(true)}
         onOpenThemeSwitcher={() => setShowThemeSwitcher(true)}
         unreadMessages={unreadCount}
-        systemName={currentSystem ? `VN-BECS · ${currentSystem === 'HUB' ? 'Supply Hub' : currentSystem === 'LIMS' ? 'Blood Center LIMS' : currentSystem === 'LAB' ? 'Clinical Laboratory' : currentSystem === 'HOSPITAL' ? 'Hospital Node' : currentSystem === 'NATIONAL' ? 'National Command' : currentSystem} Command` : "VN-BECS V2.0 Enterprise"}
+        systemName={currentSystem ? `VN-BECS · ${currentSystem === 'HUB' ? 'Supply Hub' : currentSystem === 'LIMS' ? 'Blood Center LIMS' : currentSystem === 'LAB' ? 'Clinical Laboratory' : currentSystem === 'HOSPITAL' ? 'Hospital Node' : currentSystem === 'NATIONAL' ? 'National Command' : currentSystem} Command` : "VN-BECS V1.0 Enterprise"}
       />
       
       <div className="flex flex-1 overflow-hidden relative">

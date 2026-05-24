@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import { hashPassword } from './crypto';
 if (!supabase) {
   console.warn('DB API: Supabase client is not initialized. Check your environment variables.');
 }
@@ -334,7 +335,7 @@ export const users = {
     const payload: any = {
       id: userId,
       username: data.username,
-      password: data.password,
+      password: hashPassword(data.password),
       role: data.role,
       orgId: data.orgId,
       photo_url: data.photoUrl || '',
@@ -392,7 +393,7 @@ export const users = {
   async update(id: string, data: any) {
     const payload: any = {};
     if (data.username) payload.username = data.username;
-    if (data.password) payload.password = data.password;
+    if (data.password) payload.password = hashPassword(data.password);
     if (data.role) payload.role = data.role;
     if (data.orgId) payload.orgId = data.orgId;
     if (data.photoUrl !== undefined) payload.photo_url = data.photoUrl;

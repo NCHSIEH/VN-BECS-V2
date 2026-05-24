@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import * as db from '@/src/server/db';
+import { verifyPassword } from '@/src/server/crypto';
 
 export async function POST(request: Request) {
   try {
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'User not found or database unreachable' }, { status: 401 });
     }
 
-    const isValid = user.password === password;
+    const isValid = verifyPassword(password, user.password);
     if (!isValid) {
       console.log(`Login failed: Invalid password for "${username}"`);
       return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
