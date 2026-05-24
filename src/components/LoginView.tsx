@@ -132,20 +132,7 @@ export function LoginView({ onLogin, onOpenDocs }: LoginViewProps) {
           </button>
         </form>
 
-        <div className="mt-12 pt-8 border-t border-clinical-border grid grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <p className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">Enterprise HQ</p>
-            <div className="bg-clinical-bg p-3 rounded-xl border border-clinical-border text-[11px] font-mono text-clinical-muted">
-               admin / admin123
-            </div>
-          </div>
-          <div className="space-y-2">
-            <p className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">Clinical Node</p>
-            <div className="bg-clinical-bg p-3 rounded-xl border border-clinical-border text-[11px] font-mono text-clinical-muted">
-               nurse_hosp_1 / 123
-            </div>
-          </div>
-        </div>
+
 
         {onOpenDocs && (
           <div className="mt-8">

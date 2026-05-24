@@ -27,7 +27,8 @@ export const fallbackStores = {
   ] as any[],
   users: [
     { id: 'USR-ADMIN', username: 'admin', password: 'admin123', role: 'Admin', orgId: 'HUB-DN-03', permitted_systems: 'MDM,IAM,HUB,LIMS,LAB,HOSPITAL,NATIONAL,DASHBOARD', photo_url: '', details: '{}', isActive: 1, createdAt: '2026-01-01T00:00:00Z' },
-    { id: 'USR-OPERATOR', username: 'operator', password: 'password123', role: 'HospitalOperator', orgId: 'HOSP-HCM-02', permitted_systems: 'HOSPITAL,HUB', photo_url: '', details: '{}', isActive: 1, createdAt: '2026-01-20T11:00:00Z' }
+    { id: 'USR-OPERATOR', username: 'operator', password: 'password123', role: 'HospitalOperator', orgId: 'HOSP-HCM-02', permitted_systems: 'HOSPITAL,HUB', photo_url: '', details: '{}', isActive: 1, createdAt: '2026-01-20T11:00:00Z' },
+    { id: 'USR-NURSE', username: 'nurse_hosp_1', password: '123', role: 'Nurse', orgId: 'BC-HN-01', permitted_systems: 'LIMS,LAB,HOSPITAL', photo_url: '', details: '{}', isActive: 1, createdAt: '2026-01-20T11:00:00Z' }
   ] as any[],
   donors: [
     { id: 'DNR-HCM-01', name: '陳明英 (Tran Minh Anh)', nationalId: '001095001234', dob: '1995-05-15', gender: 'Male', weight: 68, bloodType: 'O', rhd: 'Positive', registeredAt: '2026-05-24T08:00:00Z' },
