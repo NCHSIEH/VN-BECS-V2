@@ -65,10 +65,10 @@ export function SystemSwitcher({ isOpen, onClose, onSelect, currentSystem }: Sys
     },
     {
       id: 'IAM' as SystemType,
-      name: 'Identity & Access',
+      name: t('portal_station_iam_title'),
       icon: <Database size={32} />,
       color: 'from-fuchsia-500 to-fuchsia-700',
-      desc: 'User accounts, Roles & Permissions (RBAC)',
+      desc: t('portal_station_iam_desc'),
       label: 'IAM Node'
     },
     {

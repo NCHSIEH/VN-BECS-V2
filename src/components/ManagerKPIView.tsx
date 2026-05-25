@@ -14,7 +14,8 @@ import {
   CalendarRange,
   PieChart,
   ArrowRight,
-  Filter
+  Filter,
+  ArrowLeft
 } from "lucide-react";
 import { useI18n } from "../lib/i18n";
 import { Tooltip } from "./Tooltip";
@@ -34,7 +35,7 @@ function Sparkline({ data, color = '#84cc16', width = 80, height = 24 }: { data:
   );
 }
 
-export function ManagerKPIView() {
+export function ManagerKPIView({ onBack }: { onBack?: () => void }) {
   const { t, lang, setLang } = useI18n();
   const [kpis, setKpis] = useState<any>(null);
   const [alertCounts, setAlertCounts] = useState<Record<string, number>>({ Critical: 0, High: 0, Medium: 0, Low: 0 });
@@ -101,12 +102,23 @@ export function ManagerKPIView() {
       
       {/* Executive Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-8 border-b border-clinical-border pb-12 px-2">
-         <div className="space-y-4">
-            <div className="premium-subtitle">
-               Executive Oversight Node
+         <div className="flex items-start gap-4">
+            {onBack && (
+               <button 
+                 onClick={onBack} 
+                 className="p-3 bg-clinical-card border border-clinical-border hover:bg-slate-200 dark:hover:bg-slate-800 rounded-[20px] text-clinical-text hover:text-rose-500 transition-all mt-1 shadow-md active:scale-95 duration-150 cursor-pointer"
+                 title="Back to Dashboard"
+               >
+                  <ArrowLeft size={20} />
+               </button>
+            )}
+            <div className="space-y-2">
+               <div className="premium-subtitle">
+                  Executive Oversight Node
+               </div>
+               <h1 className="premium-heading">Operational Intelligence</h1>
+               <p className="text-clinical-muted text-[11px] font-black uppercase tracking-[0.3em] mt-1 opacity-80">Real-time Performance Metrics & Decision Support</p>
             </div>
-            <h1 className="premium-heading">Operational Intelligence</h1>
-            <p className="text-clinical-muted text-[11px] font-black uppercase tracking-[0.3em] mt-4 opacity-80">Real-time Performance Metrics & Decision Support</p>
          </div>
          <div className="flex items-center gap-6">
             <div className="flex items-center gap-2 bg-clinical-bg p-2 rounded-2xl border border-clinical-border shadow-inner">

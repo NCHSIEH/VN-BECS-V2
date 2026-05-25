@@ -97,6 +97,8 @@ function AppContent() {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('vnbbms_theme', theme);
+    const isDark = ['slate-corporate', 'tech-lavender', 'minty-aqua', 'aurora-glow'].includes(theme);
+    document.documentElement.classList.toggle('dark', isDark);
   }, [theme]);
 
   useEffect(() => {
@@ -276,8 +278,8 @@ function AppContent() {
                {role === 'Warehouse_IssueReturn' && <IssueReturnView />}
                {role === 'Courier' && <CourierView />}
                {role === 'Resource' && <ResourceManagementView />}
-               {role === 'Manager' && <ManagerKPIView />}
-               {role === 'Admin' && <ManagerKPIView />}
+               {role === 'Manager' && <ManagerKPIView onBack={() => setRole('Dashboard')} />}
+               {role === 'Admin' && <ManagerKPIView onBack={() => setRole('Dashboard')} />}
                {role === 'NationalCommander' && <NationalDashboardView />}
                {role === 'Auditor' && <AuditLogViewer />}
                {role === 'QA_Officer' && <AuditLogViewer />}

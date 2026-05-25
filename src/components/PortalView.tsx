@@ -155,11 +155,11 @@ export function PortalView({
     },
     {
       id: 'IAM',
-      title: 'Identity & Access',
-      subtitle: 'IAM Node',
+      title: t('portal_station_iam_title'),
+      subtitle: 'IAM',
       icon: <Database className="text-fuchsia-500" size={32} />,
       roles: ['Admin'],
-      description: 'User accounts, Roles & Permissions (RBAC)',
+      description: t('portal_station_iam_desc'),
       color: 'fuchsia',
       status: 'Protected',
       system: 'IAM' as SystemType

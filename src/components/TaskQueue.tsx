@@ -101,12 +101,26 @@ export const TaskQueue: React.FC<TaskQueueProps> = ({ role, onNavigate }) => {
   };
 
   const missions = getMissionsForRole(role);
-
-  const getPriorityStyles = (p: string) => {
+  const getPriorityColors = (p: string) => {
     switch (p) {
-      case 'Urgent': return 'from-rose-500 to-rose-700 border-rose-400/50 shadow-rose-900/40';
-      case 'High': return 'from-amber-500 to-orange-600 border-amber-400/50 shadow-amber-900/40';
-      default: return 'from-slate-800 to-slate-900 border-clinical-border shadow-sm';
+      case 'Urgent':
+        return {
+          border: 'border-rose-500/35 animate-breath-urgent border-2',
+          glow: 'bg-rose-500 shadow-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]',
+          btn: 'bg-rose-600 hover:bg-rose-500 shadow-rose-600/30'
+        };
+      case 'High':
+        return {
+          border: 'border-amber-500/35 animate-breath-high border-2',
+          glow: 'bg-amber-500 shadow-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]',
+          btn: 'bg-amber-600 hover:bg-amber-500 shadow-amber-600/30'
+        };
+      default:
+        return {
+          border: 'border-clinical-border hover:border-clinical-primary/50 shadow-sm hover:shadow-md border bg-clinical-card/95',
+          glow: 'bg-clinical-primary/60 shadow-[0_0_5px_var(--clinical-primary)]',
+          btn: 'bg-clinical-primary hover:bg-clinical-primary/80 shadow-clinical-primary/30'
+        };
     }
   };
 
@@ -143,54 +157,99 @@ export const TaskQueue: React.FC<TaskQueueProps> = ({ role, onNavigate }) => {
            </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {missions.map(mission => (
-            <div 
-              key={mission.id}
-              className={`group relative flex flex-col p-8 rounded-[40px] border transition-all hover:scale-[1.02] hover:shadow-xl bg-gradient-to-br ${getPriorityStyles(mission.priority)}`}
-            >
-              <div className="flex justify-between items-start mb-8">
-                 <div className="p-4 rounded-2xl bg-clinical-bg backdrop-blur-xl border border-clinical-border shadow-lg group-hover:rotate-6 transition-transform">
-                    {mission.icon}
-                 </div>
-                 <div className="px-4 py-2 rounded-full bg-clinical-bg backdrop-blur-xl border border-clinical-border text-[10px] font-black uppercase tracking-[0.2em]">
-                    {mission.deadline}
-                 </div>
+        /* The Centralized Operational Command Dispatch Hub Frame */
+        <div className="relative p-6 lg:p-8 rounded-[36px] border border-clinical-primary/20 bg-clinical-card/35 dark:bg-slate-950/20 backdrop-blur-2xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] mt-2 overflow-hidden">
+           {/* Subtle high-tech diagonal strip background inside the container frame */}
+           <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-clinical-primary/5 to-transparent blur-3xl pointer-events-none -z-10" />
+           
+           {/* Hub Header Info Strip */}
+           <div className="flex justify-between items-center mb-6 border-b border-clinical-border pb-4 select-none">
+              <div className="flex items-center gap-3">
+                 <span className="w-2.5 h-2.5 rounded-full bg-clinical-primary animate-pulse" />
+                 <span className="text-[10px] font-mono text-clinical-muted uppercase tracking-[0.25em] font-black">
+                    Operational Control Dispatch Hub // Active Mission Log
+                 </span>
               </div>
+              <div className="flex items-center gap-2">
+                 <span className="px-2 py-0.5 rounded-md bg-clinical-primary/10 border border-clinical-primary/20 text-[8px] font-mono text-clinical-primary font-bold tracking-widest uppercase">
+                    SYSTEM STATUS: SYNCED
+                 </span>
+              </div>
+           </div>
 
-              <h3 className="text-2xl font-black italic tracking-tight mb-3 uppercase leading-tight text-clinical-text">{mission.title}</h3>
-              <p className="text-[12px] font-bold text-clinical-text/70 mb-10 leading-relaxed uppercase tracking-wide">
-                {mission.description}
-              </p>
+           {/* The Card Grid */}
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+             {missions.map(mission => {
+               const colors = getPriorityColors(mission.priority);
 
-              <div className="mt-auto space-y-8">
-                 <div className="space-y-3">
-                    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-clinical-text/50">
-                       <span>Readiness</span>
-                       <span>{mission.progress}%</span>
-                    </div>
-                    <div className="h-2.5 w-full bg-clinical-bg rounded-full overflow-hidden p-0.5 border border-clinical-border">
-                       <div 
-                         className="h-full bg-clinical-card rounded-full shadow-[0_0_15px_rgba(255,255,255,0.6)] transition-all duration-1000 ease-out"
-                         style={{ width: `${mission.progress}%` }}
-                       />
-                    </div>
-                 </div>
-
-                 <button 
-                   onClick={() => onNavigate?.(mission.roleTarget)}
-                   className="w-full py-5 rounded-[24px] bg-clinical-card text-black font-black uppercase italic tracking-tighter hover:bg-clinical-bg active:scale-95 transition-all flex items-center justify-center gap-3 shadow-2xl"
+               return (
+                 <div 
+                   key={mission.id}
+                   className={`group relative flex flex-col p-6 rounded-tl-[12px] rounded-br-[12px] rounded-tr-[36px] rounded-bl-[36px] border bg-clinical-card/85 backdrop-blur-xl transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1 ${colors.border}`}
                  >
-                   Launch Mission <ArrowRight size={20} />
-                 </button>
-              </div>
+                   {/* Cyber HUD Corner Elements for Proposal 1 high-tech style */}
+                   <div className="absolute top-3 left-3 w-2 h-2 border-t border-l border-clinical-muted/40 group-hover:border-clinical-primary/60 transition-colors" />
+                   <div className="absolute top-3 right-3 w-2 h-2 border-t border-r border-clinical-muted/40 group-hover:border-clinical-primary/60 transition-colors" />
+                   <div className="absolute bottom-3 left-3 w-2 h-2 border-b border-l border-clinical-muted/40 group-hover:border-clinical-primary/60 transition-colors" />
+                   <div className="absolute bottom-3 right-3 w-2 h-2 border-b border-r border-clinical-muted/40 group-hover:border-clinical-primary/60 transition-colors" />
 
-              {/* Priority Tag */}
-              <div className="absolute -top-3 -right-3 px-4 py-2 rounded-xl bg-clinical-bg border border-clinical-border text-[10px] font-black text-clinical-text uppercase tracking-widest shadow-2xl group-hover:-translate-y-1 transition-transform">
-                 {mission.priority}
-              </div>
-            </div>
-          ))}
+                   {/* Top Section: Icon, ID, Priority Glow Tag */}
+                   <div className="flex justify-between items-start mb-5">
+                      <div className="relative">
+                         <div className="p-3.5 rounded-xl bg-clinical-bg border border-clinical-border shadow-inner text-clinical-text group-hover:scale-105 group-hover:rotate-3 transition-transform duration-300">
+                            {mission.icon}
+                         </div>
+                         <span className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border border-clinical-card ${colors.glow} animate-pulse`} />
+                      </div>
+                      
+                      <div className="flex flex-col items-end gap-1.5">
+                         <span className="text-[9px] font-mono text-clinical-muted font-bold tracking-wider">{mission.id}</span>
+                         <span className="px-2.5 py-0.5 rounded-full bg-clinical-bg border border-clinical-border text-[8px] font-black text-clinical-muted uppercase tracking-widest">
+                            {mission.deadline}
+                         </span>
+                      </div>
+                   </div>
+
+                   {/* Tactical readout indicators */}
+                   <div className="flex items-center gap-1.5 mb-2.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-clinical-primary/40 group-hover:bg-clinical-primary transition-colors" />
+                      <span className="text-[8px] font-mono text-clinical-muted uppercase tracking-[0.2em] font-bold">CASE READOUT // {mission.priority}</span>
+                   </div>
+
+                   {/* Card Title & Description */}
+                   <h3 className="text-lg font-black italic tracking-tight mb-2 uppercase leading-tight text-clinical-text group-hover:text-clinical-primary transition-colors">
+                      {mission.title}
+                   </h3>
+                   <p className="text-[11px] font-semibold text-clinical-muted mb-6 leading-relaxed uppercase tracking-wide line-clamp-2">
+                      {mission.description}
+                   </p>
+
+                   {/* Readiness Indicator & Launch Button */}
+                   <div className="mt-auto space-y-5">
+                      <div className="space-y-2">
+                         <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-clinical-muted">
+                            <span>Readiness</span>
+                            <span className="font-mono">{mission.progress}%</span>
+                         </div>
+                         <div className="h-2 w-full bg-clinical-bg rounded-full overflow-hidden p-0.5 border border-clinical-border">
+                            <div 
+                              className="h-full bg-clinical-primary rounded-full shadow-[0_0_8px_var(--clinical-primary)] transition-all duration-1000 ease-out"
+                              style={{ width: `${mission.progress}%` }}
+                            />
+                         </div>
+                      </div>
+
+                      <button 
+                        onClick={() => onNavigate?.(mission.roleTarget)}
+                        className={`w-full py-3 rounded-xl text-white font-black uppercase italic tracking-tighter active:scale-95 transition-all flex items-center justify-center gap-2 shadow-md text-xs cursor-pointer ${colors.btn}`}
+                      >
+                        Launch Mission <ArrowRight size={16} />
+                      </button>
+                   </div>
+                 </div>
+               );
+             })}
+           </div>
         </div>
       )}
       

@@ -289,3 +289,47 @@ aside {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(148, 163, 184, 0.8);
 }
+
+/* Operational Mission Border Breathing Animations */
+.animate-breath-urgent {
+  animation: breath-urgent 2.5s ease-in-out infinite;
+}
+.animate-breath-high {
+  animation: breath-high 2.5s ease-in-out infinite;
+}
+.animate-breath-routine {
+  animation: breath-routine 2.5s ease-in-out infinite;
+}
+
+@keyframes breath-urgent {
+  0%, 100% {
+    border-color: rgba(244, 63, 94, 0.35);
+    box-shadow: 0 0 10px rgba(244, 63, 94, 0.15), inset 0 0 8px rgba(244, 63, 94, 0.05);
+  }
+  50% {
+    border-color: rgba(244, 63, 94, 0.85);
+    box-shadow: 0 0 25px rgba(244, 63, 94, 0.45), inset 0 0 16px rgba(244, 63, 94, 0.15);
+  }
+}
+
+@keyframes breath-high {
+  0%, 100% {
+    border-color: rgba(245, 158, 11, 0.35);
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.15), inset 0 0 8px rgba(245, 158, 11, 0.05);
+  }
+  50% {
+    border-color: rgba(245, 158, 11, 0.85);
+    box-shadow: 0 0 25px rgba(245, 158, 11, 0.45), inset 0 0 16px rgba(245, 158, 11, 0.15);
+  }
+}
+
+@keyframes breath-routine {
+  0%, 100% {
+    border-color: var(--clinical-border);
+    box-shadow: 0 0 8px var(--clinical-primary), inset 0 0 6px var(--clinical-primary);
+  }
+  50% {
+    border-color: var(--clinical-primary);
+    box-shadow: 0 0 22px var(--clinical-primary), inset 0 0 12px var(--clinical-primary);
+  }
+}

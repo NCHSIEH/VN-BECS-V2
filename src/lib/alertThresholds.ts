@@ -10,11 +10,11 @@ export type ColorLevel = 'green' | 'yellow' | 'orange' | 'red' | 'gray';
 
 /** TailwindCSS class mapping for each color level. */
 export const COLOR_CLASSES: Record<ColorLevel, { bg: string; text: string; border: string }> = {
-  green:  { bg: 'bg-lime-950/20',    text: 'text-lime-400',   border: 'border-lime-900/50' },
-  yellow: { bg: 'bg-amber-950/20',   text: 'text-amber-400',  border: 'border-amber-900/50' },
-  orange: { bg: 'bg-orange-950/20',  text: 'text-orange-500', border: 'border-orange-900/50' },
-  red:    { bg: 'bg-rose-950/20',    text: 'text-rose-500',   border: 'border-rose-900/50' },
-  gray:   { bg: 'bg-slate-900/50',   text: 'text-slate-500',  border: 'border-slate-700' },
+  green:  { bg: 'bg-emerald-500/10 dark:bg-emerald-500/20',  text: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-500/20 dark:border-emerald-500/30' },
+  yellow: { bg: 'bg-amber-500/10 dark:bg-amber-500/20',    text: 'text-amber-600 dark:text-amber-400',   border: 'border-amber-500/20 dark:border-amber-500/30' },
+  orange: { bg: 'bg-orange-500/10 dark:bg-orange-500/20',  text: 'text-orange-600 dark:text-orange-400', border: 'border-orange-500/20 dark:border-orange-500/30' },
+  red:    { bg: 'bg-rose-500/10 dark:bg-rose-500/20',      text: 'text-rose-600 dark:text-rose-400',     border: 'border-rose-500/20 dark:border-rose-500/30' },
+  gray:   { bg: 'bg-slate-500/10 dark:bg-slate-500/20',    text: 'text-slate-600 dark:text-slate-400',    border: 'border-slate-500/20 dark:border-slate-500/30' },
 };
 
 /**

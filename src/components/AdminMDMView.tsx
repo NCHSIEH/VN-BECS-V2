@@ -4,7 +4,7 @@ import { useI18n } from '../lib/i18n';
 import { SuperuserDBConsole } from './SuperuserDBConsole';
 
 export function AdminMDMView({ onBack, initialTab, mode = 'MDM' }: { onBack: () => void; initialTab?: 'Orgs' | 'MSD' | 'Catalog' | 'RBAC'; mode?: 'MDM' | 'IAM' }) {
-  const { t, lang, setLang } = useI18n();
+  const { t } = useI18n();
   const defaultTab = initialTab || (mode === 'MDM' ? 'Orgs' : 'MSD');
   const [tab, setTab] = useState<'Orgs' | 'MSD' | 'Catalog' | 'RBAC'>(defaultTab);
   const [showSuperuserTerminal, setShowSuperuserTerminal] = useState(false);
@@ -192,8 +192,8 @@ export function AdminMDMView({ onBack, initialTab, mode = 'MDM' }: { onBack: () 
                    <Key className="text-fuchsia-600" size={20} />
                 </div>
                 <div>
-                   <h1 className="font-bold text-fuchsia-600 uppercase tracking-widest text-sm">Identity & Access (IAM)</h1>
-                   <p className="text-[10px] text-clinical-muted uppercase tracking-wide">人員目錄、身分認證與角色存取控制 (RBAC)</p>
+                   <h1 className="font-bold text-fuchsia-600 uppercase tracking-widest text-sm">{t('portal_station_iam_title')} (IAM)</h1>
+                   <p className="text-[10px] text-clinical-muted uppercase tracking-wide">{t('portal_station_iam_sub')}</p>
                 </div>
              </div>
            </div>
@@ -201,7 +201,7 @@ export function AdminMDMView({ onBack, initialTab, mode = 'MDM' }: { onBack: () 
       )}
 
       <div className="flex flex-1 overflow-hidden p-6 gap-6">
-          <div className="w-64 flex flex-col gap-2 justify-between">
+          <div className="w-64 flex flex-col gap-2 justify-between pb-16">
              <div className="flex flex-col gap-2">
                 {mode === 'MDM' ? (
                   <>
@@ -224,29 +224,32 @@ export function AdminMDMView({ onBack, initialTab, mode = 'MDM' }: { onBack: () 
                 )}
              </div>
              
-             {/* Glowing Cyber-Style Superuser Entrance Card Button */}
-             <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-slate-200">
-                <button 
-                   onClick={() => setShowSuperuserTerminal(true)} 
-                   className="group relative p-4 rounded-2xl border border-violet-500/30 bg-violet-950/5 text-violet-600 hover:text-white transition-all shadow-[0_0_15px_rgba(139,92,246,0.1)] hover:shadow-[0_0_25px_rgba(139,92,246,0.25)] hover:scale-[1.03] active:scale-95 duration-300 flex flex-col gap-2 items-start overflow-hidden text-left cursor-pointer"
-                >
-                   {/* Glowing neon hover gradient */}
-                   <div className="absolute inset-0 bg-gradient-to-tr from-violet-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
-                   
-                   <div className="flex items-center gap-1.5">
-                      <div className="p-1 bg-violet-500/10 group-hover:bg-white/20 rounded-lg border border-violet-500/20 group-hover:border-transparent transition-colors">
-                         <Lock size={12} className="group-hover:hidden" />
-                         <Unlock size={12} className="hidden group-hover:block" />
+             {/* Bottom Sidebar Action Area */}
+             {mode === 'MDM' && (
+                <div className="flex flex-col gap-4 mt-4 pt-4 border-t border-clinical-border">
+                   {/* Superuser Console Button: Render ONLY in MDM Mode and make it look outstanding */}
+                   <button 
+                      onClick={() => setShowSuperuserTerminal(true)} 
+                      className="group relative w-full p-4 rounded-2xl border-2 border-violet-500 bg-violet-600 text-white transition-all shadow-[0_0_20px_rgba(139,92,246,0.35)] hover:shadow-[0_0_30px_rgba(139,92,246,0.6)] hover:scale-[1.03] active:scale-95 duration-300 flex flex-col gap-2 items-start overflow-hidden text-left cursor-pointer"
+                   >
+                      {/* Premium gradient shimmer */}
+                      <div className="absolute inset-0 bg-gradient-to-tr from-violet-600 via-indigo-600 to-fuchsia-600 opacity-90 group-hover:opacity-100 transition-opacity duration-300 -z-10 animate-pulse" />
+                      
+                      <div className="flex items-center gap-1.5">
+                         <div className="p-1 bg-white/20 rounded-lg transition-colors">
+                            <Lock size={12} className="group-hover:hidden" />
+                            <Unlock size={12} className="hidden group-hover:block" />
+                         </div>
+                         <span className="text-[9px] font-black uppercase tracking-widest text-violet-100">{t('mdm_superuser_header')}</span>
                       </div>
-                      <span className="text-[9px] font-black uppercase tracking-widest text-violet-500 group-hover:text-violet-200">超級使用者終端</span>
-                   </div>
-                   
-                   <div>
-                      <p className="text-[10px] font-black text-slate-800 group-hover:text-white uppercase leading-none">⚡ ENTER SUPERUSER CONSOLE</p>
-                      <p className="text-[8px] text-slate-500 group-hover:text-white/80 mt-1 leading-tight font-medium">關聯安全認證與試算表編輯器</p>
-                   </div>
-                </button>
-             </div>
+                      
+                      <div>
+                         <p className="text-[11px] font-black text-white uppercase leading-none tracking-wider font-sans">{t('mdm_superuser_action')}</p>
+                         <p className="text-[8px] text-violet-200 mt-1 leading-tight font-bold uppercase tracking-widest">{t('mdm_superuser_subtitle')}</p>
+                      </div>
+                   </button>
+                </div>
+             )}
           </div>
 
          {/* Content */}
