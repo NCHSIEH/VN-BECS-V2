@@ -461,14 +461,15 @@ export function DonorCenterSimulatorView({
     }
 
     try {
-      await fetch(`/api/v1/lims/lab-tests/${donationId}/run`, { method: 'POST' });
-      loadData();
-      // Toast: IDM test completed, guide to PROCESS
+      // We no longer fake the test result.
+      // Instead, we just show a toast indicating it has been submitted to the IRL.
+      // IRL must clear it via the IDM Testing module.
+      
       setLimsToast({
-        title: t('lims_toast_stage2_title'),
-        message: t('lims_toast_stage2_msg'),
+        title: "Specimen Dispatched",
+        message: "Specimen sent to IRL for Infectious Disease Testing. Awaiting clearance.",
         nextStage: 'PROCESS',
-        nextLabel: t('lims_toast_stage2_btn')
+        nextLabel: "Awaiting IRL"
       });
     } catch(e) {}
   };
@@ -481,6 +482,12 @@ export function DonorCenterSimulatorView({
     const maintenanceRequired = centrifuges.find(r => r.status === 'MaintenanceRequired');
     if (maintenanceRequired) {
        setGatingError(`SAFETY INTERLOCK ACTIVE: Equipment ${maintenanceRequired.name} requires maintenance. Processing restricted.`);
+       return;
+    }
+
+    const donation = donations.find(d => d.id === donationId);
+    if (!donation || donation.idmStatus !== 'CLEARED') {
+       setGatingError(`SAFETY INTERLOCK ACTIVE: IDM Status is ${donation?.idmStatus || 'PENDING'}. Cannot process components until CLEARED by IRL.`);
        return;
     }
 

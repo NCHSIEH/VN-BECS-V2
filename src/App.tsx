@@ -55,6 +55,8 @@ import { ResourceManagementView } from './components/ResourceManagementView';
 import { NationalDashboardView } from './components/NationalDashboardView';
 import { Sidebar } from './components/Sidebar';
 import { TaskQueue } from './components/TaskQueue';
+import { LabDashboardView } from './components/LabDashboardView';
+import { IdmTestingView } from './components/IdmTestingView';
 import { offlineStore } from './lib/offlineStore';
 import { ThemeSwitcher, ThemeType } from './components/ThemeSwitcher';
 
@@ -93,6 +95,7 @@ function AppContent() {
     return (saved as ThemeType) || 'classic-medical-blue';
   });
   const [showThemeSwitcher, setShowThemeSwitcher] = useState(false);
+  const [warehouseTab, setWarehouseTab] = useState<'DISPATCH' | 'INVENTORY' | 'RESOURCES'>('DISPATCH');
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -121,7 +124,7 @@ function AppContent() {
   };
 
   useEffect(() => {
-    if (user && currentSystem === 'HUB') fetchInventory();
+    if (user && (currentSystem === 'HUB' || currentSystem === 'HOSPITAL')) fetchInventory();
   }, [user, currentSystem]);
 
   useEffect(() => {
@@ -195,17 +198,47 @@ function AppContent() {
     if (currentSystem === 'NATIONAL') {
        return (
          <div className="flex-1 flex overflow-hidden">
-           <aside className="hidden md:flex w-20 xl:w-24 border-r border-clinical-border bg-white/80 backdrop-blur-3xl flex-col p-4 xl:p-6 z-10 transition-all duration-500 shadow-2xl">
-               <nav className="flex-1 flex flex-col items-center gap-6">
-                  <CompactSidebarItem icon={<Activity size={24} />} active={nationalTab === 'overview'} onClick={() => setNationalTab('overview')} />
-                  <CompactSidebarItem icon={<Database size={24} />} active={nationalTab === 'inventory'} onClick={() => setNationalTab('inventory')} />
-                  <CompactSidebarItem icon={<Truck size={24} />} active={nationalTab === 'logistics'} onClick={() => setNationalTab('logistics')} />
-                  <CompactSidebarItem icon={<ShieldCheck size={24} />} active={nationalTab === 'surveillance'} onClick={() => setNationalTab('surveillance')} />
-                  <CompactSidebarItem icon={<Zap size={24} />} active={nationalTab === 'war_games'} onClick={() => setNationalTab('war_games')} />
-                  <div className="w-8 h-px bg-slate-100 my-4"></div>
-                  <button onClick={() => setCurrentSystem(null)} className="p-3 text-slate-500 hover:text-rose-500 transition-all"><ArrowLeft size={24} /></button>
+           <aside className="w-72 bg-clinical-card/85 border-r border-clinical-border flex flex-col h-full overflow-y-auto shrink-0 shadow-2xl z-40 backdrop-blur-xl transition-all duration-300">
+             <div className="p-8">
+               <div className="flex items-center gap-5 mb-8 px-2 group">
+                 <ShieldCheck size={24} className="text-rose-500" />
+                 <div>
+                   <h2 className="text-[14px] font-black text-clinical-text uppercase tracking-[0.4em] italic leading-none group-hover:text-clinical-primary transition-colors">VN-BECS</h2>
+                   <p className="text-[9px] text-clinical-muted font-black uppercase tracking-[0.25em] mt-2 opacity-80 italic">
+                     National Command
+                   </p>
+                 </div>
+               </div>
+
+               <nav className="space-y-10">
+                  <button
+                    onClick={() => setCurrentSystem(null)}
+                    className="w-full flex items-center justify-center gap-4 px-6 py-3.5 bg-transparent border-2 border-cyan-500/50 rounded-full text-cyan-400 hover:bg-cyan-500 hover:text-slate-900 hover:border-cyan-500 transition-all duration-300 group shadow-[0_0_15px_rgba(6,182,212,0.15)] hover:shadow-[0_0_25px_rgba(6,182,212,0.4)] active:scale-95 mb-10"
+                  >
+                    <ArrowRightLeft size={18} className="group-hover:rotate-180 transition-all duration-500" />
+                    <span className="text-[12px] font-extrabold uppercase tracking-[0.25em] italic">SYSTEM PORTAL</span>
+                  </button>
+
+                 <div className="space-y-4">
+                    <button onClick={() => setNationalTab('overview')} className={`w-full flex items-center gap-4 p-4 rounded-[20px] transition-all group ${nationalTab === 'overview' ? 'bg-clinical-primary text-white shadow-lg' : 'text-clinical-muted hover:bg-slate-100 hover:text-clinical-text'}`}>
+                      <Activity size={20} /> <span className="font-black uppercase tracking-widest text-xs italic">Overview</span>
+                    </button>
+                    <button onClick={() => setNationalTab('inventory')} className={`w-full flex items-center gap-4 p-4 rounded-[20px] transition-all group ${nationalTab === 'inventory' ? 'bg-clinical-primary text-white shadow-lg' : 'text-clinical-muted hover:bg-slate-100 hover:text-clinical-text'}`}>
+                      <Database size={20} /> <span className="font-black uppercase tracking-widest text-xs italic">Inventory</span>
+                    </button>
+                    <button onClick={() => setNationalTab('logistics')} className={`w-full flex items-center gap-4 p-4 rounded-[20px] transition-all group ${nationalTab === 'logistics' ? 'bg-clinical-primary text-white shadow-lg' : 'text-clinical-muted hover:bg-slate-100 hover:text-clinical-text'}`}>
+                      <Truck size={20} /> <span className="font-black uppercase tracking-widest text-xs italic">Logistics</span>
+                    </button>
+                    <button onClick={() => setNationalTab('surveillance')} className={`w-full flex items-center gap-4 p-4 rounded-[20px] transition-all group ${nationalTab === 'surveillance' ? 'bg-clinical-primary text-white shadow-lg' : 'text-clinical-muted hover:bg-slate-100 hover:text-clinical-text'}`}>
+                      <ShieldCheck size={20} /> <span className="font-black uppercase tracking-widest text-xs italic">Surveillance</span>
+                    </button>
+                    <button onClick={() => setNationalTab('war_games')} className={`w-full flex items-center gap-4 p-4 rounded-[20px] transition-all group ${nationalTab === 'war_games' ? 'bg-rose-600 text-white shadow-lg' : 'text-rose-500 hover:bg-rose-50 hover:text-rose-600'}`}>
+                      <Zap size={20} /> <span className="font-black uppercase tracking-widest text-xs italic">War Games</span>
+                    </button>
+                 </div>
                </nav>
-            </aside>
+             </div>
+           </aside>
             <main className="flex-1 overflow-y-auto bg-clinical-bg relative">
                {nationalTab === 'overview' && <NationalDashboardView />}
                {nationalTab === 'inventory' && <HospitalInventoryView />}
@@ -236,11 +269,11 @@ function AppContent() {
          <div className="flex-1 flex flex-col overflow-hidden">
             <FlowIndicator role={role} />
             <main className="flex-1 p-4 lg:p-6 overflow-y-auto bg-clinical-bg">
-               {role === 'Dashboard' && <TaskQueue role={user!.role} onNavigate={setRole} />}
-               {role === 'LabTech_Crossmatch' && <CrossmatchView />}
-               {role === 'MedicalReviewer' && <MedicalReviewerView />}
+               {role === 'Dashboard' && <LabDashboardView />}
+               {role === 'LabTech_Crossmatch' && <CrossmatchView user={user!} />}
+               {role === 'MedicalReviewer' && <IdmTestingView />}
                {role === 'SOP11_RareDonor' && <RareDonorView />}
-               {role !== 'Dashboard' && role !== 'LabTech_Crossmatch' && role !== 'MedicalReviewer' && role !== 'SOP11_RareDonor' && <CrossmatchView />}
+               {role !== 'Dashboard' && role !== 'LabTech_Crossmatch' && role !== 'MedicalReviewer' && role !== 'SOP11_RareDonor' && <LabDashboardView />}
             </main>
          </div>
        );
@@ -274,7 +307,7 @@ function AppContent() {
             <main className="flex-1 p-4 lg:p-6 overflow-y-auto bg-clinical-bg">
                {role === 'Dashboard' && <TaskQueue role={user!.role} onNavigate={setRole} />}
                {role === 'Dispatcher' && <DispatcherView />}
-               {role === 'WarehouseIssuer' && <WarehouseView />}
+               {role === 'WarehouseIssuer' && <WarehouseView activeTab={warehouseTab} setActiveTab={setWarehouseTab} />}
                {role === 'Warehouse_IssueReturn' && <IssueReturnView />}
                {role === 'Courier' && <CourierView />}
                {role === 'Resource' && <ResourceManagementView />}
@@ -325,6 +358,8 @@ function AppContent() {
             currentSystem={currentSystem}
             limsTab={limsTab}
             setLimsTab={setLimsTab}
+            warehouseTab={warehouseTab}
+            setWarehouseTab={setWarehouseTab}
             onReturnToPortal={() => setCurrentSystem(null)}
             user={user}
           />

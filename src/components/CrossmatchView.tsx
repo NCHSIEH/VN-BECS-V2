@@ -17,9 +17,10 @@ interface CrossmatchRecord {
   createdAt: string;
 }
 
-export function CrossmatchView() {
+export function CrossmatchView({ user }: { user?: any }) {
   const [records, setRecords] = useState<CrossmatchRecord[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [localInventory, setLocalInventory] = useState<any[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [status, setStatus] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
 
@@ -33,6 +34,14 @@ export function CrossmatchView() {
   const loadData = () => {
     fetch('/api/v1/crossmatch').then(res => res.json()).then(setRecords).catch(console.error);
     fetch('/api/v1/mdm/patients').then(res => res.json()).then(setPatients).catch(console.error);
+    fetch('/api/v1/inventory').then(res => res.json()).then(data => {
+      // Filter by location (hospital) and status
+      const localUnits = data.filter((item: any) => 
+        item.status === 'AVAILABLE' && 
+        (!user || item.location === user.orgName || item.location === user.orgId)
+      );
+      setLocalInventory(localUnits);
+    }).catch(console.error);
   };
 
   useEffect(() => { loadData(); }, []);
@@ -75,6 +84,12 @@ export function CrossmatchView() {
     }
     if (!exmAllowed) {
       setStatus({ type: 'error', msg: 'EXM not allowed: patient has clinically significant antibodies. Use AHG instead.' });
+      return;
+    }
+
+    const inventoryItem = localInventory.find(i => i.unitId === componentId);
+    if (!inventoryItem) {
+      setStatus({ type: 'error', msg: `Component ${componentId} is not available in local inventory at this hospital.` });
       return;
     }
 

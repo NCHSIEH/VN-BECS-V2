@@ -22,7 +22,8 @@ import {
   Thermometer,
   Droplet,
   Send,
-  Lock
+  Lock,
+  PackageCheck
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -32,6 +33,8 @@ interface SidebarProps {
   currentSystem: SystemType;
   limsTab?: 'DONOR' | 'LAB' | 'PROCESS' | 'RELEASE';
   setLimsTab?: (tab: 'DONOR' | 'LAB' | 'PROCESS' | 'RELEASE') => void;
+  warehouseTab?: 'DISPATCH' | 'INVENTORY' | 'RESOURCES';
+  setWarehouseTab?: (tab: 'DISPATCH' | 'INVENTORY' | 'RESOURCES') => void;
   onReturnToPortal?: () => void;
   user?: User | null;
 }
@@ -63,10 +66,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   currentSystem, 
   limsTab, 
   setLimsTab, 
+  warehouseTab,
+  setWarehouseTab,
   onReturnToPortal,
   user
 }) => {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [badgeCounts, setBadgeCounts] = useState<LimsBadgeCounts>({ DONOR: 0, LAB: 0, PROCESS: 0, RELEASE: 0 });
   const [hoveredLocked, setHoveredLocked] = useState<string | null>(null);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<number, boolean>>({
@@ -182,11 +187,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div>
             <h2 className="text-[14px] font-black text-clinical-text uppercase tracking-[0.4em] italic leading-none group-hover:text-clinical-primary transition-colors">VN-BECS</h2>
             <p className="text-[9px] text-clinical-muted font-black uppercase tracking-[0.25em] mt-2 opacity-80 italic">
-              {currentSystem === 'HUB' ? 'Supply Hub' :
-               currentSystem === 'LIMS' ? 'Blood Center LIMS' :
-               currentSystem === 'LAB' ? 'Clinical Laboratory' :
-               currentSystem === 'HOSPITAL' ? 'Hospital Node' :
-               currentSystem === 'NATIONAL' ? 'National Command' :
+              {currentSystem === 'HUB' ? t('portal_station_hub_title') :
+               currentSystem === 'LIMS' ? t('portal_station_lims_title') :
+               currentSystem === 'LAB' ? t('portal_station_lab_title') :
+               currentSystem === 'HOSPITAL' ? t('portal_station_hospital_title') :
+               currentSystem === 'NATIONAL' ? t('portal_station_national_title') :
                'V2.0 Enterprise'}
             </p>
           </div>
@@ -197,10 +202,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {onReturnToPortal && (
             <button
               onClick={onReturnToPortal}
-              className="w-full flex items-center gap-4 px-6 py-4 bg-clinical-primary/10 border border-clinical-primary/20 rounded-[24px] text-clinical-primary hover:bg-clinical-primary hover:text-white transition-all group shadow-lg active:scale-95 mb-10"
+              className="w-full flex items-center justify-center gap-4 px-6 py-3.5 bg-transparent border-2 border-cyan-500/50 rounded-full text-cyan-400 hover:bg-cyan-500 hover:text-slate-900 hover:border-cyan-500 transition-all duration-300 group shadow-[0_0_15px_rgba(6,182,212,0.15)] hover:shadow-[0_0_25px_rgba(6,182,212,0.4)] active:scale-95 mb-10"
             >
               <ArrowRightLeft size={18} className="group-hover:rotate-180 transition-all duration-500" />
-              <span className="text-[11px] font-black uppercase tracking-[0.2em] italic">System Portal</span>
+              <span className="text-[12px] font-extrabold uppercase tracking-[0.25em] italic">SYSTEM PORTAL</span>
             </button>
           )}
           {/* LIMS MODE */}
@@ -288,9 +293,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                </div>
                <div className="space-y-2">
                  {[
-                   { id: 'Dashboard', label: t('ui_mission_control'), icon: <Activity size={18} /> },
-                   { id: 'Nurse', label: t('ui_bedside_verif'), icon: <ShieldCheck size={18} /> },
                    { id: 'HospitalOperator', label: t('ui_emergency_req'), icon: <Stethoscope size={18} /> },
+                   { id: 'Nurse', label: t('ui_bedside_verif'), icon: <ShieldCheck size={18} /> },
                    { id: 'Nurse_MTP', label: t('ui_mtp_tactical'), icon: <Zap size={18} /> },
                  ].map((flow) => (
                    <button
@@ -317,89 +321,118 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           )}
 
-          {/* LAB MODE */}
-          {currentSystem === 'LAB' && (
-            <div className="space-y-4">
-               <div className="flex items-center gap-3 px-2">
-                  <div className="text-clinical-primary bg-clinical-primary/10 p-2 rounded-xl border border-clinical-primary/20 shadow-inner">
-                    <FlaskConical size={20} />
-                  </div>
-                  <span className="text-[11px] font-black text-clinical-text uppercase tracking-[0.25em]">Laboratory Flow</span>
-               </div>
-               <div className="space-y-2">
-                 {[
-                   { id: 'Dashboard', label: t('ui_mission_control'), icon: <Activity size={18} /> },
-                   { id: 'LabTech_Crossmatch', label: t('ui_precision_crossmatch'), icon: <FlaskConical size={18} /> },
-                   { id: 'MedicalReviewer', label: t('ui_idm_review'), icon: <ClipboardList size={18} /> },
-                   { id: 'SOP11_RareDonor', label: t('ui_rare_registry'), icon: <Users size={18} /> },
-                 ].map((flow) => (
-                   <button
-                     key={flow.id}
-                     onClick={() => setRole(flow.id as Role)}
-                     className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all group relative ${
-                       currentRole === flow.id
-                         ? 'bg-clinical-bg text-clinical-text border border-clinical-border shadow-md scale-[1.02]'
-                         : 'text-clinical-muted hover:text-clinical-text hover:bg-clinical-bg/50'
-                     }`}
-                   >
-                     <div className="flex items-center gap-4">
-                        <div className={`transition-colors ${currentRole === flow.id ? 'text-clinical-primary' : 'text-clinical-muted group-hover:text-clinical-text'}`}>
-                           {flow.icon}
+           {/* LAB MODE */}
+           {currentSystem === 'LAB' && (
+             <div className="space-y-4">
+                <div className="flex items-center gap-3 px-2">
+                   <div className="text-clinical-primary bg-clinical-primary/10 p-2 rounded-xl border border-clinical-primary/20 shadow-inner">
+                     <FlaskConical size={20} className="animate-pulse" />
+                   </div>
+                   <span className="text-[11px] font-black text-clinical-text uppercase tracking-[0.25em]">Core Laboratory</span>
+                </div>
+                <div className="space-y-3">
+                  {[
+                    { 
+                      id: 'Dashboard', 
+                      label: t('ui_lab_dashboard'), 
+                      sub: 'Specimen Worklist & Stats',
+                      zhSub: '檢體接收與工作清單 (AABB 標準)',
+                      icon: <Activity size={18} />,
+                      color: 'text-sky-500 bg-sky-500/10 border-sky-500/20'
+                    },
+                    { 
+                      id: 'MedicalReviewer', 
+                      label: t('ui_idm_review'), 
+                      sub: 'Serology & NAT Screening',
+                      zhSub: '血清與核酸擴增檢驗 (SOP 02)',
+                      icon: <ClipboardList size={18} />,
+                      color: 'text-amber-500 bg-amber-500/10 border-amber-500/20'
+                    },
+                    { 
+                      id: 'LabTech_Crossmatch', 
+                      label: t('ui_precision_crossmatch'), 
+                      sub: 'ABO/Rh & Immunohematology',
+                      zhSub: '免疫血液與相容性配對 (SOP 08)',
+                      icon: <FlaskConical size={18} />,
+                      color: 'text-rose-500 bg-rose-500/10 border-rose-500/20'
+                    },
+                    { 
+                      id: 'SOP11_RareDonor', 
+                      label: t('ui_rare_registry'), 
+                      sub: 'Antibody ID & Reference Lab',
+                      zhSub: '複雜抗體鑑定與罕見庫 (SOP 11)',
+                      icon: <Users size={18} />,
+                      color: 'text-indigo-500 bg-indigo-500/10 border-indigo-500/20'
+                    },
+                  ].map((flow) => {
+                    const isActive = currentRole === flow.id;
+                    return (
+                      <button
+                        key={flow.id}
+                        onClick={() => setRole(flow.id as Role)}
+                        className={`w-full flex items-center justify-between px-5 py-3 rounded-2xl transition-all duration-300 group relative border text-left ${
+                          isActive
+                            ? 'bg-clinical-primary/10 border-clinical-primary/30 text-clinical-text shadow-[0_4px_20px_-4px_rgba(var(--clinical-primary-rgb),0.15)] scale-[1.02]'
+                            : 'text-clinical-muted hover:text-clinical-text hover:bg-clinical-bg/40 border-transparent'
+                        }`}
+                      >
+                        {/* Glow left vertical pill on active */}
+                        {isActive && (
+                          <div className="absolute left-0 top-3 bottom-3 w-1 rounded-r-md bg-clinical-primary shadow-[0_0_8px_var(--clinical-primary)] animate-pulse" />
+                        )}
+
+                        <div className="flex items-center gap-4">
+                           {/* Icon Box */}
+                           <div className={`p-2.5 rounded-xl border transition-all duration-300 ${flow.color} ${
+                             isActive ? 'scale-110 shadow-sm' : 'opacity-80 group-hover:opacity-100 group-hover:scale-105'
+                           }`}>
+                              {flow.icon}
+                           </div>
+
+                           <div className="flex flex-col">
+                              <span className="text-[12px] font-black tracking-tight uppercase italic leading-none">{flow.label}</span>
+                              <span className="text-[8px] font-bold text-clinical-muted uppercase tracking-[0.06em] mt-1.5 opacity-80 leading-none group-hover:text-clinical-primary transition-colors">
+                                {lang === 'zh-TW' ? flow.zhSub : flow.sub}
+                              </span>
+                           </div>
                         </div>
-                        <span className="text-[12px] font-black tracking-tight uppercase italic text-left">{flow.label}</span>
-                     </div>
-                     {currentRole === flow.id && (
-                       <div className="w-1.5 h-1.5 rounded-full bg-clinical-primary shadow-[0_0_10px_var(--clinical-primary)]" />
-                     )}
-                   </button>
-                 ))}
-               </div>
-            </div>
-          )}
+
+                        {/* Pulse dot or active circle indicator */}
+                        {isActive ? (
+                          <div className="w-2 h-2 rounded-full bg-clinical-primary shadow-[0_0_8px_var(--clinical-primary)] animate-pulse" />
+                        ) : (
+                          <div className="w-1.5 h-1.5 rounded-full bg-clinical-border opacity-0 group-hover:opacity-40 transition-opacity" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+             </div>
+           )}
 
           {/* HUB MODE */}
           {currentSystem === 'HUB' && (
             <>
-              {/* Priority Task Queue */}
-              <div className="space-y-4">
-                 <div className="flex items-center gap-3 px-2">
-                    <div className="text-clinical-primary bg-clinical-primary/10 p-2 rounded-xl border border-clinical-primary/20 shadow-inner"><Activity size={20} /></div>
-                    <span className="text-[11px] font-black text-clinical-text uppercase tracking-[0.25em]">Operational Flow</span>
-                 </div>
-                 <button
-                    onClick={() => setRole('Dashboard')}
-                    className={`w-full flex flex-col items-start px-6 py-5 rounded-[24px] transition-all group relative overflow-hidden ${
-                      currentRole === 'Dashboard'
-                        ? 'bg-clinical-bg text-clinical-text border border-clinical-border shadow-xl scale-[1.02]'
-                        : 'text-clinical-muted hover:text-clinical-text hover:bg-clinical-bg/50'
-                    }`}
-                 >
-                   <span className="text-[14px] font-black tracking-[0.1em] uppercase italic mb-1">My Task Queue</span>
-                   <span className="text-[9px] font-bold text-clinical-muted uppercase tracking-widest">Driven by AI Dispatch</span>
-                   {currentRole === 'Dashboard' && (
-                     <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-clinical-primary" />
-                   )}
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-clinical-card border border-clinical-border flex items-center justify-center shadow-sm">
-                      <div className="w-2 h-2 rounded-full bg-clinical-primary animate-pulse shadow-[0_0_8px_var(--clinical-primary)]" />
-                   </div>
-                 </button>
-              </div>
-
               {/* Operational Hub Groups */}
               {[
                 {
                   title: t('ui_supply_chain'),
                   icon: <Package size={18} className="text-emerald-500" />,
                   items: [
-                    { id: 'WarehouseIssuer', label: t('ui_inventory_dispatch'), icon: <Package size={18} /> },
-                    { id: 'Warehouse_IssueReturn', label: t('ui_returns_mgmt'), icon: <RefreshCcw size={18} /> },
-                    { id: 'Dispatcher', label: t('ui_transport_logistics'), icon: <Truck size={18} /> },
-                    { id: 'Courier', label: t('ui_cold_chain_delivery'), icon: <MapPin size={18} /> },
-                    { id: 'Resource', label: t('ui_resource_mgmt'), icon: <Database size={18} /> },
+                    { id: 'WarehouseIssuer_DISPATCH', role: 'WarehouseIssuer', tab: 'DISPATCH', label: `1. ${t('wh_title_dispatch')}`, icon: <PackageCheck size={18} /> },
+                    { id: 'WarehouseIssuer_INVENTORY', role: 'WarehouseIssuer', tab: 'INVENTORY', label: `2. ${t('wh_title_inventory')}`, icon: <Database size={18} /> },
+                    { id: 'WarehouseIssuer_RESOURCES', role: 'WarehouseIssuer', tab: 'RESOURCES', label: `3. ${t('wh_title_resources')}`, icon: <Package size={18} /> },
+                    { id: 'Warehouse_IssueReturn', role: 'Warehouse_IssueReturn', label: t('ui_returns_mgmt'), icon: <RefreshCcw size={18} /> },
+                    { id: 'Dispatcher', role: 'Dispatcher', label: t('ui_transport_logistics'), icon: <Truck size={18} /> },
+                    { id: 'Courier', role: 'Courier', label: t('ui_cold_chain_delivery'), icon: <MapPin size={18} /> },
+                    { id: 'Resource', role: 'Resource', label: t('ui_resource_mgmt'), icon: <Database size={18} /> },
                   ]
                 }
               ].map((group, idx) => {
-                const visibleItems = group.items.filter(item => allowedRoles.includes(item.id as Role) || item.id === 'Dashboard');
+                const visibleItems = group.items.filter(item => {
+                  const targetRole = item.role || item.id;
+                  return allowedRoles.includes(targetRole as Role) || targetRole === 'Dashboard';
+                });
                 if (visibleItems.length === 0) return null;
 
                 const isCollapsed = collapsedGroups[idx] ?? false;
@@ -445,32 +478,47 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         ? 'max-h-0 opacity-0 scale-95 pointer-events-none' 
                         : 'max-h-[500px] opacity-100 scale-100'
                     }`}>
-                      {visibleItems.map((item) => (
-                        <button
-                          key={item.id}
-                          onClick={() => setRole(item.id as Role)}
-                          className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all group relative ${
-                            currentRole === item.id
-                              ? 'bg-clinical-bg text-clinical-text border border-clinical-border shadow-md scale-[1.02]'
-                               : 'text-clinical-muted hover:text-clinical-text hover:bg-clinical-bg/50'
-                          }`}
-                        >
-                          <div className="flex items-center gap-4">
-                             <div className={`transition-colors ${currentRole === item.id ? 'text-clinical-primary' : 'text-clinical-muted group-hover:text-clinical-text'}`}>
-                                {item.icon}
-                             </div>
-                             <div className="flex flex-col items-start">
-                                <span className="text-[12px] font-black tracking-tight uppercase italic text-left">{item.label}</span>
-                                <span className="text-[8px] font-black text-clinical-muted uppercase tracking-[0.1em] mt-1 opacity-70 group-hover:text-clinical-primary transition-colors">
-                                  Role: {getRoleNameForDisplay(item.id)}
-                                </span>
-                             </div>
-                          </div>
-                          {currentRole === item.id && (
-                            <div className="w-1.5 h-1.5 rounded-full bg-clinical-primary shadow-[0_0_10px_var(--clinical-primary)]" />
-                          )}
-                        </button>
-                      ))}
+                      {visibleItems.map((item) => {
+                        const targetRole = item.role || item.id;
+                        const isWarehouseIssuer = targetRole === 'WarehouseIssuer';
+                        const isActive = isWarehouseIssuer
+                          ? (currentRole === 'WarehouseIssuer' && warehouseTab === item.tab)
+                          : (currentRole === item.id);
+                        
+                        const handleClick = () => {
+                          setRole(targetRole as Role);
+                          if (isWarehouseIssuer && setWarehouseTab && item.tab) {
+                            setWarehouseTab(item.tab as any);
+                          }
+                        };
+
+                        return (
+                          <button
+                            key={item.id}
+                            onClick={handleClick}
+                            className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all group relative ${
+                              isActive
+                                ? 'bg-clinical-bg text-clinical-text border border-clinical-border shadow-md scale-[1.02]'
+                                 : 'text-clinical-muted hover:text-clinical-text hover:bg-clinical-bg/50'
+                            }`}
+                          >
+                            <div className="flex items-center gap-4">
+                               <div className={`transition-colors ${isActive ? 'text-clinical-primary' : 'text-clinical-muted group-hover:text-clinical-text'}`}>
+                                  {item.icon}
+                               </div>
+                               <div className="flex flex-col items-start">
+                                  <span className="text-[12px] font-black tracking-tight uppercase italic text-left">{item.label}</span>
+                                  <span className="text-[8px] font-black text-clinical-muted uppercase tracking-[0.1em] mt-1 opacity-70 group-hover:text-clinical-primary transition-colors">
+                                    Role: {getRoleNameForDisplay(targetRole)}
+                                  </span>
+                               </div>
+                            </div>
+                            {isActive && (
+                              <div className="w-1.5 h-1.5 rounded-full bg-clinical-primary shadow-[0_0_10px_var(--clinical-primary)]" />
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 );

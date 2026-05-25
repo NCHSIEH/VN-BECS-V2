@@ -5,13 +5,20 @@ import { validateISBT128 } from "../lib/bloodSafety";
 import { useI18n } from "../lib/i18n";
 import { motion } from "framer-motion";
 
-export function WarehouseView() {
+interface WarehouseViewProps {
+  activeTab?: 'DISPATCH' | 'INVENTORY' | 'RESOURCES';
+  setActiveTab?: (tab: 'DISPATCH' | 'INVENTORY' | 'RESOURCES') => void;
+}
+
+export function WarehouseView({ activeTab: propActiveTab, setActiveTab: propSetActiveTab }: WarehouseViewProps) {
   const { t } = useI18n();
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [scannedCode, setScannedCode] = useState("");
   const [scanResult, setScanResult] = useState<{status: 'success' | 'error', message: string} | null>(null);
-  const [activeTab, setActiveTab] = useState<'DISPATCH' | 'INVENTORY' | 'RESOURCES'>('DISPATCH');
+  const [localActiveTab, setLocalActiveTab] = useState<'DISPATCH' | 'INVENTORY' | 'RESOURCES'>('DISPATCH');
+  const activeTab = propActiveTab || localActiveTab;
+  const setActiveTab = propSetActiveTab || setLocalActiveTab;
   const [inventory, setInventory] = useState<any[]>([]);
 
   const getPriorityLabel = (priority: string) => {
@@ -109,59 +116,12 @@ export function WarehouseView() {
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        {/* Workflow Sidebar */}
-        <div className="w-96 bg-clinical-bg/50 border-r border-clinical-border flex flex-col shrink-0 p-8 gap-8 overflow-y-auto custom-scrollbar">
-           <div className="space-y-2">
-              <h2 className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] mb-6">{t('wh_tab_resources') || 'Fulfillment Hub'}</h2>
-              {[
-                { id: 'DISPATCH', label: `1. ${t('wh_title_dispatch')}`, icon: <PackageCheck size={20} />, color: 'emerald' },
-                { id: 'INVENTORY', label: `2. ${t('wh_title_inventory')}`, icon: <Database size={20} />, color: 'sky' },
-                { id: 'RESOURCES', label: `3. ${t('wh_title_resources')}`, icon: <Package size={20} />, color: 'amber' },
-              ].map((stage) => (
-                <button
-                  key={stage.id}
-                  onClick={() => setActiveTab(stage.id as any)}
-                  className={`w-full flex items-center justify-between p-6 rounded-[28px] transition-all group relative overflow-hidden ${
-                    activeTab === stage.id 
-                      ? 'bg-clinical-card text-clinical-text border border-clinical-border shadow-2xl scale-[1.02]'
-                      : 'text-clinical-muted hover:text-clinical-muted hover:bg-clinical-card/30'
-                  }`}
-                >
-                  <div className="flex items-center gap-5 relative z-10">
-                     <div className={`transition-colors ${activeTab === stage.id ? 'text-emerald-500' : 'text-clinical-text'}`}>
-                        {stage.icon}
-                     </div>
-                     <span className="text-[14px] font-black uppercase italic tracking-tight">{stage.label}</span>
-                  </div>
-                  {activeTab === stage.id && <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse relative z-10" />}
-                </button>
-              ))}
-           </div>
-
-           <div className="mt-auto space-y-6">
-              <div className="bg-clinical-bg p-6 rounded-[32px] border border-clinical-border shadow-inner">
-                  <p className="text-[10px] font-black text-clinical-muted uppercase tracking-widest">{t('wh_stock_status') || 'Hub Stock Status'}</p>
-                  <div className="flex gap-4 mt-4">
-                     <div className="flex flex-col">
-                        <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">{t('wh_units_available') || 'Units Available'}</span>
-                        <span className="text-xl font-black text-emerald-500">{inventory.length}</span>
-                     </div>
-                     <div className="w-px h-8 bg-clinical-bg mt-2" />
-                     <div className="flex flex-col">
-                        <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">{t('wh_pending_dispatch') || 'Pending Dispatch'}</span>
-                        <span className="text-xl font-black text-sky-500">{orders.filter(o => o.status === 'APPROVED').length}</span>
-                     </div>
-                  </div>
-               </div>
-           </div>
-        </div>
-
         {/* Operational Viewport */}
         <div className="flex-1 overflow-y-auto p-12 custom-scrollbar bg-clinical-bg/20">
           <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in slide-in-from-right-12 duration-1000">
             
             {/* Contextual Header */}
-            <div className="flex justify-between items-end border-b border-clinical-border pb-12">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-clinical-border pb-12">
                <div className="space-y-4">
                   <div className="flex items-center gap-4">
                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 shadow-[0_0_10px_rgba(16,185,129,0.6)]" />
@@ -173,8 +133,21 @@ export function WarehouseView() {
                     {activeTab === 'RESOURCES' && t('wh_title_resources')}
                   </h1>
                </div>
-               <div className="flex gap-4">
-                  <button onClick={fetchData} className="p-4 bg-clinical-card border border-clinical-border text-clinical-muted hover:text-clinical-text rounded-[20px] transition-all">
+               
+               {/* Elegant stock status in header */}
+               <div className="flex gap-6 items-center w-full md:w-auto justify-between md:justify-end">
+                  <div className="bg-clinical-card border border-clinical-border p-4 px-6 rounded-2xl flex items-center gap-6 shadow-sm">
+                     <div className="flex flex-col">
+                        <span className="text-[8px] font-black text-clinical-muted uppercase tracking-widest leading-none mb-1.5">{t('wh_stock_status') || 'Hub Stock Status'}</span>
+                        <span className="text-xl font-extrabold text-emerald-500 leading-none">{inventory.length} <span className="text-[10px] text-clinical-muted font-bold tracking-tight">{t('wh_units_available') || 'Available'}</span></span>
+                     </div>
+                     <div className="w-px h-6 bg-clinical-border" />
+                     <div className="flex flex-col">
+                        <span className="text-[8px] font-black text-clinical-muted uppercase tracking-widest leading-none mb-1.5">{t('wh_pending_dispatch') || 'Pending Dispatch'}</span>
+                        <span className="text-xl font-extrabold text-sky-500 leading-none">{orders.filter(o => o.status === 'APPROVED').length} <span className="text-[10px] text-clinical-muted font-bold tracking-tight">{t('wh_priority_suffix') || 'Orders'}</span></span>
+                     </div>
+                  </div>
+                  <button onClick={fetchData} className="p-4 bg-clinical-card border border-clinical-border text-clinical-muted hover:text-clinical-text rounded-[20px] transition-all hover:scale-105 active:scale-95 duration-200 shadow-sm flex items-center justify-center shrink-0">
                      <RefreshCcw size={20} />
                   </button>
                </div>
@@ -244,17 +217,34 @@ export function WarehouseView() {
                                       <span className="text-[10px] font-black text-clinical-muted uppercase tracking-widest">{item.abo} {item.rhd}</span>
                                    </div>
                                    {selectedOrder.allocatedUnits && (
-                                     <div className="bg-emerald-500/5 border border-emerald-500/20 p-4 rounded-2xl flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
-                                           <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                           <span className="font-mono text-emerald-500 font-black text-lg tracking-widest">{selectedOrder.allocatedUnits.join(', ')}</span>
-                                        </div>
-                                        <button 
-                                          onClick={() => setScannedCode(selectedOrder.allocatedUnits![0])}
-                                          className="text-[10px] font-black text-emerald-500 hover:text-emerald-600 transition-colors uppercase tracking-widest"
-                                        >
-                                          {t('wh_btn_autofill_inline')}
-                                        </button>
+                                     <div className="flex flex-wrap gap-3 mt-2">
+                                       {selectedOrder.allocatedUnits.map((unitId: string) => {
+                                         const isVerified = (selectedOrder.verifiedUnits || []).includes(unitId);
+                                         return (
+                                           <div 
+                                             key={unitId} 
+                                             className={`flex items-center gap-3 p-3 px-5 rounded-2xl border transition-all ${
+                                               isVerified 
+                                                 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500 shadow-sm' 
+                                                 : 'bg-clinical-bg/50 border-clinical-border text-clinical-text/85'
+                                             }`}
+                                           >
+                                             <div className={`w-2 h-2 rounded-full ${isVerified ? 'bg-emerald-500 shadow-[0_0_8px_var(--clinical-success)]' : 'bg-amber-500 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.5)]'}`} />
+                                             <span className="font-mono font-black text-sm tracking-widest leading-none">{unitId}</span>
+                                             {isVerified ? (
+                                               <span className="text-[8px] font-black uppercase tracking-wider bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/25">Verified</span>
+                                             ) : (
+                                               <button 
+                                                 type="button"
+                                                 onClick={() => setScannedCode(unitId)}
+                                                 className="text-[9px] font-black text-emerald-500 hover:text-emerald-400 uppercase tracking-widest leading-none"
+                                               >
+                                                 {t('wh_btn_autofill_inline') || 'Pick'}
+                                               </button>
+                                             )}
+                                           </div>
+                                         );
+                                       })}
                                      </div>
                                    )}
                                 </div>

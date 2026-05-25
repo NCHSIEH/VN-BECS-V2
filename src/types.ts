@@ -291,6 +291,7 @@ export interface Order {
     confidence?: string;
   };
   allocatedUnits?: string[];
+  verifiedUnits?: string[];
 }
 
 /** AI allocation proposal — SOP 4. */

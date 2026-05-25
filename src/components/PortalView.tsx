@@ -44,7 +44,7 @@ export function PortalView({
 }: PortalViewProps) {
   const { lang, setLang, t } = useI18n();
   const [showManual, setShowManual] = useState(false);
-  const [showTaskQueue, setShowTaskQueue] = useState(true);
+  const [showTaskQueue, setShowTaskQueue] = useState(false);
 
   const getMissionsForRole = (r: Role) => {
     const allMissions = [
@@ -214,22 +214,25 @@ export function PortalView({
           </div>
 
           <div className="flex flex-col items-end gap-6 w-full md:w-auto shrink-0">
-             {/* Controls Group */}
              <div className="flex flex-wrap items-center gap-8 justify-end w-full">
-                {/* My Task Queue Toggle Button */}
                 <div className="flex flex-col items-end gap-3">
                    <p className="text-[9px] font-black text-clinical-muted uppercase tracking-[0.4em] italic">Missions & Reminders</p>
                    <button 
                      onClick={() => setShowTaskQueue(!showTaskQueue)}
-                     className={`flex items-center gap-3 px-6 py-2.5 rounded-[20px] border transition-all group shadow-sm active:scale-95 duration-200 ${
+                     className={`flex items-center gap-3 px-6 py-2.5 rounded-[20px] border-2 transition-all group active:scale-95 duration-200 ${
                        showTaskQueue 
                          ? 'bg-rose-600 border-rose-600 text-white shadow-lg shadow-rose-900/40' 
-                         : 'bg-clinical-card border-clinical-border text-clinical-text hover:bg-clinical-primary hover:text-white'
+                         : userMissions.length > 0 
+                           ? 'bg-clinical-card border-rose-500 text-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.6)] animate-pulse hover:bg-rose-600 hover:text-white hover:border-rose-600 hover:animate-none'
+                           : 'bg-clinical-card border-clinical-border text-clinical-text hover:bg-clinical-primary hover:text-white shadow-sm'
                      }`}
                    >
                       <div className="relative flex items-center justify-center mr-1">
-                        <Activity size={16} className={`group-hover:rotate-12 transition-transform ${showTaskQueue ? 'text-white animate-pulse' : 'text-clinical-primary group-hover:text-white'}`} />
-                        {/* Dynamic status indicator light */}
+                        <Activity size={16} className={`group-hover:rotate-12 transition-transform ${
+                           showTaskQueue ? 'text-white animate-pulse' : 
+                           userMissions.length > 0 ? 'text-rose-500 group-hover:text-white animate-pulse' : 
+                           'text-clinical-primary group-hover:text-white'
+                        }`} />
                         <span className={`absolute -top-1 -right-1.5 w-2.5 h-2.5 rounded-full border border-white ${pulseColorClass} ${pulseAnimationClass}`} />
                       </div>
                       <span className="text-[10px] font-black uppercase tracking-[0.2em]">

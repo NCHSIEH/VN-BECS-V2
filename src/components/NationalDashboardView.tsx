@@ -117,8 +117,8 @@ export function NationalDashboardView({ onBack }: { onBack?: () => void } = {}) 
                     <p className="text-[10px] font-black text-rose-500/60 uppercase tracking-widest italic">{t('national_map_sub')}</p>
                  </div>
                  <div className="flex bg-clinical-bg p-1 rounded-xl border border-clinical-border">
-                    <button className="px-4 py-2 text-[8px] font-black uppercase tracking-widest bg-rose-600 text-white rounded-lg shadow-lg">Heatmap</button>
-                    <button className="px-4 py-2 text-[8px] font-black uppercase tracking-widest text-clinical-muted hover:text-clinical-text transition-colors">Nodes</button>
+                    <button className="px-4 py-2 text-[8px] font-black uppercase tracking-widest bg-rose-600 text-white rounded-lg shadow-lg">{t('national_heatmap')}</button>
+                    <button className="px-4 py-2 text-[8px] font-black uppercase tracking-widest text-clinical-muted hover:text-clinical-text transition-colors">{t('national_nodes')}</button>
                  </div>
               </div>
 
@@ -147,7 +147,7 @@ export function NationalDashboardView({ onBack }: { onBack?: () => void } = {}) 
            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="clinical-card p-8 bg-clinical-bg/20 border-clinical-border rounded-[32px]">
                  <div className="flex justify-between items-center mb-6">
-                    <h4 className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">Collection vs. Waste Trend</h4>
+                    <h4 className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">{t('national_trend_waste')}</h4>
                     <TrendingUp size={14} className="text-rose-500/40" />
                  </div>
                  <div className="h-40 flex items-end gap-3 px-2">
@@ -161,7 +161,7 @@ export function NationalDashboardView({ onBack }: { onBack?: () => void } = {}) 
               </div>
               <div className="clinical-card p-8 bg-clinical-bg/20 border-clinical-border rounded-[32px]">
                  <div className="flex justify-between items-center mb-6">
-                    <h4 className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">{t('national_waste')} Breakdown</h4>
+                    <h4 className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">{t('national_breakdown_waste')}</h4>
                     <Activity size={14} className="text-sky-500/40" />
                  </div>
                  <div className="space-y-6">
@@ -185,9 +185,9 @@ export function NationalDashboardView({ onBack }: { onBack?: () => void } = {}) 
                  <div className="space-y-4">
                     <label className="text-[9px] font-black text-clinical-muted uppercase tracking-widest block">{t('national_model_config')}</label>
                     <select className="w-full bg-clinical-bg border border-clinical-border p-4 rounded-2xl text-[10px] font-black text-clinical-text uppercase tracking-wider outline-none focus:border-rose-500 transition-all">
-                       <option>Typhoon Landing (Central)</option>
-                       <option>Viral Pandemic Surge</option>
-                       <option>Cyber Grid Outage</option>
+                       <option>{t('national_model_typhoon')}</option>
+                       <option>{t('national_model_viral')}</option>
+                       <option>{t('national_model_cyber')}</option>
                     </select>
                  </div>
 
@@ -213,8 +213,8 @@ export function NationalDashboardView({ onBack }: { onBack?: () => void } = {}) 
                  </div>
 
                  <div className="grid grid-cols-2 gap-4 pt-4">
-                    <button className="py-4 bg-clinical-bg border border-clinical-border rounded-2xl text-[9px] font-black text-clinical-muted uppercase tracking-widest hover:text-clinical-text transition-all">Deploy Units</button>
-                    <button className="py-4 bg-clinical-bg border border-clinical-border rounded-2xl text-[9px] font-black text-clinical-muted uppercase tracking-widest hover:text-clinical-text transition-all">Adjust Donations</button>
+                    <button className="py-4 bg-clinical-bg border border-clinical-border rounded-2xl text-[9px] font-black text-clinical-muted uppercase tracking-widest hover:text-clinical-text transition-all">{t('national_deploy_units')}</button>
+                    <button className="py-4 bg-clinical-bg border border-clinical-border rounded-2xl text-[9px] font-black text-clinical-muted uppercase tracking-widest hover:text-clinical-text transition-all">{t('national_adjust_donations')}</button>
                  </div>
 
                  <button 
@@ -236,10 +236,10 @@ export function NationalDashboardView({ onBack }: { onBack?: () => void } = {}) 
                </div>
                <div className="space-y-4">
                   {[
-                    { id: 'T-102', task: 'Verify Regional Stockpiles (Central)', status: 'Pending', icon: <Database size={16} /> },
-                    { id: 'T-104', task: 'Authorize Emergency Transport (SOP 3)', status: 'Urgent', icon: <Truck size={16} /> },
-                    { id: 'T-108', task: 'Approve MTP Protocol Activation', status: 'Review', icon: <Zap size={16} /> },
-                    { id: 'T-112', task: 'Sync Master Database (MDM)', status: 'Daily', icon: <Settings size={16} /> }
+                    { id: 'T-102', task: t('national_task_verify'), status: t('national_status_pending'), icon: <Database size={16} /> },
+                    { id: 'T-104', task: t('national_task_auth_transport'), status: t('national_status_urgent'), icon: <Truck size={16} /> },
+                    { id: 'T-108', task: t('national_task_approve_mtp'), status: t('national_status_review'), icon: <Zap size={16} /> },
+                    { id: 'T-112', task: t('national_task_sync_mdm'), status: t('national_status_daily'), icon: <Settings size={16} /> }
                   ].map((task, i) => (
                     <button key={i} className="w-full flex items-center justify-between p-5 bg-clinical-bg hover:bg-clinical-bg border border-clinical-border rounded-3xl transition-all group">
                        <div className="flex items-center gap-4">
@@ -266,10 +266,10 @@ export function NationalDashboardView({ onBack }: { onBack?: () => void } = {}) 
                </div>
                <div className="grid grid-cols-2 gap-4">
                   {[
-                    { name: 'Donor Centers (LIMS)', status: 'Operational', color: 'rose' },
-                    { name: 'Supply Hubs (HUB)', status: 'Syncing', color: 'emerald' },
-                    { name: 'Clinical Nodes', status: 'Active', color: 'amber' },
-                    { name: 'Logistics Fleet', status: 'On-Route', color: 'sky' }
+                    { name: t('national_dc_lims'), status: t('national_status_operational'), color: 'rose' },
+                    { name: t('national_supply_hub'), status: t('national_status_syncing'), color: 'emerald' },
+                    { name: t('national_clinical_nodes'), status: t('national_status_active'), color: 'amber' },
+                    { name: t('national_logistics_fleet'), status: t('national_status_onroute'), color: 'sky' }
                   ].map((node, i) => (
                     <div key={i} className="p-4 bg-clinical-card/30 border border-clinical-border rounded-2xl">
                        <p className="text-[9px] font-black text-clinical-text uppercase tracking-tighter mb-1">{node.name}</p>

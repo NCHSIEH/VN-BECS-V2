@@ -33,10 +33,13 @@ export function HospitalOperatorView({
   const [syncing, setSyncing] = useState(false);
   const [showOrderModal, setShowOrderModal] = useState(false);
 
-  const filteredInventory = (Array.isArray(inventory) ? inventory : []).filter(unit => 
-    unit.unitId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    unit.productCode.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter inventory by location === user.orgName, then by search term
+  const filteredInventory = (Array.isArray(inventory) ? inventory : [])
+    .filter(unit => unit.location === user.orgName)
+    .filter(unit => 
+      unit.unitId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      unit.productCode.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
   const handleOfflineRelease = () => {
     if (!offlineBarcode || !offlineTempId || !offlineDocId) {

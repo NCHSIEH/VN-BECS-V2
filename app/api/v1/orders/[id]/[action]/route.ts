@@ -64,7 +64,8 @@ export async function POST(
       }
 
       updatedOrder.allocatedUnits = allocatedUnits;
-      await db.orders.update(id, { status: 'APPROVED', allocatedUnits });
+      updatedOrder.verifiedUnits = [];
+      await db.orders.update(id, { status: 'APPROVED', allocatedUnits, verifiedUnits: [] });
 
       // Audit Event
       await db.auditEvents.create({
@@ -78,7 +79,8 @@ export async function POST(
     } else if (action === 'revert') {
       updatedOrder.status = 'SUBMITTED';
       updatedOrder.allocatedUnits = [];
-      await db.orders.update(id, { status: 'SUBMITTED', allocatedUnits: [] });
+      updatedOrder.verifiedUnits = [];
+      await db.orders.update(id, { status: 'SUBMITTED', allocatedUnits: [], verifiedUnits: [] });
 
       await db.auditEvents.create({
         eventType: 'Order Reverted',
@@ -120,30 +122,139 @@ export async function POST(
         return NextResponse.json({ error: 'Missing raw barcode scan' }, { status: 400 });
       }
 
-      // Add to allocated if not present
-      const allocated = order.allocatedUnits || [];
-      if (!allocated.includes(scannedCode)) {
-        allocated.push(scannedCode);
+      // 1. Retrieve the scanned unit from global inventory
+      const allInventory = await db.inventory.getAll();
+      const unit = allInventory.find((u: any) => u.unitId === scannedCode);
+
+      if (!unit) {
+        return NextResponse.json({ 
+          error: `🚨 Scanned unit not found in system inventory (ISBT-128: ${scannedCode})` 
+        }, { status: 404 });
       }
 
-      updatedOrder.status = 'DISPATCHED';
-      updatedOrder.allocatedUnits = allocated;
-      await db.orders.update(id, { status: 'DISPATCHED', allocatedUnits: allocated });
+      // 2. Verify unit location is 'Central HUB'
+      if (unit.location !== 'Central HUB') {
+        return NextResponse.json({ 
+          error: `🚨 Location Error: Unit ${scannedCode} is located at "${unit.location}", not at Central HUB.` 
+        }, { status: 400 });
+      }
 
-      // Transition blood unit status to PICKED
+      // 3. Verify unit safety status & expiration
+      if (unit.status === 'QUARANTINE' || unit.status === 'EXPIRED') {
+        return NextResponse.json({ 
+          error: `🚨 Safety Block: Unit ${scannedCode} is Quarantined or Expired!` 
+        }, { status: 400 });
+      }
+
+      const isExpired = new Date(unit.expiryDate) < new Date();
+      if (isExpired) {
+        return NextResponse.json({ 
+          error: `🚨 Safety Block: Unit ${scannedCode} has EXPIRED! (Expiry: ${new Date(unit.expiryDate).toLocaleDateString()})` 
+        }, { status: 400 });
+      }
+
+      // 4. Verify blood group matching
+      // Calculate total required quantity across all items
+      let totalQty = 0;
+      let matchesAnyItem = false;
+      let requestedBloodTypes: string[] = [];
+
+      for (const item of order.items) {
+        totalQty += item.qty;
+        requestedBloodTypes.push(`${item.abo} ${item.rhd === 'Positive' ? '+' : '-'}`);
+        if (item.abo === unit.abo && item.rhd === unit.rhd) {
+          matchesAnyItem = true;
+        }
+      }
+
+      if (!matchesAnyItem) {
+        return NextResponse.json({
+          error: `🚨 Blood Group Mismatch: Scanned bag is ${unit.abo} ${unit.rhd === 'Positive' ? '+' : '-'}, but this order requires: ${requestedBloodTypes.join(', ')}`
+        }, { status: 400 });
+      }
+
+      // 5. Manage verified list
+      const verified = order.verifiedUnits || [];
+      const allocated = order.allocatedUnits || [];
+
+      if (verified.includes(scannedCode)) {
+        return NextResponse.json({ error: `🚨 Safety Alert: Unit ${scannedCode} has already been verified for this order!` }, { status: 400 });
+      }
+
+      // Dynamic Swap if scanned unit is compatible but not in the original allocated list
+      if (!allocated.includes(scannedCode)) {
+        // Find an unverified allocated unit of the same ABO/Rh group to replace
+        let replacedIndex = -1;
+        
+        for (let i = 0; i < allocated.length; i++) {
+          const allocId = allocated[i];
+          if (!verified.includes(allocId)) {
+            const allocUnit = allInventory.find((u: any) => u.unitId === allocId);
+            if (allocUnit && allocUnit.abo === unit.abo && allocUnit.rhd === unit.rhd) {
+              replacedIndex = i;
+              break;
+            }
+          }
+        }
+
+        if (replacedIndex !== -1) {
+          // Revert old reserved unit status
+          const oldUnitId = allocated[replacedIndex];
+          const oldUnit = allInventory.find((u: any) => u.unitId === oldUnitId);
+          if (oldUnit) {
+            await db.inventory.create({ ...oldUnit, status: 'AVAILABLE' });
+          }
+
+          // Allocate new unit
+          allocated[replacedIndex] = scannedCode;
+          await db.inventory.create({ ...unit, status: 'RESERVED' });
+        } else {
+          return NextResponse.json({ error: `🚨 Capacity Exceeded: Scanned compatible unit ${scannedCode} exceeds the required quantity for this blood type.` }, { status: 400 });
+        }
+      }
+
+      // Add to verified list
+      verified.push(scannedCode);
+
+      // 6. Transition to DISPATCHED if all units are verified
+      const isComplete = verified.length === totalQty;
+      const finalStatus = isComplete ? 'DISPATCHED' : 'APPROVED';
+
+      updatedOrder.status = finalStatus;
+      updatedOrder.allocatedUnits = allocated;
+      updatedOrder.verifiedUnits = verified;
+
+      await db.orders.update(id, { 
+        status: finalStatus, 
+        allocatedUnits: allocated, 
+        verifiedUnits: verified 
+      });
+
+      // Update unit status to PICKED
+      await db.inventory.create({ ...unit, status: 'PICKED' });
+
       try {
         await db.components.updateStatus(scannedCode, 'PICKED');
-      } catch (e) {
-        // Fallback for components table missing
-      }
+      } catch (e) {}
 
+      // Audit Event
       await db.auditEvents.create({
-        eventType: 'Order Dispatched',
+        eventType: 'Order Unit Verified',
         objectId: id,
         actorRole: 'WarehouseIssuer',
-        details: `Blood unit ${scannedCode} verified and dispatched for shipment.`,
+        details: `Unit ${scannedCode} verified. Progress: ${verified.length}/${totalQty} units verified.`,
         timestamp: new Date().toISOString()
       });
+
+      if (isComplete) {
+        await db.auditEvents.create({
+          eventType: 'Order Dispatched',
+          objectId: id,
+          actorRole: 'WarehouseIssuer',
+          details: `Order fully picked, verified (${verified.join(', ')}), and dispatched. Ready for transit.`,
+          timestamp: new Date().toISOString()
+        });
+      }
 
     } else if (action === 'transit') {
       updatedOrder.status = 'IN_TRANSIT';
@@ -170,11 +281,22 @@ export async function POST(
       updatedOrder.status = 'DELIVERED';
       await db.orders.update(id, { status: 'DELIVERED' });
 
-      // Transition blood units to RECEIVED
+      // Transition blood units to RECEIVED and update location in inventory
       const units = order.allocatedUnits || [];
+      const allInventory = await db.inventory.getAll();
       for (const unit of units) {
         try {
           await db.components.updateStatus(unit, 'RECEIVED');
+          
+          // Move inventory to Hospital
+          const invItem = allInventory.find((inv: any) => inv.unitId === unit);
+          if (invItem) {
+            await db.inventory.create({
+              ...invItem,
+              status: 'AVAILABLE',
+              location: order.hospital || 'HOSPITAL' // If hospital id is available
+            });
+          }
         } catch (e) {}
       }
 
