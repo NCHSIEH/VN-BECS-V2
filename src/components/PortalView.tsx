@@ -181,7 +181,7 @@ export function PortalView({
     onSelectSystem(system);
     // Auto-role assignment based on station intent
     if (id === 'LIMS') onSelectRole?.('Dashboard' as Role);
-    if (id === 'LAB') onSelectRole?.('LabTech_Crossmatch' as Role);
+    if (id === 'LAB') onSelectRole?.('Dashboard' as Role);
     if (id === 'HUB') onSelectRole?.('WarehouseIssuer' as Role);
     if (id === 'HOSPITAL') onSelectRole?.('HospitalOperator' as Role);
     if (id === 'NATIONAL') onSelectRole?.('NationalCommander' as Role);

@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Specimen Flowchart - VN-BECS V2</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-canvas: #080d19;
+            --bg-card: rgba(13, 22, 42, 0.7);
+            --border-color: rgba(56, 189, 248, 0.2);
+            --text-primary: #f1f5f9;
+            --text-muted: #94a3b8;
+            --color-sky: #38bdf8;
+            --color-amber: #fbbf24;
+            --color-purple: #c084fc;
+            --color-emerald: #34d399;
+            --color-rose: #f43f5e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-canvas);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 3rem 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .slide-container {
+            width: 100%;
+            max-width: 1200px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(12px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-container::before {
+            content: '';
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            width: 40%;
+            height: 40%;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-b: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 2rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-indicator {
+            width: 12px;
+            height: 36px;
+            background: var(--color-sky);
+            border-radius: 6px;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
+        }
+
+        .title-area h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            text-transform: uppercase;
+            font-style: italic;
+        }
+
+        .title-area p {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            margin-top: 0.2rem;
+        }
+
+        .meta-area {
+            text-align: right;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+        }
+
+        .meta-area strong {
+            color: var(--text-primary);
+        }
+
+        /* Language Toggle Tabs */
+        .lang-selector {
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.3rem;
+            border-radius: 12px;
+            margin-bottom: 2.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            width: fit-content;
+        }
+
+        .lang-tab {
+            padding: 0.6rem 1.5rem;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-weight: 800;
+            font-size: 0.75rem;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .lang-tab:hover {
+            color: var(--text-primary);
+        }
+
+        .lang-tab.active {
+            background: var(--color-sky);
+            color: #080d19;
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+        }
+
+        /* SVG Flowchart Section */
+        .diagram-container {
+            width: 100%;
+            background: rgba(8, 13, 25, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2.5rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        svg {
+            width: 100%;
+            height: auto;
+            max-width: 1000px;
+        }
+
+        .node-box {
+            fill: #0d162a;
+            stroke: var(--border-color);
+            stroke-width: 2;
+            rx: 12px;
+            ry: 12px;
+            transition: all 0.3s;
+        }
+
+        .node-box.active {
+            stroke: var(--color-sky);
+            fill: rgba(56, 189, 248, 0.05);
+        }
+
+        .node-box.accent {
+            stroke: var(--color-amber);
+            fill: rgba(251, 191, 36, 0.05);
+        }
+
+        .node-box.purple {
+            stroke: var(--color-purple);
+            fill: rgba(192, 132, 252, 0.05);
+        }
+
+        .node-text-title {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            fill: var(--text-primary);
+            letter-spacing: 0.05em;
+        }
+
+        .node-text-sub {
+            font-size: 8px;
+            font-weight: 600;
+            fill: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .flow-line {
+            stroke: rgba(255, 255, 255, 0.15);
+            stroke-width: 1.5;
+            fill: none;
+            stroke-dasharray: 4 4;
+        }
+
+        .flow-line.active {
+            stroke: var(--color-sky);
+            stroke-width: 2;
+            stroke-dasharray: none;
+        }
+
+        /* Detailed Matrix Table */
+        .matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .matrix-table th {
+            text-align: left;
+            padding: 1rem;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .matrix-table td {
+            padding: 1.2rem 1rem;
+            font-size: 0.85rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            vertical-align: top;
+        }
+
+        .matrix-table tr:hover td {
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .step-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--color-sky);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+
+        .step-title {
+            font-weight: 800;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+            font-style: italic;
+        }
+
+        .step-desc {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            line-height: 1.5;
+        }
+
+        .system-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--color-sky);
+        }
+
+        .print-btn {
+            position: absolute;
+            top: 3rem;
+            right: 3rem;
+            padding: 0.6rem 1.5rem;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--color-sky);
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.3s;
+        }
+
+        .print-btn:hover {
+            background: var(--color-sky);
+            color: #080d19;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                color: #000;
+                padding: 0;
+            }
+            .slide-container {
+                box-shadow: none;
+                border: none;
+                background: #fff;
+                color: #000;
+                padding: 0;
+                max-width: 100%;
+            }
+            .print-btn, .lang-selector {
+                display: none;
+            }
+            .node-box {
+                fill: #fff;
+                stroke: #000;
+            }
+            .node-text-title {
+                fill: #000;
+            }
+            .node-text-sub {
+                fill: #444;
+            }
+            .flow-line.active {
+                stroke: #000;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="slide-container">
+        <button class="print-btn" onclick="window.print()">Print / PDF</button>
+
+        <header>
+            <div class="logo-section">
+                <div class="logo-indicator"></div>
+                <div class="title-area">
+                    <h1 id="main-title">Specimen Flowchart</h1>
+                    <p id="main-sub">VN-BECS V2.0 System Integration</p>
+                </div>
+            </div>
+            <div class="meta-area">
+                <p>Document: <strong id="doc-type">Specimen Pipeline</strong></p>
+                <p>Status: <strong style="color: var(--color-emerald)">Approved</strong></p>
+                <p>Ref: <strong id="sop-ref">SOP 02 / SOP 08 / SOP 11</strong></p>
+            </div>
+        </header>
+
+        <!-- Language Selector -->
+        <div class="lang-selector">
+            <button class="lang-tab active" onclick="switchLanguage('en')">EN</button>
+            <button class="lang-tab" onclick="switchLanguage('zh')">繁中</button>
+            <button class="lang-tab" onclick="switchLanguage('vi')">VIỆT</button>
+        </div>
+
+        <!-- SVG Flowchart -->
+        <div class="diagram-container">
+            <svg viewBox="0 0 1000 240">
+                <defs>
+                    <marker id="arrow-sky" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#38bdf8" />
+                    </marker>
+                    <marker id="arrow-gray" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(255,255,255,0.15)" />
+                    </marker>
+                </defs>
+
+                <!-- Connecting Lines -->
+                <path d="M 210 120 L 290 120" class="flow-line active" marker-end="url(#arrow-sky)" />
+                <path d="M 470 120 L 550 120" class="flow-line active" marker-end="url(#arrow-sky)" />
+                <path d="M 730 120 L 810 120" class="flow-line active" marker-end="url(#arrow-sky)" />
+
+                <!-- Step 1: Donor Center phlebotomy -->
+                <g>
+                    <rect x="30" y="60" width="180" height="120" class="node-box active" />
+                    <text x="50" y="100" class="node-text-title" id="node1-title">Donor Center</text>
+                    <text x="50" y="125" class="node-text-sub" id="node1-sub1">Phlebotomy (採血)</text>
+                    <text x="50" y="145" class="node-text-sub" id="node1-sub2">Scan DIN (ISBT-128)</text>
+                </g>
+
+                <!-- Step 2: IRL Dashboard Pending Reception -->
+                <g>
+                    <rect x="290" y="60" width="180" height="120" class="node-box active" />
+                    <text x="310" y="100" class="node-text-title" id="node2-title">IRL Control Tower</text>
+                    <text x="310" y="125" class="node-text-sub" id="node2-sub1">Pending Reception</text>
+                    <text x="310" y="145" class="node-text-sub" id="node2-sub2">LIMS Automated Sync</text>
+                </g>
+
+                <!-- Step 3: IRL Lab testing & Crossmatching -->
+                <g>
+                    <rect x="550" y="60" width="180" height="120" class="node-box accent" />
+                    <text x="570" y="100" class="node-text-title" style="fill: var(--color-amber)" id="node3-title">IRL Screening Lab</text>
+                    <text x="570" y="125" class="node-text-sub" id="node3-sub1">Pending IDM & XM</text>
+                    <text x="570" y="145" class="node-text-sub" id="node3-sub2">LIS Analyzer Sync</text>
+                </g>
+
+                <!-- Step 4: Quality Released -->
+                <g>
+                    <rect x="810" y="60" width="160" height="120" class="node-box purple" />
+                    <text x="830" y="100" class="node-text-title" style="fill: var(--color-purple)" id="node4-title">QA Release Node</text>
+                    <text x="830" y="125" class="node-text-sub" id="node4-sub1">Quality Released</text>
+                    <text x="830" y="145" class="node-text-sub" id="node4-sub2">Unlock to AVAILABLE</text>
+                </g>
+            </svg>
+        </div>
+
+        <!-- Description Table -->
+        <table class="matrix-table">
+            <thead>
+                <tr>
+                    <th style="width: 10%" id="th-step">Step</th>
+                    <th style="width: 25%" id="th-system">Subsystem / Feature</th>
+                    <th style="width: 65%" id="th-desc">Workflow & Verification Logic</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="step-badge">01</span></td>
+                    <td class="system-tag" id="t1-sys">Donor Center (LIMS)</td>
+                    <td>
+                        <div class="step-title" id="t1-title">Phlebotomy & Sample Extraction</div>
+                        <div class="step-desc" id="t1-desc">When phlebotomy completes, bind the whole blood bag and sample tube using the ISBT-128 standard DIN bar code. Pre-dispatch is automatically registered and pushed to the core testing lab.</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="step-badge" style="background: rgba(251, 191, 36, 0.15); color: var(--color-amber); border-color: rgba(251, 191, 36, 0.2)">02</span></td>
+                    <td class="system-tag" id="t2-sys" style="color: var(--color-amber)">Immunohematology & Reference Lab (IRL)</td>
+                    <td>
+                        <div class="step-title" id="t2-title">Specimen Reception & Worklist Dispatch</div>
+                        <div class="step-desc" id="t2-desc">Specimen arrives at the lab. The control tower lists the sample as "Pending Reception" (待接收檢體). Signing off automatically dispatches the tube into parallel workflows: serological IDM/NAT screening and crossmatch queues.</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="step-badge" style="background: rgba(192, 132, 252, 0.15); color: var(--color-purple); border-color: rgba(192, 132, 252, 0.2)">03</span></td>
+                    <td class="system-tag" id="t3-sys" style="color: var(--color-purple)">Analyzer Integration (LIS)</td>
+                    <td>
+                        <div class="step-title" id="t3-title">Automated Testing & LIS Sync</div>
+                        <div class="step-desc" id="t3-desc">The specimen runs inside automated analytical platforms (e.g. cobas 6800, ARCHITECT). High-throughput assay results for HIV, HBV, HCV, NAT, and Serology are synced directly back to the BECS database.</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="step-badge" style="background: rgba(52, 211, 153, 0.15); color: var(--color-emerald); border-color: rgba(52, 211, 153, 0.2)">04</span></td>
+                    <td class="system-tag" id="t4-sys" style="color: var(--color-emerald)">Quality Assurance (QA) Node</td>
+                    <td>
+                        <div class="step-title" id="t4-title">Final Quality Release & Inventory Unlock</div>
+                        <div class="step-desc" id="t4-desc">Once all IDM, NAT, and blood grouping checks are reactive-free and fully compatible, the system triggers the "Quality Released" status. This immediately unlocks the corresponding physical blood bags inside the Blood Supply Hub from TESTING to AVAILABLE status.</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const dict = {
+            en: {
+                mainTitle: "Specimen Flowchart",
+                mainSub: "VN-BECS V2.0 System Integration",
+                docType: "Specimen Pipeline",
+                sopRef: "SOP 02 / SOP 08 / SOP 11",
+                thStep: "Step",
+                thSystem: "Subsystem / Feature",
+                thDesc: "Workflow & Verification Logic",
+                node1Title: "Donor Center",
+                node1Sub1: "Phlebotomy (LIMS)",
+                node1Sub2: "Scan DIN (ISBT-128)",
+                node2Title: "IRL Control Tower",
+                node2Sub1: "Pending Reception",
+                node2Sub2: "LIMS Automated Sync",
+                node3Title: "IRL Screening Lab",
+                node3Sub1: "Pending IDM & XM",
+                node3Sub2: "LIS Analyzer Sync",
+                node4Title: "QA Release Node",
+                node4Sub1: "Quality Released",
+                node4Sub2: "Unlock to AVAILABLE",
+                t1Sys: "Donor Center (LIMS)",
+                t1Title: "Phlebotomy & Sample Extraction",
+                t1Desc: "When phlebotomy completes, bind the whole blood bag and sample tube using the ISBT-128 standard DIN bar code. Pre-dispatch is automatically registered and pushed to the core testing lab.",
+                t2Sys: "Immunohematology & Reference Lab (IRL)",
+                t2Title: "Specimen Reception & Worklist Dispatch",
+                t2Desc: "Specimen arrives at the lab. The control tower lists the sample as 'Pending Reception' (待接收檢體). Signing off automatically dispatches the tube into parallel workflows: serological IDM/NAT screening and crossmatch queues.",
+                t3Sys: "Analyzer Integration (LIS)",
+                t3Title: "Automated Testing & LIS Sync",
+                t3Desc: "The specimen runs inside automated analytical platforms (e.g. cobas 6800, ARCHITECT). High-throughput assay results for HIV, HBV, HCV, NAT, and Serology are synced directly back to the BECS database.",
+                t4Sys: "Quality Assurance (QA) Node",
+                t4Title: "Final Quality Release & Inventory Unlock",
+                t4Desc: "Once all IDM, NAT, and blood grouping checks are reactive-free and fully compatible, the system triggers the 'Quality Released' status. This immediately unlocks the corresponding physical blood bags inside the Blood Supply Hub from TESTING to AVAILABLE status."
+            },
+            zh: {
+                mainTitle: "檢體真實流向圖",
+                mainSub: "VN-BECS V2.0 系統整合流程",
+                docType: "檢體處理程序",
+                sopRef: "SOP 02 / SOP 08 / SOP 11 規範",
+                thStep: "步驟",
+                thSystem: "所屬子系統 / 整合功能",
+                thDesc: "臨床作業流程與防呆校驗邏輯",
+                node1Title: "捐血中心 (Donor Center)",
+                node1Sub1: "採血作業 (Phlebotomy)",
+                node1Sub2: "綁定捐血號碼 (DIN)",
+                node2Title: "IRL 核心控制台",
+                node2Sub1: "待接收檢體",
+                node2Sub2: "LIMS 數據同步簽收",
+                node3Title: "IRL 檢驗與配血",
+                node3Sub1: "待處理 IDM 與配血",
+                node3Sub2: "LIS 儀器連線同步",
+                node4Title: "品管放行節點",
+                node4Sub1: "品質放行成功",
+                node4Sub2: "庫存解鎖為可用 (AVAILABLE)",
+                t1Sys: "捐血中心 (Donor Center) - 子系統",
+                t1Title: "採集作業與檢體 DIN 綁定",
+                t1Desc: "當採血小組完成捐血人血液採集後，立即使用 ISBT-128 國際標準條碼（DIN，捐血號碼）綁定血袋與檢體管。系統將自動向核心實驗室發送檢體預報資訊。",
+                t2Sys: "免疫血液學與參考實驗室 (IRL) - 子系統",
+                t2Title: "檢體簽收與控制台自動分流",
+                t2Desc: "檢體管送達核心實驗室。控制台自動將其標記為「待接收檢體」。經醫檢師確認簽收後，系統會將其自動分派至兩個平行佇列：「待處理 IDM 篩查」與「待處理交叉匹配」。",
+                t3Sys: "自動化檢驗儀器連線 (LIS) - 整合功能",
+                t3Title: "儀器化驗與 LIS 數據自動同步",
+                t3Desc: "檢體管送入全自動化生化與核酸分析儀（如 cobas 6800、ARCHITECT）。系統自動化同步儀器所產生的 HIV、HBV、HCV、NAT 與血清學化驗結果，並存入 BECS 資料庫中。",
+                t4Sys: "品管放行節點 (QA Node) - 功能模組",
+                t4Title: "終端品管審核與庫存狀態解鎖",
+                t4Desc: "在確認所有 IDM/NAT 檢驗陰性、血型判定無誤且交叉配血相容後，醫檢師點擊放行。系統將該捐血號碼對應的實體血袋在「血液供應中心 (Blood Supply Hub)」中，由檢驗中 (TESTING) 解鎖為可用庫存 (AVAILABLE)。"
+            },
+            vi: {
+                mainTitle: "Sơ đồ Quy trình Mẫu xét nghiệm",
+                mainSub: "Tích hợp Hệ thống VN-BECS V2.0",
+                docType: "Quy trình Mẫu",
+                sopRef: "Quy chuẩn SOP 02 / SOP 08 / SOP 11",
+                thStep: "Bước",
+                thSystem: "Phân hệ / Tính năng",
+                thDesc: "Quy trình Vận hành & Logic Xác thực Lâm sàng",
+                node1Title: "Trung tâm Hiến máu",
+                node1Sub1: "Lấy máu (Phlebotomy)",
+                node1Sub2: "Quét mã DIN (ISBT-128)",
+                node2Title: "Tháp Điều khiển IRL",
+                node2Sub1: "Chờ tiếp nhận",
+                node2Sub2: "Đồng bộ Tự động LIMS",
+                node3Title: "Lab Sàng lọc IRL",
+                node3Sub1: "Chờ duyệt IDM & XM",
+                node3Sub2: "Đồng bộ Máy LIS",
+                node4Title: "Điểm QA Phát hành",
+                node4Sub1: "Đã duyệt chất lượng",
+                node4Sub2: "Mở khóa kho AVAILABLE",
+                t1Sys: "Trung tâm Hiến máu (Donor Center)",
+                t1Title: "Lấy máu & Đăng ký Mã định danh DIN",
+                t1Desc: "Khi hoàn tất lấy máu, tiến hành liên kết túi máu và ống nghiệm mẫu bằng mã vạch tiêu chuẩn ISBT-128 (DIN). Thông tin tiền phát hành được tự động gửi đến phòng xét nghiệm trung tâm.",
+                t2Sys: "Lab Miễn dịch Huyết học (IRL)",
+                t2Title: "Tiếp nhận Mẫu & Phân phối Danh sách chờ",
+                t2Desc: "Mẫu đến phòng lab. Tháp điều khiển hiển thị trạng thái 'Chờ tiếp nhận'. Việc ký nhận sẽ tự động phân phối ống nghiệm vào hai hàng đợi song song: sàng lọc IDM/NAT huyết thanh và hàng đợi phản ứng chéo.",
+                t3Sys: "Tích hợp Máy Xét nghiệm (LIS)",
+                t3Title: "Xét nghiệm Tự động & Đồng bộ LIS",
+                t3Desc: "Mẫu được chạy trên hệ thống phân tích tự động (ví dụ cobas 6800, ARCHITECT). Kết quả sàng lọc HIV, HBV, HCV, NAT được đồng bộ trực tiếp về cơ sở dữ liệu BECS.",
+                t4Sys: "Phòng Kiểm định Chất lượng (QA)",
+                t4Title: "Duyệt chất lượng cuối cùng & Mở khóa Kho hàng",
+                t4Desc: "Khi tất cả xét nghiệm IDM, NAT và định nhóm máu không phản ứng và tương thích, hệ thống kích hoạt trạng thái 'Đã duyệt chất lượng'. Việc này lập tức giải phóng túi máu thực tế trong kho của '血液供應中心 (Blood Supply Hub)' từ trạng thái TESTING sang AVAILABLE."
+            }
+        };
+
+        function switchLanguage(lang) {
+            // Toggle active tab class
+            document.querySelectorAll('.lang-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.getAttribute('onclick') && tab.getAttribute('onclick').includes(`'${lang}'`)) {
+                    tab.classList.add('active');
+                }
+            });
+
+            // Apply translation values
+            const data = dict[lang];
+            document.getElementById('main-title').innerText = data.mainTitle;
+            document.getElementById('main-sub').innerText = data.mainSub;
+            document.getElementById('doc-type').innerText = data.docType;
+            document.getElementById('sop-ref').innerText = data.sopRef;
+            document.getElementById('th-step').innerText = data.thStep;
+            document.getElementById('th-system').innerText = data.thSystem;
+            document.getElementById('th-desc').innerText = data.thDesc;
+
+            // SVG translation updates
+            document.getElementById('node1-title').textContent = data.node1Title;
+            document.getElementById('node1-sub1').textContent = data.node1Sub1;
+            document.getElementById('node1-sub2').textContent = data.node1Sub2;
+
+            document.getElementById('node2-title').textContent = data.node2Title;
+            document.getElementById('node2-sub1').textContent = data.node2Sub1;
+            document.getElementById('node2-sub2').textContent = data.node2Sub2;
+
+            document.getElementById('node3-title').textContent = data.node3Title;
+            document.getElementById('node3-sub1').textContent = data.node3Sub1;
+            document.getElementById('node3-sub2').textContent = data.node3Sub2;
+
+            document.getElementById('node4-title').textContent = data.node4Title;
+            document.getElementById('node4-sub1').textContent = data.node4Sub1;
+            document.getElementById('node4-sub2').textContent = data.node4Sub2;
+
+            // Table translation updates
+            document.getElementById('t1-sys').innerText = data.t1Sys;
+            document.getElementById('t1-title').innerText = data.t1Title;
+            document.getElementById('t1-desc').innerText = data.t1Desc;
+
+            document.getElementById('t2-sys').innerText = data.t2Sys;
+            document.getElementById('t2-title').innerText = data.t2Title;
+            document.getElementById('t2-desc').innerText = data.t2Desc;
+
+            document.getElementById('t3-sys').innerText = data.t3Sys;
+            document.getElementById('t3-title').innerText = data.t3Title;
+            document.getElementById('t3-desc').innerText = data.t3Desc;
+
+            document.getElementById('t4-sys').innerText = data.t4Sys;
+            document.getElementById('t4-title').innerText = data.t4Title;
+            document.getElementById('t4-desc').innerText = data.t4Desc;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinical Order Flowchart - VN-BECS V2</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-canvas: #080d19;
+            --bg-card: rgba(13, 22, 42, 0.7);
+            --border-color: rgba(244, 63, 94, 0.2);
+            --text-primary: #f1f5f9;
+            --text-muted: #94a3b8;
+            --color-sky: #38bdf8;
+            --color-amber: #fbbf24;
+            --color-purple: #c084fc;
+            --color-emerald: #34d399;
+            --color-rose: #f43f5e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-canvas);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 3rem 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .slide-container {
+            width: 100%;
+            max-width: 1200px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(12px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-container::before {
+            content: '';
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            width: 40%;
+            height: 40%;
+            background: radial-gradient(circle, rgba(244, 63, 94, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-b: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 2rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-indicator {
+            width: 12px;
+            height: 36px;
+            background: var(--color-rose);
+            border-radius: 6px;
+            box-shadow: 0 0 15px rgba(244, 63, 94, 0.6);
+        }
+
+        .title-area h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            text-transform: uppercase;
+            font-style: italic;
+        }
+
+        .title-area p {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            margin-top: 0.2rem;
+        }
+
+        .meta-area {
+            text-align: right;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+        }
+
+        .meta-area strong {
+            color: var(--text-primary);
+        }
+
+        /* Language Toggle Tabs */
+        .lang-selector {
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.3rem;
+            border-radius: 12px;
+            margin-bottom: 2.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            width: fit-content;
+        }
+
+        .lang-tab {
+            padding: 0.6rem 1.5rem;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-weight: 800;
+            font-size: 0.75rem;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .lang-tab:hover {
+            color: var(--text-primary);
+        }
+
+        .lang-tab.active {
+            background: var(--color-rose);
+            color: #080d19;
+            box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);
+        }
+
+        /* SVG Flowchart Section */
+        .diagram-container {
+            width: 100%;
+            background: rgba(8, 13, 25, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2.5rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        svg {
+            width: 100%;
+            height: auto;
+            max-width: 1000px;
+        }
+
+        .node-box {
+            fill: #0d162a;
+            stroke: rgba(255, 255, 255, 0.1);
+            stroke-width: 2;
+            rx: 12px;
+            ry: 12px;
+            transition: all 0.3s;
+        }
+
+        .node-box.active {
+            stroke: var(--color-rose);
+            fill: rgba(244, 63, 94, 0.05);
+        }
+
+        .node-box.accent {
+            stroke: var(--color-purple);
+            fill: rgba(192, 132, 252, 0.05);
+        }
+
+        .node-box.emerald {
+            stroke: var(--color-emerald);
+            fill: rgba(52, 211, 153, 0.05);
+        }
+
+        .node-text-title {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            fill: var(--text-primary);
+            letter-spacing: 0.05em;
+        }
+
+        .node-text-sub {
+            font-size: 8px;
+            font-weight: 600;
+            fill: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .flow-line {
+            stroke: rgba(255, 255, 255, 0.15);
+            stroke-width: 1.5;
+            fill: none;
+            stroke-dasharray: 4 4;
+        }
+
+        .flow-line.active {
+            stroke: var(--color-rose);
+            stroke-width: 2;
+            stroke-dasharray: none;
+        }
+
+        /* Detailed Matrix Table */
+        .matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .matrix-table th {
+            text-align: left;
+            padding: 1rem;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .matrix-table td {
+            padding: 1.2rem 1rem;
+            font-size: 0.85rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            vertical-align: top;
+        }
+
+        .matrix-table tr:hover td {
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .step-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            background: rgba(244, 63, 94, 0.15);
+            color: var(--color-rose);
+            border: 1px solid rgba(244, 63, 94, 0.2);
+        }
+
+        .step-title {
+            font-weight: 800;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+            font-style: italic;
+        }
+
+        .step-desc {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            line-height: 1.5;
+        }
+
+        .system-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--color-rose);
+        }
+
+        .print-btn {
+            position: absolute;
+            top: 3rem;
+            right: 3rem;
+            padding: 0.6rem 1.5rem;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--color-rose);
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.3s;
+        }
+
+        .print-btn:hover {
+            background: var(--color-rose);
+            color: #080d19;
+            box-shadow: 0 0 15px rgba(244, 63, 94, 0.4);
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                color: #000;
+                padding: 0;
+            }
+            .slide-container {
+                box-shadow: none;
+                border: none;
+                background: #fff;
+                color: #000;
+                padding: 0;
+                max-width: 100%;
+            }
+            .print-btn, .lang-selector {
+                display: none;
+            }
+            .node-box {
+                fill: #fff;
+                stroke: #000;
+            }
+            .node-text-title {
+                fill: #000;
+            }
+            .node-text-sub {
+                fill: #444;
+            }
+            .flow-line.active {
+                stroke: #000;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="slide-container">
+        <button class="print-btn" onclick="window.print()">Print / PDF</button>
+
+        <header>
+            <div class="logo-section">
+                <div class="logo-indicator"></div>
+                <div class="title-area">
+                    <h1 id="main-title">Clinical Order Flowchart</h1>
+                    <p id="main-sub">VN-BECS V2.0 System Integration</p>
+                </div>
+            </div>
+            <div class="meta-area">
+                <p>Document: <strong id="doc-type">Order Requisition</strong></p>
+                <p>Status: <strong style="color: var(--color-emerald)">Approved</strong></p>
+                <p>Ref: <strong id="sop-ref">SOP 07 / SOP 10 / AABB</strong></p>
+            </div>
+        </header>
+
+        <!-- Language Selector -->
+        <div class="lang-selector">
+            <button class="lang-tab active" onclick="switchLanguage('en')">EN</button>
+            <button class="lang-tab" onclick="switchLanguage('zh')">繁中</button>
+            <button class="lang-tab" onclick="switchLanguage('vi')">VIỆT</button>
+        </div>
+
+        <!-- SVG Flowchart -->
+        <div class="diagram-container">
+            <svg viewBox="0 0 1000 240">
+                <defs>
+                    <marker id="arrow-rose" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#f43f5e" />
+                    </marker>
+                </defs>
+
+                <!-- Connecting Lines -->
+                <path d="M 210 120 L 290 120" class="flow-line active" marker-end="url(#arrow-rose)" />
+                <path d="M 470 120 L 550 120" class="flow-line active" marker-end="url(#arrow-rose)" />
+                <path d="M 730 120 L 810 120" class="flow-line active" marker-end="url(#arrow-rose)" />
+
+                <!-- Step 1: Hospital Transfusion Service order creation -->
+                <g>
+                    <rect x="30" y="60" width="180" height="120" class="node-box active" />
+                    <text x="50" y="100" class="node-text-title" id="node1-title">Transfusion Service</text>
+                    <text x="50" y="125" class="node-text-sub" id="node1-sub1">Clinical Ordering</text>
+                    <text x="50" y="145" class="node-text-sub" id="node1-sub2">Regular & MTP (STAT)</text>
+                </g>
+
+                <!-- Step 2: IRL Control Tower Pending Crossmatch -->
+                <g>
+                    <rect x="290" y="60" width="180" height="120" class="node-box active" />
+                    <text x="310" y="100" class="node-text-title" id="node2-title">IRL Control Tower</text>
+                    <text x="310" y="125" class="node-text-sub" id="node2-sub1">Pending Crossmatch</text>
+                    <text x="310" y="145" class="node-text-sub" id="node2-sub2">Urgent STAT Requisition</text>
+                </g>
+
+                <!-- Step 3: Compatibility Testing -->
+                <g>
+                    <rect x="550" y="60" width="180" height="120" class="node-box accent" />
+                    <text x="570" y="100" class="node-text-title" style="fill: var(--color-purple)" id="node3-title">IRL Reference Lab</text>
+                    <text x="570" y="125" class="node-text-sub" id="node3-sub1">Compatibility Testing</text>
+                    <text x="570" y="145" class="node-text-sub" id="node3-sub2">IS / AHG / EXM Protocol</text>
+                </g>
+
+                <!-- Step 4: Blood Supply Hub Dispatch -->
+                <g>
+                    <rect x="810" y="60" width="160" height="120" class="node-box emerald" />
+                    <text x="830" y="100" class="node-text-title" style="fill: var(--color-emerald)" id="node4-title">Blood Supply Hub</text>
+                    <text x="830" y="125" class="node-text-sub" id="node4-sub1">Cold Chain Dispatch</text>
+                    <text x="830" y="145" class="node-text-sub" id="node4-sub2">FEFO & Barcode Verify</text>
+                </g>
+            </svg>
+        </div>
+
+        <!-- Description Table -->
+        <table class="matrix-table">
+            <thead>
+                <tr>
+                    <th style="width: 10%" id="th-step">Step</th>
+                    <th style="width: 25%" id="th-system">Subsystem / Feature</th>
+                    <th style="width: 65%" id="th-desc">Workflow & Requisition Logic</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="step-badge">01</span></td>
+                    <td class="system-tag" id="t1-sys">Transfusion Service (Hospital)</td>
+                    <td>
+                        <div class="step-title" id="t1-title">Clinical Ordering & Emergency Requisition</div>
+                        <div class="step-desc" id="t1-desc">Physicians place ordering requisitions for specific patients in the system. Clinicians can request standard crossmatching or trigger a 1-click STAT "Massive Transfusion Protocol" (MTP) for trauma emergencies.</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="step-badge" style="background: rgba(251, 191, 36, 0.15); color: var(--color-amber); border-color: rgba(251, 191, 36, 0.2)">02</span></td>
+                    <td class="system-tag" id="t2-sys" style="color: var(--color-amber)">Immunohematology & Reference Lab (IRL)</td>
+                    <td>
+                        <div class="step-title" id="t2-title">Order Interoperability & Queue Alarm</div>
+                        <div class="step-desc" id="t2-desc">The clinical request instantly pushes to the IRL Control Tower. Standard requests enter "Pending Crossmatch" (待處理交叉匹配). Emergency MTP orders trigger flash-red alarms in "Urgent Clinical Requests" (緊急臨床血袋申請) for prioritized processing.</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="step-badge" style="background: rgba(192, 132, 252, 0.15); color: var(--color-purple); border-color: rgba(192, 132, 252, 0.2)">03</span></td>
+                    <td class="system-tag" id="t3-sys" style="color: var(--color-purple)">IRL Compatibility Testing Node</td>
+                    <td>
+                        <div class="step-title" id="t3-title">Compatibility Testing & Match Verification</div>
+                        <div class="step-desc" id="t3-desc">The medical technologist fetches the patient's MRN and antibody history. The system enforces strict matching protocols: Electronic Crossmatch (EXM) for antibody-free patients, and Serological IS/AHG for patients with positive antibody history.</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="step-badge" style="background: rgba(52, 211, 153, 0.15); color: var(--color-emerald); border-color: rgba(52, 211, 153, 0.2)">04</span></td>
+                    <td class="system-tag" id="t4-sys" style="color: var(--color-emerald)">Blood Supply Hub (Hub)</td>
+                    <td>
+                        <div class="step-title" id="t4-title">Cold Chain Dispatch & FEFO Pick</div>
+                        <div class="step-desc" id="t4-desc">Once compatible units are verified, the Blood Supply Hub acts on the release command. Utilizes FEFO (First-Expire, First-Out) algorithms to auto-select and dispatch the optimal blood units under continuous IoT cold chain tracking.</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const dict = {
+            en: {
+                mainTitle: "Clinical Order Flowchart",
+                mainSub: "VN-BECS V2.0 System Integration",
+                docType: "Order Requisition",
+                sopRef: "SOP 07 / SOP 10 / AABB",
+                thStep: "Step",
+                thSystem: "Subsystem / Feature",
+                thDesc: "Workflow & Requisition Logic",
+                node1Title: "Transfusion Service",
+                node1Sub1: "Clinical Ordering",
+                node1Sub2: "Regular & MTP (STAT)",
+                node2Title: "IRL Control Tower",
+                node2Sub1: "Pending Crossmatch",
+                node2Sub2: "Urgent STAT Requisition",
+                node3Title: "IRL Reference Lab",
+                node3Sub1: "Compatibility Testing",
+                node3Sub2: "IS / AHG / EXM Protocol",
+                node4Title: "Blood Supply Hub",
+                node4Sub1: "Cold Chain Dispatch",
+                node4Sub2: "FEFO & Barcode Verify",
+                t1Sys: "Transfusion Service (Hospital)",
+                t1Title: "Clinical Ordering & Emergency Requisition",
+                t1Desc: "Physicians place ordering requisitions for specific patients in the system. Clinicians can request standard crossmatching or trigger a 1-click STAT 'Massive Transfusion Protocol' (MTP) for trauma emergencies.",
+                t2Sys: "Immunohematology & Reference Lab (IRL)",
+                t2Title: "Order Interoperability & Queue Alarm",
+                t2Desc: "The clinical request instantly pushes to the IRL Control Tower. Standard requests enter 'Pending Crossmatch' (待處理交叉匹配). Emergency MTP orders trigger flash-red alarms in 'Urgent Clinical Requests' (緊急臨床血袋申請) for prioritized processing.",
+                t3Sys: "IRL Compatibility Testing Node",
+                t3Title: "Compatibility Testing & Match Verification",
+                t3Desc: "The medical technologist fetches the patient's MRN and antibody history. The system enforces strict matching protocols: Electronic Crossmatch (EXM) for antibody-free patients, and Serological IS/AHG for patients with positive antibody history.",
+                t4Sys: "Blood Supply Hub (Hub)",
+                t4Title: "Cold Chain Dispatch & FEFO Pick",
+                t4Desc: "Once compatible units are verified, the Blood Supply Hub acts on the release command. Utilizes FEFO (First-Expire, First-Out) algorithms to auto-select and dispatch the optimal blood units under continuous IoT cold chain tracking."
+            },
+            zh: {
+                mainTitle: "臨床醫囑真實流向圖",
+                mainSub: "VN-BECS V2.0 系統整合流程",
+                docType: "臨床用血與配血醫囑",
+                sopRef: "SOP 07 / SOP 10 / AABB 規範",
+                thStep: "步驟",
+                thSystem: "所屬子系統 / 整合功能",
+                thDesc: "醫囑開立與相容性試驗邏輯說明",
+                node1Title: "輸血服務 (Transfusion Service)",
+                node1Sub1: "開立配血醫囑",
+                node1Sub2: "常規配血與 MTP 協議",
+                node2Title: "IRL 核心控制台",
+                node2Sub1: "待處理交叉匹配",
+                node2Sub2: "緊急 STAT 醫囑接收",
+                node3Title: "IRL 參考實驗室",
+                node3Sub1: "相容性交叉配血",
+                node3Sub2: "IS / AHG / EXM 試驗",
+                node4Title: "血液供應中心 (Blood Supply Hub)",
+                node4Sub1: "冷鏈發行與調度",
+                node4Sub2: "FEFO 與條碼核對",
+                t1Sys: "輸血服務 (Transfusion Service) - 子系統",
+                t1Title: "醫囑開立與緊急大量輸血申請",
+                t1Desc: "醫師在「輸血服務 (Transfusion Service)」子系統中，為特定病患開立用血醫囑。可選擇常規交叉配血，或針對大失血病患一鍵啟動「大量輸血協定 (MTP)」緊急免交叉配血放行流程。",
+                t2Sys: "免疫血液學與參考實驗室 (IRL) - 子系統",
+                t2Title: "醫囑即時介接與控制台警報",
+                t2Desc: "臨床用血請求會即時拋接至 IRL 核心控制台。常規配血醫囑自動排入「待處理交叉匹配 (Crossmatch)」；而緊急 MTP 醫囑則會同步在「緊急臨床血袋申請」看板中觸發紅色高危警示，指引醫檢師優先處理。",
+                t3Sys: "免疫血液學與參考實驗室 (IRL) - 配血節點",
+                t3Title: "相容性配對與臨床防呆驗證",
+                t3Desc: "醫檢師自系統讀取病患病歷號碼 (MRN) 與不規則抗體史。系統強制執行防呆：對無抗體史病患採用電子交叉配血 (EXM)，對有抗體史或輸血反應史病患強制執行實體血清學（IS 即時離心 / AHG 抗球蛋白）交叉配血。",
+                t4Sys: "血液供應中心 (Blood Supply Hub) - 子系統",
+                t4Title: "冷鏈物料調度與 FEFO 揀貨",
+                t4Desc: "交叉配血相容放行後，「血液供應中心 (Blood Supply Hub)」接收發行指令。執行 FEFO（先進先出，優先發行效期短者）演算法進行自動揀貨，並在物聯網全程低溫冷鏈監控下，將血袋發行配送至醫院。"
+            },
+            vi: {
+                mainTitle: "Sơ đồ Quy trình Y lệnh Lâm sàng",
+                mainSub: "Tích hợp Hệ thống VN-BECS V2.0",
+                docType: "Y lệnh Truyền máu",
+                sopRef: "Quy chuẩn SOP 07 / SOP 10 / AABB",
+                thStep: "Bước",
+                thSystem: "Phân hệ / Tính năng",
+                thDesc: "Quy trình Y lệnh & Logic Đối chiếu Lâm sàng",
+                node1Title: "輸血服務 (Transfusion Service)",
+                node1Sub1: "Đặt y lệnh lâm sàng",
+                node1Sub2: "Y lệnh thường & MTP (STAT)",
+                node2Title: "Tháp Điều khiển IRL",
+                node2Sub1: "Chờ phản ứng chéo",
+                node2Sub2: "Tiếp nhận Y lệnh Khẩn STAT",
+                node3Title: "Lab Tham chiếu IRL",
+                node3Sub1: "Thử nghiệm tương thích",
+                node3Sub2: "Quy trình IS / AHG / EXM",
+                node4Title: "血液供應中心 (Blood Supply Hub)",
+                node4Sub1: "Cấp phát chuỗi lạnh",
+                node4Sub2: "Kiểm tra FEFO & Mã vạch",
+                t1Sys: "Phân hệ 輸血服務 (Transfusion Service)",
+                t1Title: "Đặt Y lệnh Lâm sàng & Y lệnh Khẩn cấp",
+                t1Desc: "Bác sĩ đặt y lệnh truyền máu cho bệnh nhân trong hệ thống. Có thể yêu cầu phản ứng chéo thông thường hoặc kích hoạt khẩn cấp 'Phác đồ Truyền máu Khối lượng lớn' (MTP) chỉ với 1-click cho các ca chấn thương cấp cứu.",
+                t2Sys: "Lab Miễn dịch Huyết học (IRL)",
+                t2Title: "Liên thông Y lệnh & Báo động Hàng đợi",
+                t2Desc: "Y lệnh lâm sàng lập tức được đẩy về Tháp điều khiển IRL. Y lệnh thường vào hàng đợi 'Chờ phản ứng chéo'. Y lệnh khẩn MTP kích hoạt cảnh báo đỏ nhấp nháy tại mục 'Yêu cầu Lâm sàng Khẩn cấp' để ưu tiên xử lý.",
+                t3Sys: "Điểm Thử nghiệm Tương thích IRL",
+                t3Title: "Thử nghiệm tương thích & Xác thực Đối chiếu",
+                t3Desc: "Kỹ thuật viên truy xuất mã bệnh nhân MRN và lịch sử kháng thể. Hệ thống bắt buộc đối chiếu nghiêm ngặt: Phản ứng chéo điện tử (EXM) cho bệnh nhân không có kháng thể, và Phản ứng chéo huyết thanh IS/AHG cho bệnh nhân có kháng thể dương tính.",
+                t4Sys: "Phân hệ 血液供應中心 (Blood Supply Hub)",
+                t4Title: "Cấp phát Chuỗi lạnh & Lấy hàng theo FEFO",
+                t4Desc: "Khi đơn vị máu tương thích được xác thực, Blood Supply Hub thực thi lệnh cấp phát. Sử dụng thuật toán FEFO (Hạn dùng trước, Xuất trước) để tự động chọn và xuất túi máu tối ưu dưới sự giám sát chuỗi lạnh IoT liên tục."
+            }
+        };
+
+        function switchLanguage(lang) {
+            // Toggle active tab class
+            document.querySelectorAll('.lang-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.getAttribute('onclick') && tab.getAttribute('onclick').includes(`'${lang}'`)) {
+                    tab.classList.add('active');
+                }
+            });
+
+            // Apply translation values
+            const data = dict[lang];
+            document.getElementById('main-title').innerText = data.mainTitle;
+            document.getElementById('main-sub').innerText = data.mainSub;
+            document.getElementById('doc-type').innerText = data.docType;
+            document.getElementById('sop-ref').innerText = data.sopRef;
+            document.getElementById('th-step').innerText = data.thStep;
+            document.getElementById('th-system').innerText = data.thSystem;
+            document.getElementById('th-desc').innerText = data.thDesc;
+
+            // SVG translation updates
+            document.getElementById('node1-title').textContent = data.node1Title;
+            document.getElementById('node1-sub1').textContent = data.node1Sub1;
+            document.getElementById('node1-sub2').textContent = data.node1Sub2;
+
+            document.getElementById('node2-title').textContent = data.node2Title;
+            document.getElementById('node2-sub1').textContent = data.node2Sub1;
+            document.getElementById('node2-sub2').textContent = data.node2Sub2;
+
+            document.getElementById('node3-title').textContent = data.node3Title;
+            document.getElementById('node3-sub1').textContent = data.node3Sub1;
+            document.getElementById('node3-sub2').textContent = data.node3Sub2;
+
+            document.getElementById('node4-title').textContent = data.node4Title;
+            document.getElementById('node4-sub1').textContent = data.node4Sub1;
+            document.getElementById('node4-sub2').textContent = data.node4Sub2;
+
+            // Table translation updates
+            document.getElementById('t1-sys').innerText = data.t1Sys;
+            document.getElementById('t1-title').innerText = data.t1Title;
+            document.getElementById('t1-desc').innerText = data.t1Desc;
+
+            document.getElementById('t2-sys').innerText = data.t2Sys;
+            document.getElementById('t2-title').innerText = data.t2Title;
+            document.getElementById('t2-desc').innerText = data.t2Desc;
+
+            document.getElementById('t3-sys').innerText = data.t3Sys;
+            document.getElementById('t3-title').innerText = data.t3Title;
+            document.getElementById('t3-desc').innerText = data.t3Desc;
+
+            document.getElementById('t4-sys').innerText = data.t4Sys;
+            document.getElementById('t4-title').innerText = data.t4Title;
+            document.getElementById('t4-desc').innerText = data.t4Desc;
+        }
+    </script>
+</body>
+</html>

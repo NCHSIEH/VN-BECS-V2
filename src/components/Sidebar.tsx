@@ -328,7 +328,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                    <div className="text-clinical-primary bg-clinical-primary/10 p-2 rounded-xl border border-clinical-primary/20 shadow-inner">
                      <FlaskConical size={20} className="animate-pulse" />
                    </div>
-                   <span className="text-[11px] font-black text-clinical-text uppercase tracking-[0.25em]">Core Laboratory</span>
+                   <span className="text-[11px] font-black text-clinical-text uppercase tracking-[0.25em]">{t('portal_station_lab_title')}</span>
                 </div>
                 <div className="space-y-3">
                   {[

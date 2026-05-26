@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>跨子系統互聯互通全局流程圖 - VN-BECS V2</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-canvas: #f8fafc;
+            --bg-card: #ffffff;
+            --border-color: #cbd5e1;
+            --text-primary: #0f172a;
+            --text-muted: #64748b;
+            --color-sky: #0ea5e9;      /* 🟦 檢體流向 */
+            --color-emerald: #10b981;  /* 🟩 血袋流向 */
+            --color-rose: #f43f5e;     /* 🟥 臨床醫囑 */
+            --color-purple: #8b5cf6;
+            --color-amber: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-canvas);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2.5rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .slide-container {
+            width: 100%;
+            max-width: 1220px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-indicator {
+            width: 10px;
+            height: 38px;
+            background: linear-gradient(135deg, var(--color-sky), var(--color-emerald));
+            border-radius: 4px;
+        }
+
+        .title-area h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .title-area p {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.15em;
+            margin-top: 0.1rem;
+        }
+
+        .meta-area {
+            text-align: right;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .meta-area strong {
+            color: var(--text-primary);
+        }
+
+        /* Controls row with Lang selector & Legend */
+        .controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .lang-selector {
+            display: flex;
+            gap: 0.4rem;
+            background: #f1f5f9;
+            padding: 0.25rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .lang-tab {
+            padding: 0.4rem 1rem;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-weight: 800;
+            font-size: 0.72rem;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .lang-tab:hover {
+            color: var(--text-primary);
+        }
+
+        .lang-tab.active {
+            background: #ffffff;
+            color: #0f172a;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+        }
+
+        .legend-container {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .legend-line {
+            width: 24px;
+            height: 3px;
+            border-radius: 2px;
+        }
+
+        .legend-line.specimen { background-color: var(--color-sky); }
+        .legend-line.bloodbag { background-color: var(--color-emerald); }
+        .legend-line.order { background-color: var(--color-rose); }
+
+        /* SVG Diagram Container with White Background */
+        .diagram-container {
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: center;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.01);
+        }
+
+        svg {
+            width: 100%;
+            height: auto;
+            background-color: #ffffff;
+        }
+
+        /* SVG Nodes Styles - LARGER FONT SCALE */
+        .system-box {
+            fill: #ffffff;
+            stroke: #94a3b8;
+            stroke-width: 1.5;
+            rx: 6px;
+            ry: 6px;
+        }
+
+        .system-label {
+            font-size: 10.5px;
+            font-weight: 800;
+            fill: #475569;
+        }
+
+        .node-box {
+            fill: #ffffff;
+            stroke: #cbd5e1;
+            stroke-width: 2;
+            rx: 5px;
+            ry: 5px;
+        }
+
+        .node-box.sky-node { stroke: var(--color-sky); fill: rgba(14, 165, 233, 0.01); }
+        .node-box.emerald-node { stroke: var(--color-emerald); fill: rgba(16, 185, 129, 0.01); }
+        .node-box.rose-node { stroke: var(--color-rose); fill: rgba(244, 63, 94, 0.01); }
+        .node-box.purple-node { stroke: var(--color-purple); fill: rgba(139, 92, 246, 0.01); }
+
+        .node-sys-label {
+            font-size: 9.5px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .node-text {
+            font-size: 12px;  /* 字體放大 */
+            font-weight: 800;
+            fill: #0f172a;
+            text-anchor: middle;
+        }
+
+        .sub-node-box {
+            fill: #f8fafc;
+            stroke: #cbd5e1;
+            stroke-width: 1.2;
+            rx: 3px;
+            ry: 3px;
+        }
+
+        .sub-node-text {
+            font-size: 10px;  /* 字體放大 */
+            font-weight: 700;
+            fill: #334155;
+            text-anchor: middle;
+        }
+
+        /* SVG Lines Styles */
+        .flow-line {
+            fill: none;
+            stroke-width: 2; /* 線條稍微加粗 */
+        }
+
+        .flow-line.specimen { stroke: var(--color-sky); }
+        .flow-line.bloodbag { stroke: var(--color-emerald); }
+        .flow-line.order { stroke: var(--color-rose); }
+        .flow-line.purple-dashed { stroke: var(--color-purple); stroke-dasharray: 4 2; }
+
+        .line-label-box {
+            fill: #ffffff;
+            stroke: #cbd5e1;
+            stroke-width: 1;
+            rx: 3px;
+            ry: 3px;
+        }
+
+        .line-label-text {
+            font-size: 9px;  /* 字體放大 */
+            font-weight: 800;
+            fill: #475569;
+            text-anchor: middle;
+        }
+
+        /* Matrix Table */
+        .matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .matrix-table th {
+            text-align: left;
+            padding: 0.8rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .matrix-table td {
+            padding: 1rem;
+            font-size: 0.85rem;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: top;
+        }
+
+        .matrix-table tr:hover td {
+            background: #f8fafc;
+        }
+
+        .flow-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 800;
+        }
+
+        .flow-badge.badge-specimen {
+            background: rgba(14, 165, 233, 0.1);
+            color: #0369a1;
+            border: 1px solid rgba(14, 165, 233, 0.2);
+        }
+
+        .flow-badge.badge-bloodbag {
+            background: rgba(16, 185, 129, 0.1);
+            color: #047857;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .flow-badge.badge-order {
+            background: rgba(244, 63, 94, 0.1);
+            color: #b91c1c;
+            border: 1px solid rgba(244, 63, 94, 0.2);
+        }
+
+        .step-info {
+            font-weight: 800;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+            color: #0f172a;
+        }
+
+        .step-desc {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            line-height: 1.5;
+        }
+
+        .system-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .print-btn {
+            position: absolute;
+            top: 2.5rem;
+            right: 2.5rem;
+            padding: 0.5rem 1.2rem;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+            border-radius: 12px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .print-btn:hover {
+            border-color: #94a3b8;
+            background: #f8fafc;
+        }
+
+        @media print {
+            body { padding: 0; }
+            .slide-container { box-shadow: none; border: none; padding: 0; }
+            .print-btn, .lang-selector { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="slide-container">
+        <button class="print-btn" onclick="window.print()">列印 / 輸出 PDF</button>
+
+        <header>
+            <div class="logo-section">
+                <div class="logo-indicator"></div>
+                <div class="title-area">
+                    <h1 id="main-title">全系統互聯互通全局流程圖</h1>
+                    <p id="main-sub">VN-BECS V2.0 系統整合流程與防呆邏輯</p>
+                </div>
+            </div>
+            <div class="meta-area">
+                <p><span id="meta-doc">文件類別</span>: <strong id="doc-type">全局系統互通圖</strong></p>
+                <p><span id="meta-status">審查狀態</span>: <strong style="color: var(--color-emerald)" id="doc-status">已核准發行</strong></p>
+            </div>
+        </header>
+
+        <!-- Controls Row -->
+        <div class="controls-row">
+            <!-- Language Selector -->
+            <div class="lang-selector">
+                <button class="lang-tab active" onclick="switchLanguage('zh')">繁中</button>
+                <button class="lang-tab" onclick="switchLanguage('en')">EN</button>
+                <button class="lang-tab" onclick="switchLanguage('vi')">VIỆT</button>
+            </div>
+
+            <!-- Legends -->
+            <div class="legend-container">
+                <div class="legend-item">
+                    <div class="legend-line specimen"></div>
+                    <span id="leg-specimen">🟦 藍色線 - 檢體流向 (Specimen Flow)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-line bloodbag"></div>
+                    <span id="leg-bloodbag">🟩 綠色線 - 血袋流向 (Blood Bag Flow)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-line order"></div>
+                    <span id="leg-order">🟥 紅色線 - 臨床醫囑 (Clinical Order Flow)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SVG Flowchart (Top-Down Layout with White Background) -->
+        <div class="diagram-container">
+            <svg viewBox="0 0 960 1150">
+                <defs>
+                    <marker id="arrow-sky" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#0ea5e9" />
+                    </marker>
+                    <marker id="arrow-emerald" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981" />
+                    </marker>
+                    <marker id="arrow-rose" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#f43f5e" />
+                    </marker>
+                    <marker id="arrow-purple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#8b5cf6" />
+                    </marker>
+                </defs>
+
+                <!-- Stage Grid Labels -->
+                <line x1="20" y1="130" x2="940" y2="130" stroke="#f1f5f9" stroke-width="1.5" stroke-dasharray="5 5" />
+                <line x1="20" y1="270" x2="940" y2="270" stroke="#f1f5f9" stroke-width="1.5" stroke-dasharray="5 5" />
+                <line x1="20" y1="410" x2="940" y2="410" stroke="#f1f5f9" stroke-width="1.5" stroke-dasharray="5 5" />
+                <line x1="20" y1="565" x2="940" y2="565" stroke="#f1f5f9" stroke-width="1.5" stroke-dasharray="5 5" />
+
+                <!-- ==================== 1. 捐血中心 (Donor Center) ==================== -->
+                <g>
+                    <!-- Container Box -->
+                    <rect x="50" y="25" width="380" height="395" class="system-box" />
+                    <text x="65" y="42" class="system-label" id="lane-dc">捐血中心 (Donor Center)</text>
+
+                    <!-- Node 1.1: 捐血者登記與篩檢 -->
+                    <rect x="140" y="55" width="200" height="35" class="node-box sky-node" />
+                    <text x="240" y="77" class="node-text" id="n1-1">1. 捐血者登記與篩檢</text>
+
+                    <!-- Node 1.2: 採血作業 -->
+                    <rect x="140" y="115" width="200" height="35" class="node-box sky-node" />
+                    <text x="240" y="136" class="node-text" id="n1-2">2. 採血作業 (Phlebotomy)</text>
+
+                    <!-- Branch Subtitles -->
+                    <rect x="90" y="175" width="100" height="20" class="sub-node-box" />
+                    <text x="140" y="189" class="sub-node-text" id="n1-3">產生 Whole Blood</text>
+
+                    <rect x="290" y="175" width="100" height="20" class="sub-node-box" />
+                    <text x="340" y="189" class="sub-node-text" id="n1-4">產生 檢體管</text>
+
+                    <!-- Blood Bag & Specimen Tube DIN Nodes -->
+                    <rect x="90" y="215" width="100" height="30" class="node-box emerald-node" />
+                    <text x="140" y="234" class="node-text" id="n1-5">血袋 (DIN)</text>
+
+                    <rect x="290" y="215" width="100" height="30" class="node-box sky-node" />
+                    <text x="340" y="234" class="node-text" id="n1-6">檢體管 (DIN)</text>
+
+                    <!-- Component Separation -->
+                    <rect x="75" y="265" width="130" height="30" class="node-box emerald-node" />
+                    <text x="140" y="284" class="node-text" style="font-size: 9.5px;" id="n1-7">3. 血液成分分離製造</text>
+
+                    <!-- State Box -->
+                    <rect x="62" y="315" width="156" height="20" class="sub-node-box" style="stroke: var(--color-amber);" />
+                    <text x="140" y="329" class="sub-node-text" style="fill: var(--color-amber); font-weight: 700; font-size: 8.5px;" id="n1-8">製造完成，標記為 TESTING (檢驗中)</text>
+
+                    <!-- Waiting Box -->
+                    <rect x="75" y="355" width="130" height="30" class="node-box emerald-node" />
+                    <text x="140" y="374" class="node-text" id="n1-9">等待化驗血袋</text>
+                </g>
+
+
+                <!-- ==================== 2. 輸血服務 (Transfusion Service) ==================== -->
+                <g>
+                    <rect x="520" y="300" width="390" height="80" class="system-box" />
+                    <text x="535" y="315" class="system-label" id="lane-ts">輸血服務 (Transfusion Service)</text>
+
+                    <!-- Ordering Node -->
+                    <rect x="540" y="330" width="170" height="35" class="node-box rose-node" />
+                    <text x="625" y="351" class="node-text" id="n2-1">開立臨床用血醫囑 / MTP</text>
+
+                    <!-- Bedside verification -->
+                    <rect x="730" y="330" width="160" height="35" class="node-box rose-node" />
+                    <text x="810" y="351" class="node-text" id="n2-2">病患床邊安全驗證</text>
+                </g>
+
+
+                <!-- ==================== 3. 免疫血液學與參考實驗室 (IRL) ==================== -->
+                <g>
+                    <rect x="220" y="440" width="670" height="400" class="system-box" />
+                    <text x="235" y="455" class="system-label" id="lane-irl">免疫血液學與參考實驗室 (IRL)</text>
+
+                    <!-- Pending Reception -->
+                    <rect x="345" y="470" width="180" height="35" class="node-box sky-node" />
+                    <text x="435" y="491" class="node-text" id="n3-1">待接收檢體 (Pending Reception)</text>
+
+                    <!-- Reception auto route label -->
+                    <rect x="365" y="525" width="140" height="20" class="sub-node-box" />
+                    <text x="435" y="539" class="sub-node-text" id="n3-2">簽收並自動分流</text>
+
+                    <!-- Branch Queues -->
+                    <rect x="245" y="565" width="190" height="35" class="node-box sky-node" />
+                    <text x="340" y="586" class="node-text" id="n3-3" style="font-size: 11px;">待處理 IDM 篩查 (Pending IDM)</text>
+
+                    <rect x="465" y="565" width="190" height="35" class="node-box rose-node" />
+                    <text x="560" y="586" class="node-text" id="n3-4" style="font-size: 11px;">待處理交叉匹配 (Pending Crossmatch)</text>
+
+                    <rect x="675" y="565" width="195" height="35" class="node-box rose-node" />
+                    <text x="772.5" y="586" class="node-text" id="n3-5" style="font-size: 11px;">緊急臨床血袋申請 (Urgent Requests)</text>
+
+                    <!-- Sub-label elements under queues -->
+                    <rect x="245" y="618" width="90" height="20" class="sub-node-box" />
+                    <text x="290" y="631" class="sub-node-text" id="n3-6a" style="font-size: 8.5px;">儀器連線發送資訊</text>
+
+                    <rect x="345" y="618" width="90" height="20" class="sub-node-box" />
+                    <text x="390" y="631" class="sub-node-text" id="n3-6b" style="font-size: 8.5px;">取得 LIS 化驗結果</text>
+
+                    <rect x="475" y="618" width="170" height="20" class="sub-node-box" />
+                    <text x="560" y="631" class="sub-node-text" id="n3-7" style="font-size: 8.5px;">核對 MRN 與不規則抗體歷史</text>
+
+                    <rect x="697" y="618" width="150" height="20" class="sub-node-box" />
+                    <text x="772" y="631" class="sub-node-text" id="n3-8" style="font-size: 8.5px;">優先級當檢驗完成流向</text>
+
+                    <!-- Processing nodes -->
+                    <rect x="245" y="655" width="190" height="35" class="node-box sky-node" />
+                    <text x="340" y="676" class="node-text" id="n3-9" style="font-size: 11px;">自動化檢驗儀器連線 (LIS)</text>
+
+                    <rect x="475" y="655" width="370" height="35" class="node-box rose-node" />
+                    <text x="660" y="676" class="node-text" id="n3-10" style="font-size: 11px;">醫檢師審查與相容性試驗</text>
+
+                    <!-- Verify label -->
+                    <rect x="460" y="708" width="150" height="20" class="sub-node-box" />
+                    <text x="535" y="722" class="sub-node-text" id="n3-11">核對與判定相符與合格</text>
+
+                    <!-- Quality Release -->
+                    <rect x="445" y="745" width="180" height="35" class="node-box purple-node" />
+                    <text x="535" y="767" class="node-text" id="n3-12" style="fill: var(--color-purple);">品品管放行 (Quality Released)</text>
+                </g>
+
+
+                <!-- ==================== 4. 血液供應中心 (Blood Supply Hub) ==================== -->
+                <g>
+                    <rect x="150" y="890" width="180" height="115" class="system-box" />
+                    <text x="165" y="905" class="system-label" id="lane-hub">血液供應中心 (Blood Supply Hub)</text>
+
+                    <!-- AVAILABLE stock -->
+                    <rect x="165" y="915" width="150" height="30" class="node-box emerald-node" />
+                    <text x="240" y="934" class="node-text" id="n4-1" style="fill: var(--color-emerald); font-size: 11px;">可用血袋庫存 (AVAILABLE)</text>
+
+                    <!-- FEFO -->
+                    <rect x="165" y="960" width="150" height="30" class="node-box emerald-node" />
+                    <text x="240" y="979" class="node-text" id="n4-2" style="font-size: 11px;">冷鏈調度與發行 (FEFO)</text>
+                </g>
+
+
+                <!-- ==================== CONNECTION LINES & LABELS ==================== -->
+                <path d="M 240 150 L 240 165" class="flow-line specimen" />
+                <path d="M 240 165 L 140 165 L 140 175" class="flow-line specimen" marker-end="url(#arrow-sky)" />
+                <path d="M 240 165 L 340 165 L 340 175" class="flow-line specimen" marker-end="url(#arrow-sky)" />
+
+                <path d="M 140 195 L 140 215" class="flow-line bloodbag" marker-end="url(#arrow-emerald)" />
+                <path d="M 340 195 L 340 215" class="flow-line specimen" marker-end="url(#arrow-sky)" />
+
+                <path d="M 140 245 L 140 265" class="flow-line bloodbag" marker-end="url(#arrow-emerald)" />
+                <path d="M 140 295 L 140 315" class="flow-line bloodbag" marker-end="url(#arrow-emerald)" />
+                <path d="M 140 335 L 140 355" class="flow-line bloodbag" marker-end="url(#arrow-emerald)" />
+
+                <path d="M 340 245 L 340 395" class="flow-line specimen" />
+                <rect x="280" y="391" width="120" height="17" class="line-label-box" />
+                <text x="340" y="403" class="line-label-text" id="lbl-bind">實體管檢與 LIMS 綁定</text>
+                <path d="M 340 408 L 340 470" class="flow-line specimen" marker-end="url(#arrow-sky)" />
+
+                <path d="M 605 365 L 605 391" class="flow-line order" />
+                <rect x="545" y="389" width="120" height="17" class="line-label-box" />
+                <text x="605" y="401" class="line-label-text" id="lbl-regular">開立常規配血醫囑</text>
+                <path d="M 605 406 L 605 565" class="flow-line order" marker-end="url(#arrow-rose)" />
+
+                <path d="M 655 365 L 655 380 L 770 380 L 770 391" class="flow-line order" />
+                <rect x="710" y="389" width="120" height="17" class="line-label-box" />
+                <text x="770" y="401" class="line-label-text" id="lbl-stat">啟動 STAT 大量輸血</text>
+                <path d="M 770 406 L 770 565" class="flow-line order" marker-end="url(#arrow-rose)" />
+
+                <path d="M 435 505 L 435 525" class="flow-line specimen" />
+                <path d="M 435 545 L 435 555 L 340 555 L 340 565" class="flow-line specimen" marker-end="url(#arrow-sky)" />
+                <path d="M 435 555 L 560 555 L 560 565" class="flow-line specimen" marker-end="url(#arrow-sky)" />
+
+                <path d="M 340 600 L 340 610" class="flow-line specimen" />
+                <path d="M 340 610 L 290 610 L 290 618" class="flow-line specimen" marker-end="url(#arrow-sky)" />
+                <path d="M 340 610 L 390 610 L 390 618" class="flow-line specimen" marker-end="url(#arrow-sky)" />
+
+                <path d="M 290 638 L 290 655" class="flow-line specimen" marker-end="url(#arrow-sky)" />
+                <path d="M 390 638 L 390 655" class="flow-line specimen" marker-end="url(#arrow-sky)" />
+
+                <path d="M 340 690 L 340 703 L 535 703 L 535 708" class="flow-line specimen" marker-end="url(#arrow-sky)" />
+
+                <path d="M 560 600 L 560 618" class="flow-line order" marker-end="url(#arrow-rose)" />
+                <path d="M 560 638 L 560 655" class="flow-line order" marker-end="url(#arrow-rose)" />
+
+                <path d="M 770 600 L 770 618" class="flow-line order" marker-end="url(#arrow-rose)" />
+                <path d="M 770 638 L 770 655" class="flow-line order" marker-end="url(#arrow-rose)" />
+
+                <path d="M 660 690 L 660 703 L 535 703" class="flow-line order" />
+                <path d="M 535 728 L 535 745" class="flow-line specimen" marker-end="url(#arrow-sky)" />
+
+                <path d="M 535 780 L 535 795 L 360 795 L 360 860" class="flow-line purple-dashed" />
+                <rect x="290" y="790" width="140" height="17" class="line-label-box" />
+                <text x="360" y="802" class="line-label-text" id="lbl-unlock">解鎖狀態由 TESTING 轉 AVAILABLE</text>
+                <path d="M 360 865 L 240 865 L 240 915" class="flow-line purple-dashed" marker-end="url(#arrow-purple)" />
+
+                <path d="M 535 795 L 630 795 L 630 805" class="flow-line purple-dashed" />
+                <rect x="580" y="805" width="100" height="17" class="line-label-box" />
+                <text x="630" y="817" class="line-label-text" id="lbl-note">發行註記</text>
+                <path d="M 630 822 L 630 830" class="flow-line purple-dashed" marker-end="url(#arrow-purple)" />
+
+                <rect x="570" y="830" width="120" height="30" class="node-box" />
+                <text x="630" y="849" class="node-text" id="n3-13">今日完成發行</text>
+
+                <path d="M 140 385 L 140 815" class="flow-line emerald-flow" />
+                <rect x="85" y="810" width="110" height="17" class="line-label-box" />
+                <text x="140" y="822" class="line-label-text" id="lbl-lock">進入成品庫存鎖定</text>
+                <path d="M 140 827 L 140 925 L 165 925" class="flow-line emerald-flow" marker-end="url(#arrow-emerald)" />
+
+                <path d="M 240 945 L 240 960" class="flow-line emerald-flow" marker-end="url(#arrow-emerald)" />
+
+                <path d="M 240 990 L 240 1020 L 25 1020 L 25 10 L 935 10 L 935 320" class="flow-line emerald-flow" />
+                <rect x="15" y="960" width="60" height="17" class="line-label-box" />
+                <text x="45" y="972" class="line-label-text" id="lbl-transit">冷鏈配送發行</text>
+                
+                <path d="M 935 320 L 810 320 L 810 330" class="flow-line emerald-flow" marker-end="url(#arrow-emerald)" />
+
+                <path d="M 810 365 L 810 405 L 905 405 L 905 590" class="flow-line emerald-flow" marker-end="url(#arrow-emerald)" />
+                <rect x="865" y="415" width="80" height="17" class="line-label-box" />
+                <text x="905" y="427" class="line-label-text" id="lbl-verify">核相配點驗行</text>
+
+                <g>
+                    <rect x="730" y="590" width="280" height="40" class="node-box rose-node" />
+                    <text x="870" y="614" class="node-text" id="n2-3">臨床雙人護理師 SCAN 手環與血袋核對</text>
+
+                    <rect x="1020" y="590" width="70" height="40" class="node-box rose-node" style="stroke: var(--color-emerald); fill: rgba(16, 185, 129, 0.05);" />
+                    <text x="1055" y="614" class="node-text" style="fill: #047857; font-weight: 800; font-size: 11px;" id="n2-4">床邊輸血</text>
+
+                    <path d="M 1010 610 L 1020 610" class="flow-line emerald-flow" marker-end="url(#arrow-emerald)" />
+                </g>
+            </svg>
+        </div>
+
+        <!-- Description Table (Dynamic Multi-Language) -->
+        <table class="matrix-table">
+            <thead>
+                <tr>
+                    <th style="width: 15%" id="th-flow">整合流程線</th>
+                    <th style="width: 25%" id="th-system">跨子系統與資料庫狀態流轉</th>
+                    <th style="width: 60%" id="th-desc">互聯互通與業務防呆細節說明</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="flow-badge badge-specimen" id="badge-flow1">🟦 檢體流向</span></td>
+                    <td class="system-tag" id="tag-flow1">捐集端 ➔ IRL待接收佇列 ➔ LIS自動化 ➔ 品管審查</td>
+                    <td>
+                        <div class="step-info" id="title-flow1">1. 檢體試管的診斷與審核生命週期</div>
+                        <div class="step-desc" id="desc-flow1">試管在採集端綁定捐血號碼 (DIN) 後送至核心實驗室。分析儀完成 NAT/IDM 傳染病診斷並即時同步 BECS 資料庫，最終經品管放行，解除血袋的檢驗安全鎖。</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="flow-badge badge-bloodbag" id="badge-flow2">🟩 血袋流向</span></td>
+                    <td class="system-tag" id="tag-flow2">採集拆分 ➔ Hub隔離 TESTING ➔ Hub解鎖 AVAILABLE ➔ 床邊SCAN核對</td>
+                    <td>
+                        <div class="step-info" id="title-flow2">2. 血袋低溫冷鏈物控與庫存安全狀態變更</div>
+                        <div class="step-desc" id="desc-flow2">全血分離拆分後，以 TESTING 狀態隔離鎖定在血液庫存中。當品管放行，系統連動解鎖為 AVAILABLE，配血成功後以 FEFO 先進先出出庫配送，床邊以條碼 SCAN 掃描核對。</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="flow-badge badge-order" id="badge-order">🟥 臨床醫囑</span></td>
+                    <td class="system-tag" id="tag-flow3">輸血服務開立 ➔ IRL控制台待配血佇列 ➔ IRL參考室交叉配血</td>
+                    <td>
+                        <div class="step-info" id="title-flow3">3. 臨床用血與相容性試驗業務鏈接</div>
+                        <div class="step-desc" id="desc-flow3">臨床開立醫囑，常規自動排入 IRL 核心控制台待配血佇列，STAT/MTP 觸發紅色高危閃爍警報，指引醫檢師執行電子 (EXM) 或血清學 (IS-AHG) 相容性試驗，配血通過後下達調度指令。</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const dict = {
+            zh: {
+                mainTitle: "全系統互聯互通全局流程圖",
+                mainSub: "VN-BECS V2.0 系統整合流程與防呆邏輯",
+                metaDoc: "文件類別",
+                docType: "全局系統互通圖",
+                metaStatus: "審查狀態",
+                docStatus: "已核准發行",
+                legSpecimen: "🟦 藍色線 - 檢體流向 (Specimen Flow)",
+                legBloodbag: "🟩 綠色線 - 血袋流向 (Blood Bag Flow)",
+                legOrder: "🟥 紅色線 - 臨床醫囑 (Clinical Order Flow)",
+                laneDc: "捐血中心 (Donor Center)",
+                laneTs: "輸血服務 (Transfusion Service)",
+                laneIrl: "免疫血液學與參考實驗室 (IRL)",
+                laneHub: "血液供應中心 (Blood Supply Hub)",
+                "n1-1": "1. 捐血者登記與篩檢",
+                "n1-2": "2. 採血作業 (Phlebotomy)",
+                "n1-3": "產生 Whole Blood",
+                "n1-4": "產生 檢體管",
+                "n1-5": "血袋 (DIN)",
+                "n1-6": "檢體管 (DIN)",
+                "n1-7": "3. 血液成分分離製造",
+                "n1-8": "製造完成，標記為 TESTING (檢驗中)",
+                "n1-9": "等待化驗血袋",
+                "n2-1": "開立臨床用血醫囑 / MTP",
+                "n2-2": "病患床邊安全驗證",
+                "n2-3": "臨床雙人護理師 SCAN 手環與血袋核對",
+                "n2-4": "床邊輸血",
+                "n3-1": "待接收檢體 (Pending Reception)",
+                "n3-2": "簽收並自動分流",
+                "n3-3": "待處理 IDM 篩查 (Pending IDM)",
+                "n3-4": "待處理交叉匹配 (Pending Crossmatch)",
+                "n3-5": "緊急臨床血袋申請 (Urgent Requests)",
+                "n3-6a": "儀器連線發送資訊",
+                "n3-6b": "取得 LIS 化驗結果",
+                "n3-7": "核對 MRN 與不規則抗體歷史",
+                "n3-8": "優先級當檢驗完成流向",
+                "n3-9": "自動化檢驗儀器連線 (LIS)",
+                "n3-10": "醫檢師審查與相容性試驗",
+                "n3-11": "核對與判定相符與合格",
+                "n3-12": "品管放行 (Quality Released)",
+                "n3-13": "今日完成發行",
+                "n4-1": "可用血袋庫存 (AVAILABLE)",
+                "n4-2": "冷鏈調度與發行 (FEFO)",
+                lblBind: "實體管檢與 LIMS 綁定",
+                lblRegular: "開立常規配血醫囑",
+                lblStat: "啟動 STAT 大量輸血",
+                lblUnlock: "解鎖狀態由 TESTING 轉 AVAILABLE",
+                lblNote: "發行註記",
+                lblLock: "進入成品庫存鎖定",
+                lblTransit: "冷鏈配送發行",
+                lblVerify: "核相配點驗行",
+                thFlow: "整合流程線",
+                thSystem: "跨子系統與資料庫狀態流轉",
+                thDesc: "互聯互通與業務防呆細節說明",
+                flow1Badge: "🟦 檢體流向",
+                tagFlow1: "捐集端 ➔ IRL待接收佇列 ➔ LIS自動化 ➔ 品管審查",
+                titleFlow1: "1. 檢體試管的診斷與審核生命週期",
+                descFlow1: "試管在採集端綁定捐血號碼 (DIN) 後送至核心實驗室。分析儀完成 NAT/IDM 傳染病診斷並即時同步 BECS 資料庫，最終經品管放行，解除血袋的檢驗安全鎖。",
+                flow2Badge: "🟩 血袋流向",
+                tagFlow2: "採集拆分 ➔ Hub隔離 TESTING ➔ Hub解鎖 AVAILABLE ➔ 床邊SCAN核對",
+                titleFlow2: "2. 血袋低溫冷鏈物控與庫存安全狀態變更",
+                descFlow2: "全血分離拆分後，以 TESTING 狀態隔離鎖定在血液庫存中。當品管放行，系統連動解鎖為 AVAILABLE，配血成功後以 FEFO 先進先出出庫配送，床邊以條碼 SCAN 掃描核對。",
+                flow3Badge: "🟥 臨床醫囑",
+                tagFlow3: "輸血服務開立 ➔ IRL控制台待配血佇列 ➔ IRL參考室交叉配血",
+                titleFlow3: "3. 臨床用血與相容性試驗業務鏈接",
+                descFlow3: "臨床開立醫囑，常規自動排入 IRL 核心控制台待配血佇列，STAT/MTP 觸發紅色高危閃爍警報，指引醫檢師執行電子 (EXM) 或血清學 (IS-AHG) 相容性試驗，配血通過後下達調度指令。"
+            },
+            en: {
+                mainTitle: "Master System Interoperability Flowchart",
+                mainSub: "VN-BECS V2.0 System Integration Workflows & Safety Logic",
+                metaDoc: "Document Type",
+                docType: "Global Interoperability Blueprint",
+                metaStatus: "Review Status",
+                docStatus: "Approved",
+                legSpecimen: "🟦 Blue Line - Specimen Flow",
+                legBloodbag: "🟩 Green Line - Blood Bag Flow",
+                legOrder: "🟥 Red Line - Clinical Order Flow",
+                laneDc: "Donor Center",
+                laneTs: "Transfusion Service",
+                laneIrl: "Immunohematology & Reference Lab (IRL)",
+                laneHub: "Blood Supply Hub",
+                "n1-1": "1. Donor Registration & Screening",
+                "n1-2": "2. Phlebotomy & Intake",
+                "n1-3": "Generate Whole Blood",
+                "n1-4": "Generate Sample Tube",
+                "n1-5": "Blood Bag (DIN)",
+                "n1-6": "Sample Tube (DIN)",
+                "n1-7": "3. Component Separation & Manufacture",
+                "n1-8": "Manufactured: Marked as TESTING (Quarantined)",
+                "n1-9": "Awaiting Lab Testing",
+                "n2-1": "Create Transfusion Order / MTP",
+                "n2-2": "Bedside Verification & Safety",
+                "n2-3": "Double Nurse Scan Bedside Verify Scan",
+                "n2-4": "Bedside Transfusion",
+                "n3-1": "Pending Reception",
+                "n3-2": "Sign-in & Auto Routing",
+                "n3-3": "Pending IDM Screening",
+                "n3-4": "Pending Crossmatch",
+                "n3-5": "Urgent Clinical Requests",
+                "n3-6a": "Analyzer Send Query",
+                "n3-6b": "Fetch LIS Result",
+                "n3-7": "Verify MRN & Antibody History",
+                "n3-8": "Priority Routing Upon Test Complete",
+                "n3-9": "LIS Automation Node",
+                "n3-10": "Compatibility Test & Crossmatching",
+                "n3-11": "Verification & Decision Check",
+                "n3-12": "Quality Released",
+                "n3-13": "Complete Release Today",
+                "n4-1": "Available Stock (AVAILABLE)",
+                "n4-2": "FEFO Cold Chain Dispatch",
+                lblBind: "Bind Tube & LIMS Process",
+                lblRegular: "Create Regular Crossmatch",
+                lblStat: "Trigger STAT Massive Transfusion",
+                lblUnlock: "Unlock [TESTING] to [AVAILABLE] in DB",
+                lblNote: "Dispatch Release Note",
+                lblLock: "Lock inside Inventory Storage",
+                lblTransit: "Cold Chain Delivery",
+                lblVerify: "Bedside Dispatch Sign-off",
+                thFlow: "Integrated Workflow",
+                thSystem: "Cross-Subsystems & Database Transitions",
+                thDesc: "Interoperability Logic & Safety Controls Description",
+                flow1Badge: "🟦 Specimen",
+                tagFlow1: "Donor Center ➔ IRL Reception ➔ LIS Auto ➔ QA Review",
+                titleFlow1: "1. Specimen Tube Lifecycle & Automated Screening",
+                descFlow1: "Sample tubes are linked to DIN at collection and dispatched to IRL. Automation runs NAT/IDM diagnostics, instantly syncing to the BECS database. QA Release releases the specimen and unlocks the blood bags.",
+                flow2Badge: "🟩 Blood Bag",
+                tagFlow2: "Collection Centrifuge ➔ Hub TESTING Quarantine ➔ Hub AVAILABLE ➔ Bedside Scan",
+                titleFlow2: "2. Blood Product Cold-Chain & Database Lock Controls",
+                descFlow2: "Whole blood component separation splits RBC/PLT/Plasma locked as TESTING. IRL QA release unlocks the state to AVAILABLE. Dispatch selects units via FEFO, delivered via IoT cold chain, bedside scan checks.",
+                flow3Badge: "🟥 Clinical Order",
+                tagFlow3: "Transfusion Service ➔ IRL Control Tower ➔ Crossmatch Verification",
+                titleFlow3: "3. Transfusion Requisition Matching & STAT Protocols",
+                descFlow3: "Orders created in Transfusion Service sync to the IRL control tower queue.STAT MTP triggers flashing red warnings.Technologists perform Electronic (EXM) or Serological (IS-AHG) crossmatching before dispatch."
+            },
+            vi: {
+                mainTitle: "Sơ đồ liên thông tích hợp hệ thống",
+                mainSub: "Quy trình tích hợp & Logic an toàn VN-BECS V2.0",
+                metaDoc: "Tài liệu",
+                docType: "Quy chuẩn liên hệ thống",
+                metaStatus: "Trạng thái",
+                docStatus: "Đã phê duyệt",
+                legSpecimen: "🟦 Đường xanh đứt - Quy trình Y lệnh",
+                legBloodbag: "🟩 Đường xanh lục - Quy trình Túi máu",
+                legOrder: "🟥 Đường đỏ - Quy trình Y lệnh Lâm sàng",
+                laneDc: "Trung tâm Hiến máu (Donor Center)",
+                laneTs: "輸血服務 (Transfusion Service)",
+                laneIrl: "免疫血液學與參考實驗室 (IRL)",
+                laneHub: "血液供應中心 (Blood Supply Hub)",
+                "n1-1": "1. Đăng ký & Sàng lọc Người hiến",
+                "n1-2": "2. Phlebotomy & Lấy mẫu",
+                "n1-3": "Tạo Whole Blood",
+                "n1-4": "Tạo Ống nghiệm Mẫu",
+                "n1-5": "Túi máu (DIN)",
+                "n1-6": "Ống nghiệm (DIN)",
+                "n1-7": "3. Phân tách thành phần máu",
+                "n1-8": "Chế tạo xong: Gán TESTING (Cách ly)",
+                "n1-9": "Chờ xét nghiệm phòng Lab",
+                "n2-1": "Đặt Y lệnh Lâm sàng / Phác đồ MTP",
+                "n2-2": "Xác thực An toàn Giường bệnh",
+                "n2-3": "Hai điều dưỡng quét mã giường bệnh",
+                "n2-4": "Bedside Transfusion",
+                "n3-1": "Chờ Tiếp nhận Mẫu (Pending Reception)",
+                "n3-2": "Ký nhận & Tự động Phân phối",
+                "n3-3": "Chờ Xét nghiệm IDM",
+                "n3-4": "Chờ Phản ứng chéo",
+                "n3-5": "Yêu cầu Lâm sàng Khẩn",
+                "n3-6a": "Máy gửi truy vấn LIMS",
+                "n3-6b": "Lấy kết quả LIS",
+                "n3-7": "Đối chiếu MRN & Lịch sử Kháng thể",
+                "n3-8": "Ưu tiên lưu chuyển khi hoàn tất",
+                "n3-9": "Phân hệ LIS Tự động",
+                "n3-10": "Thử nghiệm Tương thích IRL",
+                "n3-11": "Thẩm định & Phán quyết Hợp lệ",
+                "n3-12": "品管放行 (Quality Released)",
+                "n3-13": "Hoàn thành cấp phát hôm nay",
+                "n4-1": "Kho sẵn sàng (AVAILABLE)",
+                "n4-2": "FEFO Cấp phát Chuỗi lạnh",
+                lblBind: "Liên kết LIMS",
+                lblRegular: "Đặt Y lệnh Phản ứng chéo thường",
+                lblStat: "Kích hoạt STAT Truyền máu lớn",
+                lblUnlock: "Giải phóng [TESTING] sang [AVAILABLE] CSDL",
+                lblNote: "Ghi chú cấp phát hôm nay",
+                lblLock: "Khóa cách ly an toàn",
+                lblTransit: "Vận chuyển chuỗi lạnh",
+                lblVerify: "Ký nhận giường bệnh",
+                thFlow: "Quy trình tích hợp",
+                thSystem: "Phân hệ liên kết & Trạng thái CSDL",
+                thDesc: "Chi tiết quy trình tích hợp liên thông & Logic an toàn",
+                flow1Badge: "🟦 Mẫu máu",
+                tagFlow1: "Donor Center ➔ IRL Reception ➔ LIS Auto ➔ QA Review",
+                titleFlow1: "1. Vòng đời ống nghiệm mẫu & Xét nghiệm tự động LIS",
+                descFlow1: "Ống mẫu được liên kết mã DIN khi thu gom và chuyển về IRL. Hệ thống LIS chạy xét nghiệm tự động NAT/IDM và đồng bộ ngay lên BECS. QA duyệt phóng thích ống mẫu.",
+                flow2Badge: "🟩 Túi máu",
+                tagFlow2: "Ly tâm phân tách ➔ Cách ly TESTING ➔ Giải phóng AVAILABLE ➔ Quét đối chiếu",
+                titleFlow2: "2. Chuỗi lạnh túi máu & Khóa trạng thái kho dữ liệu",
+                descFlow2: "Máu toàn phần ly tâm phân tách, khóa cách ly TESTING. Khi IRL duyệt QA, CSDL tự động đổi thành AVAILABLE. Lấy túi máu theo FEFO, chuyển qua IoT lạnh, quét nurse đối chiếu.",
+                flow3Badge: "🟥 Y lệnh",
+                tagFlow3: "Transfusion Service ➔ IRL Control Tower ➔ Thử nghiệm tương thích",
+                titleFlow3: "3. Y lệnh truyền máu lâm sàng & Thử nghiệm tương thích",
+                descFlow3: "Đặt y lệnh trong hệ thống lâm sàng, đồng bộ tháp điều khiển IRL. Y lệnh STAT MTP kích hoạt cảnh báo đỏ. Kỹ thuật viên chạy phản ứng chéo EXM/IS-AHG trước cấp phát."
+            }
+        };
+
+        function switchLanguage(lang) {
+            // Toggle active tab class
+            document.querySelectorAll('.lang-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.getAttribute('onclick') && tab.getAttribute('onclick').includes(`'${lang}'`)) {
+                    tab.classList.add('active');
+                }
+            });
+
+            const data = dict[lang];
+            document.getElementById('main-title').innerText = data.mainTitle;
+            document.getElementById('main-sub').innerText = data.mainSub;
+            document.getElementById('meta-doc').innerText = data.metaDoc;
+            document.getElementById('doc-type').innerText = data.docType;
+            document.getElementById('meta-status').innerText = data.metaStatus;
+            document.getElementById('doc-status').innerText = data.docStatus;
+
+            // Legends
+            document.getElementById('leg-specimen').innerText = data.legSpecimen;
+            document.getElementById('leg-bloodbag').innerText = data.legBloodbag;
+            document.getElementById('leg-order').innerText = data.legOrder;
+
+            // Swimlanes
+            document.getElementById('lane-dc').textContent = data.laneDc;
+            document.getElementById('lane-ts').textContent = data.laneTs;
+            document.getElementById('lane-irl').textContent = data.laneIrl;
+            document.getElementById('lane-hub').textContent = data.laneHub;
+
+            // Nodes
+            document.getElementById('n1-1').textContent = data['n1-1'];
+            document.getElementById('n1-2').textContent = data['n1-2'];
+            document.getElementById('n1-3').textContent = data['n1-3'];
+            document.getElementById('n1-4').textContent = data['n1-4'];
+            document.getElementById('n1-5').textContent = data['n1-5'];
+            document.getElementById('n1-6').textContent = data['n1-6'];
+            document.getElementById('n1-7').textContent = data['n1-7'];
+            document.getElementById('n1-8').textContent = data['n1-8'];
+            document.getElementById('n1-9').textContent = data['n1-9'];
+
+            document.getElementById('n2-1').textContent = data['n2-1'];
+            document.getElementById('n2-2').textContent = data['n2-2'];
+            document.getElementById('n2-3').textContent = data['n2-3'];
+            document.getElementById('n2-4').textContent = data['n2-4'];
+
+            document.getElementById('n3-1').textContent = data['n3-1'];
+            document.getElementById('n3-2').textContent = data['n3-2'];
+            document.getElementById('n3-3').textContent = data['n3-3'];
+            document.getElementById('n3-4').textContent = data['n3-4'];
+            document.getElementById('n3-5').textContent = data['n3-5'];
+            document.getElementById('n3-6a').textContent = data['n3-6a'];
+            document.getElementById('n3-6b').textContent = data['n3-6b'];
+            document.getElementById('n3-7').textContent = data['n3-7'];
+            document.getElementById('n3-8').textContent = data['n3-8'];
+            document.getElementById('n3-9').textContent = data['n3-9'];
+            document.getElementById('n3-10').textContent = data['n3-10'];
+            document.getElementById('n3-11').textContent = data['n3-11'];
+            document.getElementById('n3-12').textContent = data['n3-12'];
+            document.getElementById('n3-13').textContent = data['n3-13'];
+
+            document.getElementById('n4-1').textContent = data['n4-1'];
+            document.getElementById('n4-2').textContent = data['n4-2'];
+
+            // Flow Labels
+            document.getElementById('lbl-bind').textContent = data.lblBind;
+            document.getElementById('lbl-regular').textContent = data.lblRegular;
+            document.getElementById('lbl-stat').textContent = data.lblStat;
+            document.getElementById('lbl-unlock').textContent = data.lblUnlock;
+            document.getElementById('lbl-note').textContent = data.lblNote;
+            document.getElementById('lbl-lock').textContent = data.lblLock;
+            document.getElementById('lbl-transit').textContent = data.lblTransit;
+            document.getElementById('lbl-verify').textContent = data.lblVerify;
+
+            // Table
+            document.getElementById('th-flow').innerText = data.thFlow;
+            document.getElementById('th-system').innerText = data.thSystem;
+            document.getElementById('th-desc').innerText = data.thDesc;
+
+            document.getElementById('badge-flow1').innerText = data.flow1Badge;
+            document.getElementById('tag-flow1').innerText = data.tagFlow1;
+            document.getElementById('title-flow1').innerText = data.titleFlow1;
+            document.getElementById('desc-flow1').innerText = data.descFlow1;
+
+            document.getElementById('badge-flow2').innerText = data.flow2Badge;
+            document.getElementById('tag-flow2').innerText = data.tagFlow2;
+            document.getElementById('title-flow2').innerText = data.titleFlow2;
+            document.getElementById('desc-flow2').innerText = data.descFlow2;
+
+            document.getElementById('badge-order').innerText = data.flow3Badge;
+            document.getElementById('tag-flow3').innerText = data.tagFlow3;
+            document.getElementById('title-flow3').innerText = data.titleFlow3;
+            document.getElementById('desc-flow3').innerText = data.descFlow3;
+        }
+    </script>
+</body>
+</html>

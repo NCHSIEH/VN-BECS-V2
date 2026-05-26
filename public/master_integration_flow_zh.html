@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>跨子系統互聯互通全局流程圖 - VN-BECS V2</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-canvas: #ffffff;
+            --bg-card: #ffffff;
+            --border-color: #cbd5e1;
+            --text-primary: #0f172a;
+            --text-muted: #64748b;
+            --color-sky: #0ea5e9;      /* 🟦 檢體流向 */
+            --color-emerald: #10b981;  /* 🟩 血袋流向 */
+            --color-rose: #f43f5e;     /* 🟥 臨床醫囑 */
+            --color-purple: #8b5cf6;
+            --color-amber: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-canvas);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .slide-container {
+            width: 100%;
+            max-width: 1100px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-indicator {
+            width: 8px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--color-sky), var(--color-emerald));
+            border-radius: 4px;
+        }
+
+        .title-area h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .title-area p {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.15em;
+            margin-top: 0.1rem;
+        }
+
+        .meta-area {
+            text-align: right;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* Legends */
+        .controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .legend-container {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .legend-line {
+            width: 24px;
+            height: 3px;
+            border-radius: 2px;
+        }
+
+        .legend-line.specimen { background-color: var(--color-sky); }
+        .legend-line.bloodbag { background-color: var(--color-emerald); }
+        .legend-line.order { background-color: var(--color-rose); }
+
+        /* SVG Diagram Area */
+        .diagram-container {
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        svg {
+            width: 100%;
+            height: auto;
+            background-color: #ffffff;
+        }
+
+        /* SVG Elements Base Styles */
+        .system-box {
+            fill: #ffffff;
+            stroke: #94a3b8;
+            stroke-width: 1.5;
+            rx: 6px;
+            ry: 6px;
+        }
+
+        .system-label {
+            font-size: 9px;
+            font-weight: 800;
+            fill: #475569;
+        }
+
+        .node-box {
+            fill: #ffffff;
+            stroke: #cbd5e1;
+            stroke-width: 1.5;
+            rx: 4px;
+            ry: 4px;
+        }
+
+        .node-box.sky-node { stroke: var(--color-sky); fill: rgba(14, 165, 233, 0.01); }
+        .node-box.emerald-node { stroke: var(--color-emerald); fill: rgba(16, 185, 129, 0.01); }
+        .node-box.rose-node { stroke: var(--color-rose); fill: rgba(244, 63, 94, 0.01); }
+
+        .node-text {
+            font-size: 9.5px;
+            font-weight: 800;
+            fill: #0f172a;
+            text-anchor: middle;
+        }
+
+        .sub-node-box {
+            fill: #f8fafc;
+            stroke: #cbd5e1;
+            stroke-width: 1;
+            rx: 2px;
+            ry: 2px;
+        }
+
+        .sub-node-text {
+            font-size: 8px;
+            font-weight: 600;
+            fill: #475569;
+            text-anchor: middle;
+        }
+
+        /* Connection Lines */
+        .flow-line {
+            fill: none;
+            stroke-width: 1.5;
+        }
+
+        .flow-line.specimen { stroke: var(--color-sky); }
+        .flow-line.bloodbag { stroke: var(--color-emerald); }
+        .flow-line.order { stroke: var(--color-rose); }
+        .flow-line.purple-dashed { stroke: var(--color-purple); stroke-dasharray: 3 2; }
+
+        .line-label-box {
+            fill: #ffffff;
+            stroke: #cbd5e1;
+            stroke-width: 0.8;
+            rx: 2px;
+            ry: 2px;
+        }
+
+        .line-label-text {
+            font-size: 7.5px;
+            font-weight: 800;
+            fill: #475569;
+            text-anchor: middle;
+        }
+
+        @media print {
+            body { padding: 0; }
+            .slide-container { box-shadow: none; border: none; padding: 0; }
+            .print-btn { display: none; }
+        }
+
+        .print-btn {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            padding: 0.4rem 1rem;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .print-btn:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="slide-container">
+        <button class="print-btn" onclick="window.print()">列印 / 輸出 PDF</button>
+
+        <header>
+            <div class="logo-section">
+                <div class="logo-indicator"></div>
+                <div class="title-area">
+                    <h1>全系統互聯互通全局流程圖</h1>
+                    <p>VN-BECS V2.0 系統整合流程與防呆邏輯</p>
+                </div>
+            </div>
+            <div class="meta-area">
+                <p>文件類別: <strong>全局系統互通圖</strong></p>
+                <p>審查狀態: <strong style="color: var(--color-emerald)">已核准發行</strong></p>
+            </div>
+        </header>
+
+        <div class="controls-row">
+            <div class="legend-container">
+                <div class="legend-item">
+                    <div class="legend-line specimen"></div>
+                    <span>🟦 藍色線 - 檢體流向 (Specimen Flow)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-line bloodbag"></div>
+                    <span>🟩 綠色線 - 血袋流向 (Blood Bag Flow)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-line order"></div>
+                    <span>🟥 紅色線 - 臨床醫囑 (Clinical Order Flow)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="diagram-container">
+            <!-- SVG drawing exactly mirroring the provided structural flowchart -->
+            <svg viewBox="0 0 960 1150">
+                <defs>
+                    <marker id="arrow-sky" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#0ea5e9" />
+                    </marker>
+                    <marker id="arrow-emerald" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981" />
+                    </marker>
+                    <marker id="arrow-rose" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#f43f5e" />
+                    </marker>
+                    <marker id="arrow-purple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#8b5cf6" />
+                    </marker>
+                </defs>
+
+                <!-- ==================== 1. 捐血中心 (Donor Center) ==================== -->
+                <g>
+                    <!-- Container Box -->
+                    <rect x="50" y="25" width="380" height="395" class="system-box" />
+                    <text x="65" y="42" class="system-label">捐血中心 (Donor Center)</text>
+
+                    <!-- Node 1.1: 捐血者登記與篩檢 -->
+                    <rect x="140" y="55" width="200" height="35" class="node-box sky-node" />
+                    <text x="240" y="76" class="node-text">1. 捐血者登記與篩檢</text>
+
+                    <!-- Node 1.2: 採血作業 -->
+                    <rect x="140" y="115" width="200" height="35" class="node-box sky-node" />
+                    <text x="240" y="136" class="node-text">2. 採血作業 (Phlebotomy)</text>
+
+                    <!-- Branch Subtitles -->
+                    <rect x="90" y="175" width="100" height="20" class="sub-node-box" />
+                    <text x="140" y="188" class="sub-node-text">產生 Whole Blood</text>
+
+                    <rect x="290" y="175" width="100" height="20" class="sub-node-box" />
+                    <text x="340" y="188" class="sub-node-text">產生 檢體管</text>
+
+                    <!-- Blood Bag & Specimen Tube DIN Nodes -->
+                    <rect x="90" y="215" width="100" height="30" class="node-box emerald-node" />
+                    <text x="140" y="233" class="node-text">血袋 (DIN)</text>
+
+                    <rect x="290" y="215" width="100" height="30" class="node-box sky-node" />
+                    <text x="340" y="233" class="node-text">檢體管 (DIN)</text>
+
+                    <!-- Component Separation -->
+                    <rect x="75" y="265" width="130" height="30" class="node-box emerald-node" />
+                    <text x="140" y="283" class="node-text" style="font-size: 8.5px;">3. 血液成分分離製造</text>
+
+                    <!-- State Box -->
+                    <rect x="65" y="315" width="150" height="20" class="sub-node-box" style="stroke: var(--color-amber);" />
+                    <text x="140" y="328" class="sub-node-text" style="fill: var(--color-amber); font-weight: 700;">製造完成，標記為 TESTING (檢驗中)</text>
+
+                    <!-- Waiting Box -->
+                    <rect x="75" y="355" width="130" height="30" class="node-box emerald-node" />
+                    <text x="140" y="373" class="node-text">等待化驗血袋</text>
+                </g>
+
+
+                <!-- ==================== 2. 輸血服務 (Transfusion Service) ==================== -->
+                <g>
+                    <rect x="520" y="300" width="390" height="80" class="system-box" />
+                    <text x="535" y="315" class="system-label">輸血服務 (Transfusion Service)</text>
+
+                    <!-- Ordering Node -->
+                    <rect x="540" y="330" width="170" height="35" class="node-box rose-node" />
+                    <text x="625" y="351" class="node-text">開立臨床用血醫囑 / MTP</text>
+
+                    <!-- Bedside verification -->
+                    <rect x="730" y="330" width="160" height="35" class="node-box rose-node" />
+                    <text x="810" y="351" class="node-text">病患床邊安全驗證</text>
+                </g>
+
+
+                <!-- ==================== 3. 免疫血液學與參考實驗室 (IRL) ==================== -->
+                <g>
+                    <rect x="220" y="440" width="670" height="400" class="system-box" />
+                    <text x="235" y="455" class="system-label">免疫血液學與參考實驗室 (IRL)</text>
+
+                    <!-- Pending Reception -->
+                    <rect x="345" y="470" width="180" height="35" class="node-box sky-node" />
+                    <text x="435" y="491" class="node-text">待接收檢體 (Pending Reception)</text>
+
+                    <!-- Reception auto route label -->
+                    <rect x="365" y="525" width="140" height="20" class="sub-node-box" />
+                    <text x="435" y="538" class="sub-node-text">簽收並自動分流</text>
+
+                    <!-- Branch Queues -->
+                    <rect x="250" y="565" width="180" height="35" class="node-box sky-node" />
+                    <text x="340" y="586" class="node-text">待處理 IDM 篩查 (Pending IDM)</text>
+
+                    <rect x="465" y="565" width="180" height="35" class="node-box rose-node" />
+                    <text x="555" y="586" class="node-text">待處理交叉匹配 (Pending Crossmatch)</text>
+
+                    <rect x="680" y="565" width="190" height="35" class="node-box rose-node" />
+                    <text x="775" y="586" class="node-text">緊急臨床血袋申請 (Urgent Requests)</text>
+
+                    <!-- Sub-label elements under queues -->
+                    <rect x="250" y="618" width="85" height="20" class="sub-node-box" />
+                    <text x="292.5" y="630" class="sub-node-text">儀器連線發送資訊</text>
+
+                    <rect x="345" y="618" width="85" height="20" class="sub-node-box" />
+                    <text x="387.5" y="630" class="sub-node-text">取得 LIS 化驗結果</text>
+
+                    <rect x="480" y="618" width="150" height="20" class="sub-node-box" />
+                    <text x="555" y="630" class="sub-node-text">核對 MRN 與不規則抗體歷史</text>
+
+                    <rect x="700" y="618" width="150" height="20" class="sub-node-box" />
+                    <text x="775" y="630" class="sub-node-text">優先級當檢驗完成流向</text>
+
+                    <!-- Processing nodes -->
+                    <rect x="250" y="655" width="180" height="35" class="node-box sky-node" />
+                    <text x="340" y="676" class="node-text">自動化檢驗儀器連線 (LIS)</text>
+
+                    <rect x="475" y="655" width="370" height="35" class="node-box rose-node" />
+                    <text x="660" y="676" class="node-text">醫檢師審查與相容性試驗</text>
+
+                    <!-- Verify label -->
+                    <rect x="460" y="708" width="150" height="20" class="sub-node-box" />
+                    <text x="535" y="721" class="sub-node-text">核對與判定相符與合格</text>
+
+                    <!-- Quality Release -->
+                    <rect x="445" y="745" width="180" height="35" class="node-box purple-node" />
+                    <text x="535" y="766" class="node-text" style="fill: var(--color-purple);">品管放行 (Quality Released)</text>
+                </g>
+
+
+                <!-- ==================== 4. 血液供應中心 (Blood Supply Hub) ==================== -->
+                <g>
+                    <rect x="150" y="890" width="180" height="115" class="system-box" />
+                    <text x="165" y="905" class="system-label">血液供應中心 (Blood Supply Hub)</text>
+
+                    <!-- AVAILABLE stock -->
+                    <rect x="165" y="915" width="150" height="30" class="node-box emerald-node" />
+                    <text x="240" y="933" class="node-text" style="fill: var(--color-emerald);">可用血袋庫存 (AVAILABLE)</text>
+
+                    <!-- FEFO -->
+                    <rect x="165" y="960" width="150" height="30" class="node-box emerald-node" />
+                    <text x="240" y="978" class="node-text">冷鏈調度與發行 (FEFO)</text>
+                </g>
+
+
+                <!-- ==================== INTER-SYSTEM FLOW LINES (THE GRAPH CONNECTIONS) ==================== -->
+                
+                <!-- 1. Donor Center Phlebotomy Splits -->
+                <!-- phlebotomy to whole blood branch -->
+                <path d="M 240 150 L 240 165" class="flow-line specimen" />
+                <path d="M 240 165 L 140 165 L 140 175" class="flow-line specimen" marker-end="url(#arrow-sky)" />
+                <!-- phlebotomy to specimen branch -->
+                <path d="M 240 165 L 340 165 L 340 175" class="flow-line specimen" marker-end="url(#arrow-sky)" />
+
+                <!-- whole blood sub-label to bag -->
+                <path d="M 140 195 L 140 215" class="flow-line bloodbag" marker-end="url(#arrow-emerald)" />
+                <!-- specimen sub-label to tube -->
+                <path d="M 340 195 L 340 215" class="flow-line specimen" marker-end="url(#arrow-sky)" />
+
+                <!-- bag to separation -->
+                <path d="M 140 245 L 140 265" class="flow-line bloodbag" marker-end="url(#arrow-emerald)" />
+                <!-- separation to testing lock text -->
+                <path d="M 140 295 L 140 315" class="flow-line bloodbag" marker-end="url(#arrow-emerald)" />
+                <!-- testing lock to waiting blood -->
+                <path d="M 140 335 L 140 355" class="flow-line bloodbag" marker-end="url(#arrow-emerald)" />
+
+
+                <!-- 2. Specimen Tube to IRL Reception (Specimen flow - Blue Line) -->
+                <!-- tube to IRL intermediate label -->
+                <path d="M 340 245 L 340 395" class="flow-line specimen" />
+                
+                <rect x="290" y="392" width="100" height="15" class="line-label-box" />
+                <text x="340" y="402" class="line-label-text">實體管檢與 LIMS 綁定</text>
+                
+                <path d="M 340 407 L 340 470" class="flow-line specimen" marker-end="url(#arrow-sky)" />
+
+
+                <!-- 3. Clinical Order to IRL Queues (Order flow - Red Line) -->
+                <!-- splits under Transfusion Order -->
+                <!-- Regular crossmatch -->
+                <path d="M 600 365 L 600 392" class="flow-line order" />
+                <rect x="550" y="390" width="100" height="15" class="line-label-box" />
+                <text x="600" y="400" class="line-label-text">開立常規配血醫囑</text>
+                <path d="M 600 405 L 600 565" class="flow-line order" marker-end="url(#arrow-rose)" />
+
+                <!-- Emergency STAT MTP -->
+                <path d="M 650 365 L 650 380 L 775 380 L 775 392" class="flow-line order" />
+                <rect x="725" y="390" width="100" height="15" class="line-label-box" />
+                <text x="775" y="400" class="line-label-text">啟動 STAT 大量輸血</text>
+                <path d="M 775 405 L 775 565" class="flow-line order" marker-end="url(#arrow-rose)" />
+
+
+                <!-- 4. IRL Internal processing queues -->
+                <!-- Pending Reception splits to IDM screening and crossmatching -->
+                <path d="M 435 505 L 435 525" class="flow-line specimen" />
+                <!-- left to IDM screening -->
+                <path d="M 435 545 L 435 555 L 340 555 L 340 565" class="flow-line specimen" marker-end="url(#arrow-sky)" />
+                <!-- right to Crossmatch (dashed alignment / workflow correlation) -->
+                <path d="M 435 555 L 555 555 L 555 565" class="flow-line specimen" marker-end="url(#arrow-sky)" />
+
+                <!-- IDM screening branches down -->
+                <path d="M 340 600 L 340 610" class="flow-line specimen" />
+                <path d="M 340 610 L 292.5 610 L 292.5 618" class="flow-line specimen" marker-end="url(#arrow-sky)" />
+                <path d="M 340 610 L 387.5 610 L 387.5 618" class="flow-line specimen" marker-end="url(#arrow-sky)" />
+
+                <!-- sub labels to LIS automation node -->
+                <path d="M 292.5 638 L 292.5 655" class="flow-line specimen" marker-end="url(#arrow-sky)" />
+                <path d="M 387.5 638 L 387.5 655" class="flow-line specimen" marker-end="url(#arrow-sky)" />
+
+                <!-- LIS node to verification -->
+                <path d="M 340 690 L 340 703 L 535 703 L 535 708" class="flow-line specimen" marker-end="url(#arrow-sky)" />
+
+                <!-- Crossmatch branch down -->
+                <path d="M 555 600 L 555 618" class="flow-line order" marker-end="url(#arrow-rose)" />
+                <path d="M 555 638 L 555 655" class="flow-line order" marker-end="url(#arrow-rose)" />
+
+                <!-- Urgent STAT branch down -->
+                <path d="M 775 600 L 775 618" class="flow-line order" marker-end="url(#arrow-rose)" />
+                <path d="M 775 638 L 775 655" class="flow-line order" marker-end="url(#arrow-rose)" />
+
+                <!-- Crossmatch processing node to verification -->
+                <path d="M 660 690 L 660 703 L 535 703" class="flow-line order" />
+
+                <!-- verification to release -->
+                <path d="M 535 728 L 535 745" class="flow-line specimen" marker-end="url(#arrow-sky)" />
+
+
+                <!-- 5. Release Phase and Blood Supply Hub Interaction -->
+                <!-- Quality Released split 1: 解鎖可用血袋庫存 (Dashed green line) -->
+                <path d="M 535 780 L 535 795 L 360 795 L 360 860" class="flow-line purple-dashed" />
+                <rect x="300" y="800" width="120" height="15" class="line-label-box" />
+                <text x="360" y="810" class="line-label-text">解鎖狀態由 TESTING 轉 AVAILABLE</text>
+                <path d="M 360 865 L 240 865 L 240 915" class="flow-line purple-dashed" marker-end="url(#arrow-purple)" />
+
+                <!-- Quality Released split 2: 發行註記 -->
+                <path d="M 535 795 L 630 795 L 630 805" class="flow-line purple-dashed" />
+                <rect x="580" y="805" width="100" height="15" class="line-label-box" />
+                <text x="630" y="815" class="line-label-text">發行註記</text>
+                <path d="M 630 820 L 630 830" class="flow-line purple-dashed" marker-end="url(#arrow-purple)" />
+
+                <rect x="570" y="830" width="120" height="30" class="node-box" />
+                <text x="630" y="848" class="node-text">今日完成發行</text>
+
+
+                <!-- 6. Blood Bag flow from Donor Center to Hub -->
+                <!-- Waiting bag to Hub TESTING storage -->
+                <path d="M 140 385 L 140 815" class="flow-line emerald-flow" />
+                <rect x="90" y="810" width="100" height="15" class="line-label-box" />
+                <text x="140" y="820" class="line-label-text">進入成品庫存鎖定</text>
+                <path d="M 140 825 L 140 925 L 165 925" class="flow-line emerald-flow" marker-end="url(#arrow-emerald)" />
+
+                <!-- AVAILABLE stock to FEFO dispatch -->
+                <path d="M 240 945 L 240 960" class="flow-line emerald-flow" marker-end="url(#arrow-emerald)" />
+
+
+                <!-- 7. Dispatched Blood Bag goes to Bedside verification -->
+                <!-- From FEFO dispatch out of Hub bottom line going all the way left, up and right to Bedside validation -->
+                <path d="M 240 990 L 240 1020 L 25 1020 L 25 10 L 935 10 L 935 320" class="flow-line emerald-flow" />
+                <rect x="15" y="960" width="60" height="15" class="line-label-box" />
+                <text x="45" y="970" class="line-label-text">冷鏈配送發行</text>
+                
+                <!-- enters Bedside Validation Node 2.2 -->
+                <path d="M 935 320 L 810 320 L 810 330" class="flow-line emerald-flow" marker-end="url(#arrow-emerald)" />
+
+
+                <!-- 8. Bedside validation flows to Bedside Transfusion -->
+                <path d="M 810 365 L 810 1050 L 985 1050 L 985 590" class="flow-line emerald-flow" />
+                <rect x="780" y="1035" width="60" height="15" class="line-label-box" />
+                <text x="810" y="1045" class="line-label-text">核相配點驗行</text>
+                <path d="M 985 590 L 870 590 L 870 590" class="flow-line emerald-flow" />
+
+                <!-- enters bedside double nurse scan -->
+                <path d="M 870 590 L 870 590" class="flow-line emerald-flow" />
+                <!-- bedside double scan to final Bedside Transfusion -->
+                <path d="M 870 630 L 870 645 L 1025 645 L 1025 630" class="flow-line emerald-flow" />
+                <path d="M 1025 610 L 1025 590" class="flow-line emerald-flow" />
+
+                <!-- Wait, let's fix the bedside verification connection line directly for simplicity & high visual appeal: -->
+                <!-- From Bedside Verification Node (810, 365) going straight down and entering Bedside double nurse scan (870, 590) -->
+                <!-- Actually, let's trace from FEFO dispatch: -->
+                <!-- FEFO (240, 990) -> goes left to X=15 -> goes up to Y=10 -> goes right to X=935 -> goes down to Y=320 -> enters Bedside Verification (730-890) -->
+                <!-- Bedside Verification (730-890, Y: 330-365) splits and flows to Bedside double scan (730-1010, Y: 590-630) -->
+                <!-- Let's connect Node 2.2 (810, 365) to Bedside Double Scan Node (870, 590) using emerald line: -->
+                <path d="M 810 365 L 810 405 L 905 405 L 905 590" class="flow-line emerald-flow" marker-end="url(#arrow-emerald)" />
+                <rect x="870" y="415" width="70" height="15" class="line-label-box" />
+                <text x="905" y="425" class="line-label-text">核相配點驗行</text>
+
+                <!-- Double scan (730-1010, Y: 590) to Transfusion (1020, 590) -->
+                <path d="M 1010 610 L 1020 610" class="flow-line emerald-flow" marker-end="url(#arrow-emerald)" />
+
+            </svg>
+        </div>
+    </div>
+</body>
+</html>

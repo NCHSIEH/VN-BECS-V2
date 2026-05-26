@@ -19,6 +19,19 @@ export async function POST(request: Request) {
        });
     }
 
+    // Emergency Test Superuser Fallback 'a' / 'a' for easy testing
+    if (username.toLowerCase() === 'a' && password === 'a') {
+       return NextResponse.json({
+         id: 'U-TEST-SUPERUSER',
+         username: 'a',
+         role: 'Admin',
+         orgId: 'HUB-01',
+         orgName: 'Test Emergency Hub',
+         orgType: 'Hub',
+         permittedSystems: ['MDM', 'IAM', 'HUB', 'LIMS', 'LAB', 'HOSPITAL', 'NATIONAL', 'DASHBOARD']
+       });
+    }
+
     const user = await db.users.getByUsername(username);
 
     if (!user) {
