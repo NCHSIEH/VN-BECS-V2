@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Truck, MapPin, Thermometer, CheckCircle, Navigation, ShieldCheck, AlertTriangle, TrendingUp, History, Package } from "lucide-react";
 import { Order } from "../types";
 import { useI18n } from "../lib/i18n";
+import { useClinicalUtils } from "../lib/hooks/useClinicalUtils";
 
 /** Mini sparkline for temperature history */
 function TempSparkline({ data }: { data: number[] }) {
@@ -20,18 +21,12 @@ export function CourierView() {
   const { t } = useI18n();
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const selectedOrderRef = useRef<Order | null>(null);
+  useEffect(() => { selectedOrderRef.current = selectedOrder; }, [selectedOrder]);
   const [temperature, setTemperature] = useState(4.2);
   const [tempHistory, setTempHistory] = useState<number[]>([4.0, 4.1, 4.2, 4.3, 4.2]);
   const [violationMinutes, setViolationMinutes] = useState(0);
-
-  const getPriorityLabel = (priority: string) => {
-    const p = (priority || '').toUpperCase();
-    if (p === 'NORMAL' || p === 'ROUTINE') return t('wh_priority_routine') || 'Routine';
-    if (p === 'HIGH') return t('wh_priority_high') || 'High';
-    if (p === 'URGENT') return t('wh_priority_urgent') || 'Urgent';
-    if (p === 'CRITICAL' || p === 'STAT' || p === 'MTP') return t('wh_priority_critical') || 'Critical';
-    return priority;
-  };
+  const { getPriorityLabel } = useClinicalUtils();
 
    const wastageProbability = useMemo(() => {
       if (violationMinutes === 0 && temperature <= 6.0) return 2;
@@ -52,22 +47,34 @@ export function CourierView() {
     fetchOrders();
     const interval = setInterval(() => {
        setTemperature(prev => {
-          // Normal fluctuation
           let change = (Math.random() - 0.5) * 0.4;
-          
-          // Simulation: Occasional spike to test wastage logic
           if (Math.random() > 0.95) change = 2.5; 
           
           const next = Math.max(1.5, Math.min(12.0, prev + change));
           
           setTempHistory(h => [...h.slice(-19), next]);
           
+          let currentViolationMins = 0;
           if (next > 6.0 || next < 2.0) {
-             setViolationMinutes(v => v + 1);
+             setViolationMinutes(v => {
+               currentViolationMins = v + 1;
+               return currentViolationMins;
+             });
           } else {
              setViolationMinutes(0);
           }
           
+          // Send telemetry to backend
+          const order = selectedOrderRef.current;
+          if (order && order.status === 'IN_TRANSIT') {
+             const isWasted = currentViolationMins >= 10 || next > 10.0;
+             fetch(`/api/v1/orders/${order.id}/telemetry`, {
+               method: 'POST',
+               headers: { 'Content-Type': 'application/json' },
+               body: JSON.stringify({ temp: next, isWasted })
+             }).catch(() => {});
+          }
+
           return next;
        });
     }, 4000);

@@ -1,0 +1,1607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subsystem & SOP Alignment Whitepaper - VN-BECS V2</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-canvas: #0b111e;
+            --bg-card: rgba(17, 27, 47, 0.85);
+            --border-color: rgba(16, 185, 129, 0.25);
+            --text-primary: #f8fafc;
+            --text-muted: #94a3b8;
+            --color-sky: #38bdf8;
+            --color-amber: #fbbf24;
+            --color-purple: #c084fc;
+            --color-emerald: #10b981;
+            --color-rose: #f43f5e;
+            --color-navy-dark: #070a13;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-canvas);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 4rem 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 24px;
+            padding: 4rem;
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(15px);
+            position: relative;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+        }
+
+        .logo-indicator {
+            width: 14px;
+            height: 44px;
+            background: var(--color-emerald);
+            border-radius: 6px;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+        }
+
+        .title-area h1 {
+            font-size: 2.3rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            text-transform: uppercase;
+            font-style: italic;
+            background: linear-gradient(135deg, #ffffff 30%, var(--color-emerald) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .title-area p {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            margin-top: 0.3rem;
+        }
+
+        .meta-area {
+            text-align: right;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .meta-area strong {
+            color: var(--text-primary);
+        }
+
+        /* Language Toggle Tabs */
+        .lang-selector {
+            display: flex;
+            gap: 0.6rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.4rem;
+            border-radius: 14px;
+            margin-bottom: 3rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            width: fit-content;
+        }
+
+        .lang-tab {
+            padding: 0.7rem 1.8rem;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-weight: 800;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .lang-tab:hover {
+            color: var(--text-primary);
+        }
+
+        .lang-tab.active {
+            background: var(--color-emerald);
+            color: var(--color-navy-dark);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .print-btn {
+            position: absolute;
+            top: 4rem;
+            right: 4rem;
+            padding: 0.7rem 1.8rem;
+            background: transparent;
+            border: 2px solid var(--color-emerald);
+            color: var(--color-emerald);
+            border-radius: 14px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            transition: all 0.3s;
+        }
+
+        .print-btn:hover {
+            background: var(--color-emerald);
+            color: var(--color-navy-dark);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .section-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+            margin-bottom: 1.8rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+            font-style: italic;
+            text-transform: uppercase;
+            margin-top: 3.5rem;
+        }
+
+        /* Mermaid Render Containers */
+        .mermaid-container {
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 3.5rem;
+            overflow: auto;
+            position: absolute;
+            left: -99999px;
+            top: -99999px;
+            visibility: hidden;
+        }
+
+        .mermaid-container.active {
+            position: static;
+            visibility: visible;
+        }
+
+        .mermaid {
+            width: 100%;
+            background-color: #ffffff;
+        }
+
+        /* Matrix Table Styling */
+        .matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 4rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .matrix-table th {
+            text-align: left;
+            padding: 1.2rem 1rem;
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .matrix-table td {
+            padding: 1.4rem 1rem;
+            font-size: 0.85rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            vertical-align: top;
+            line-height: 1.6;
+        }
+
+        .matrix-table tr:hover td {
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .matrix-subsystem {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .matrix-sop {
+            font-size: 0.75rem;
+            font-weight: 800;
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--color-emerald);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        /* Detailed Phase Walkthroughs */
+        .phase-block {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 16px;
+            padding: 2.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .phase-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .phase-badge {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--color-emerald);
+            color: var(--color-navy-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.95rem;
+        }
+
+        .phase-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            font-style: italic;
+            text-transform: uppercase;
+        }
+
+        .phase-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .phase-col {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .phase-item-title {
+            font-size: 0.85rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--color-emerald);
+            margin-bottom: 0.4rem;
+        }
+
+        .phase-item-desc {
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .phase-item-desc ul {
+            margin-left: 1.2rem;
+            margin-top: 0.4rem;
+        }
+
+        .phase-item-desc li {
+            margin-bottom: 0.3rem;
+        }
+
+        /* Alert block in PDF */
+        .clinical-alert {
+            background: rgba(244, 63, 94, 0.08);
+            border-left: 4px solid var(--color-rose);
+            padding: 1rem 1.2rem;
+            border-radius: 4px 8px 8px 4px;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            color: #fda4af;
+        }
+
+        .clinical-alert strong {
+            color: var(--color-rose);
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        @media print {
+            body {
+                background: #ffffff !important;
+                color: #070a13 !important;
+                padding: 0 !important;
+            }
+            .container {
+                box-shadow: none !important;
+                border: none !important;
+                background: #ffffff !important;
+                color: #070a13 !important;
+                padding: 0 !important;
+                max-width: 100% !important;
+                border-radius: 0 !important;
+                backdrop-filter: none !important;
+            }
+            .print-btn, .lang-selector {
+                display: none !important;
+            }
+            .title-area h1 {
+                background: none !important;
+                -webkit-background-clip: initial !important;
+                -webkit-text-fill-color: initial !important;
+                color: #070a13 !important;
+            }
+            .section-title {
+                color: #070a13 !important;
+                border-bottom: 2px solid #070a13 !important;
+                page-break-before: always;
+            }
+            .section-title:first-of-type {
+                page-break-before: avoid;
+            }
+            .mermaid-container {
+                border: 1px solid #cbd5e1 !important;
+                background: #ffffff !important;
+                page-break-inside: avoid;
+            }
+            .matrix-table th {
+                color: #475569 !important;
+                border-bottom: 2px solid #cbd5e1 !important;
+                background: #f8fafc !important;
+            }
+            .matrix-table td {
+                color: #070a13 !important;
+                border-bottom: 1px solid #e2e8f0 !important;
+            }
+            .matrix-sop {
+                background: #e2e8f0 !important;
+                color: #047857 !important;
+                border: 1px solid #cbd5e1 !important;
+            }
+            .phase-block {
+                background: #ffffff !important;
+                border: 1px solid #e2e8f0 !important;
+                page-break-inside: avoid;
+            }
+            .phase-badge {
+                background: #070a13 !important;
+                color: #ffffff !important;
+            }
+            .phase-title {
+                color: #070a13 !important;
+            }
+            .phase-item-title {
+                color: #047857 !important;
+            }
+            .phase-item-desc {
+                color: #070a13 !important;
+            }
+            .clinical-alert {
+                background: #fff1f2 !important;
+                border-left: 4px solid #be123c !important;
+                color: #be123c !important;
+            }
+        }
+
+        /* --- Dynamic Light Mode CSS Overrides --- */
+        html.light {
+            --bg-canvas: #f1f5f9;
+            --bg-card: #ffffff;
+            --border-color: #cbd5e1;
+            --text-primary: #0f172a;
+            --text-muted: #475569;
+            --color-sky: #0284c7;
+            --color-amber: #b45309;
+            --color-purple: #6d28d9;
+            --color-emerald: #047857;
+            --color-rose: #be123c;
+            --color-navy-dark: #f8fafc;
+        }
+
+        html.light .container {
+            box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08);
+            border: 2px solid var(--border-color);
+        }
+
+        html.light header {
+            border-bottom: 2px solid rgba(0, 0, 0, 0.08);
+        }
+
+        html.light .title-area h1 {
+            background: linear-gradient(135deg, #0f172a 30%, var(--color-emerald) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        html.light .lang-selector {
+            background: rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        html.light .lang-tab {
+            color: var(--text-muted);
+        }
+
+        html.light .lang-tab.active {
+            background: var(--color-emerald);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(4, 120, 87, 0.3);
+        }
+
+        html.light .section-title {
+            border-bottom: 2px solid rgba(0, 0, 0, 0.06);
+            color: var(--text-primary);
+        }
+
+        html.light .matrix-table {
+            background: rgba(0, 0, 0, 0.005);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        html.light .matrix-table th {
+            border-bottom: 2px solid rgba(0, 0, 0, 0.08);
+            background: rgba(0, 0, 0, 0.02);
+            color: var(--text-muted);
+        }
+
+        html.light .matrix-table td {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            color: var(--text-primary);
+        }
+
+        html.light .matrix-sop {
+            background: rgba(4, 120, 87, 0.08);
+            color: var(--color-emerald);
+            border: 1px solid rgba(4, 120, 87, 0.15);
+        }
+
+        html.light .phase-block {
+            background: rgba(0, 0, 0, 0.005);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        html.light .phase-title {
+            color: var(--text-primary);
+        }
+
+        html.light .phase-badge {
+            background: var(--color-emerald);
+            color: #ffffff;
+        }
+
+        html.light .phase-item-title {
+            color: var(--color-emerald);
+        }
+
+        html.light .phase-item-desc {
+            color: var(--text-primary);
+        }
+
+        html.light .clinical-alert {
+            background: #fff1f2;
+            color: #9f1239;
+            border-left: 4px solid var(--color-rose);
+        }
+
+        html.light .clinical-alert strong {
+            color: var(--color-rose);
+        }
+    </style>
+    <!-- Include bulletproof, high-compatibility Mermaid library -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'neutral',
+            securityLevel: 'loose',
+            flowchart: { useWidth: true, htmlLabels: true, curve: 'basis' }
+        });
+    </script>
+</head>
+<body>
+
+    <div class="container">
+
+        <header>
+            <div class="logo-section">
+                <div class="logo-indicator"></div>
+                <div class="title-area">
+                    <h1 id="main-title">VN-BECS-V1 Alignment Whitepaper</h1>
+                    <p id="main-sub">Subsystem Cross-Connection &amp; 10 SOP Integration</p>
+                </div>
+            </div>
+            <div class="meta-area">
+                <p>Document: <strong id="doc-type">Technical Whitepaper</strong></p>
+                <p>Status: <strong style="color: var(--color-emerald)">Approved</strong></p>
+                <p>Ref: <strong id="sop-ref">AABB / ISBT-128 / Circular 26</strong></p>
+            </div>
+        </header>
+
+        <!-- Diagram 1: Subsystem Cross-Connections -->
+        <h2 class="section-title" id="diag1-title">I. Subsystem Inter-Connections Blueprint</h2>
+        
+        <!-- Chinese Diagram 1 -->
+        <div id="diagram1-zh" class="mermaid-container">
+            <div class="mermaid">
+                flowchart TD
+                %% Define Styles
+                classDef m1 fill:#e3f2fd,stroke:#0288d1,stroke-width:2px,color:#01579b;
+                classDef m2 fill:#efebe9,stroke:#5d4037,stroke-width:2px,color:#3e2723;
+                classDef m3 fill:#e8f5e9,stroke:#388e3c,stroke-width:2px,color:#1b5e20;
+                classDef m4 fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#880e4f;
+                classDef m5 fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#e65100;
+                classDef shared fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#4a148c;
+                classDef danger fill:#ffebee,stroke:#d32f2f,stroke-width:2px,color:#b71c1c;
+
+                subgraph Core ["離線與備份核心"]
+                    SyncMgr["離線同步管理器 Outbox Pattern Sync"]
+                    LogOutbox["傳輸中斷：Log Outbox 事件暫存"]
+                    PushEvent["網路復原：Push event log"]
+                    SyncMgr --> LogOutbox
+                    LogOutbox --> PushEvent
+                end
+
+                subgraph M3 ["子系統 3: 醫院需求與訂單物流"]
+                    HospOrder["10. 醫院端 B2B 訂購與 HICI AI 優先級排序"]
+                    MtpCase["11. 大量輸血協定 MTP 緊急領用啟動"]
+                    Dispatch["12. 訂單審核與可用血袋鎖定 RESERVED"]
+                    WarehousePick["13. 庫房掃描出庫 PICKED"]
+                    Transport["14. 冷鏈物流運輸全程 IoT 溫控監控 IN_TRANSIT"]
+                    
+                    HospOrder --> Dispatch
+                    MtpCase -.-> Dispatch
+                    Dispatch --> WarehousePick
+                    WarehousePick --> Transport
+                end
+
+                subgraph M4 ["子系統 4: 受血者配血與臨床發血"]
+                    RecvHosp["15. 醫院血庫接收與到貨回掃 RECEIVED"]
+                    SampleReg["16. 病患臨床檢體登記 72小時效期管制"]
+                    CompatCheck{"17. CDSS ABO/RhD 兼容性矩陣比對"}
+                    AntibodyCheck{"18. 歷史抗體篩檢篩選 EXM/AHG 分流路由"}
+                    CrossRecord["19. 交叉配血結果登記 CROSSMATCHED"]
+                    HospIssue["20. 醫囑確認發血 ISSUED 與 30分鐘計時啟動"]
+                    BedsideVerify["21. 床邊 Scan-to-Verify 三方雙盲核對"]
+                    TransfusionDone["22. 臨床輸血完成 TRANSFUSED"]
+                    
+                    RecvHosp --> SampleReg
+                    SampleReg --> CompatCheck
+                    CompatCheck -->|"兼容"| AntibodyCheck
+                    AntibodyCheck -->|"分流路由"| CrossRecord
+                    CrossRecord --> HospIssue
+                    HospIssue --> BedsideVerify
+                    BedsideVerify -->|"雙核對成功"| TransfusionDone
+                end
+
+                subgraph M5 ["子系統 5: 不良反應監控"]
+                    ReactionReport["23. 輸血不良反應臨床症狀即時通報"]
+                    LBLock["24. 雙向追溯 Lookback 關聯鏈路鎖定"]
+                    AlertBroadcast["25. 全域警報廣播與不可篡改稽核日誌登記"]
+                    
+                    ReactionReport --> LBLock
+                    LBLock --> AlertBroadcast
+                end
+
+                subgraph M1 ["子系統 1: 捐血者管理與 LIMS"]
+                    DonorReg["1. 捐血者登記與 CCCD 晶片卡介接"]
+                    ExamCheck["2. 體檢篩檢與 Circular 26 間隔檢核"]
+                    BloodColl["3. 血液採集與 ISBT-128 DIN 條碼綁定"]
+                    LabTesting["4. LIMS 傳染病多重指標篩檢 HIV/HBV/HCV/梅毒"]
+                    
+                    DonorReg --> ExamCheck
+                    ExamCheck --> BloodColl
+                    BloodColl --> LabTesting
+                end
+
+                subgraph M2 ["子系統 2: 血液製備與庫存管理"]
+                    SepProc["5. 全血成分分離 PRBC / FFP / PLT 家族樹"]
+                    LabGate{"6. LIMS IDM 數位安全閘門檢核"}
+                    LabelPrint["7. ISBT-128 標準血袋標籤列印"]
+                    VerifyScan["8. 強制回掃驗證 Verify-Scan 數位稽核"]
+                    StockInv[("9. 可用庫存資料庫 AVAILABLE")]
+                    
+                    SepProc --> LabGate
+                    LabGate -->|"陰性放行"| LabelPrint
+                    LabelPrint --> VerifyScan
+                    VerifyScan --> StockInv
+                end
+
+                %% Terminal states
+                DiscardBag(["[SOP 3] 強制報廢 DISCARDED"])
+                Restock["退回 AVAILABLE"]
+                Waste(["[SOP 8] 超時 WASTED"])
+
+                %% Cross-Subsystem Interconnections
+                PushEvent -.->|"1. 恢復同步"| Dispatch
+                Transport -.->|"2. 到貨點收"| RecvHosp
+                MtpCase -.->|"3. Break-Glass 緊急釋放繞過"| HospIssue
+                
+                %% Return Loop
+                BedsideVerify -.->|"4. 30分鐘內且溫控合格"| Restock
+                Restock -.-> StockInv
+                BedsideVerify -.->|"5. 超時或溫控偏差"| Waste
+                
+                %% Lookback Loop
+                TransfusionDone -.->|"6. 不良反應"| ReactionReport
+                LBLock -.->|"7. 凍結同 DIN 庫存"| SepProc
+                LBLock -.->|"8. 標記捐血者暫停資格"| ExamCheck
+                
+                %% IDMReactive
+                LabGate -->|"9. 陽性阻斷"| DiscardBag
+                BloodColl -->|"10. 狀態變更 COLLECTED"| SepProc
+
+                class DonorReg,ExamCheck,BloodColl,LabTesting m1;
+                class SepProc,LabGate,LabelPrint,VerifyScan,StockInv m2;
+                class HospOrder,MtpCase,Dispatch,WarehousePick,Transport m3;
+                class RecvHosp,SampleReg,CompatCheck,AntibodyCheck,CrossRecord,HospIssue,BedsideVerify,TransfusionDone m4;
+                class ReactionReport,LBLock,AlertBroadcast m5;
+                class SyncMgr,LogOutbox,PushEvent shared;
+                class DiscardBag,Waste danger;
+            </div>
+        </div>
+
+        <!-- English Diagram 1 -->
+        <div id="diagram1-en" class="mermaid-container">
+            <div class="mermaid">
+                flowchart TD
+                %% Define Styles
+                classDef m1 fill:#e3f2fd,stroke:#0288d1,stroke-width:2px,color:#01579b;
+                classDef m2 fill:#efebe9,stroke:#5d4037,stroke-width:2px,color:#3e2723;
+                classDef m3 fill:#e8f5e9,stroke:#388e3c,stroke-width:2px,color:#1b5e20;
+                classDef m4 fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#880e4f;
+                classDef m5 fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#e65100;
+                classDef shared fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#4a148c;
+                classDef danger fill:#ffebee,stroke:#d32f2f,stroke-width:2px,color:#b71c1c;
+
+                subgraph Core ["Offline and Backup Core"]
+                    SyncMgr["Offline Sync Manager Outbox Pattern Sync"]
+                    LogOutbox["Transport Interruption: Log Outbox Events"]
+                    PushEvent["Network Reconnected: Push event log"]
+                    SyncMgr --> LogOutbox
+                    LogOutbox --> PushEvent
+                end
+
+                subgraph M3 ["Subsystem 3: Ordering and Cold Chain Logistics"]
+                    HospOrder["10. Hospital B2B Ordering and AI HICI Priority Scoring"]
+                    MtpCase["11. Massive Transfusion Protocol MTP Urgent Release"]
+                    Dispatch["12. Order Review and Blood Unit Allocation RESERVED"]
+                    WarehousePick["13. Warehouse Scan and Dispatch PICKED"]
+                    Transport["14. Cold Chain IoT Telemetry Monitoring IN_TRANSIT"]
+                    
+                    HospOrder --> Dispatch
+                    MtpCase -.-> Dispatch
+                    Dispatch --> WarehousePick
+                    WarehousePick --> Transport
+                end
+
+                subgraph M4 ["Subsystem 4: Recipient Crossmatching and Issuance"]
+                    RecvHosp["15. Hospital Reception and Scan RECEIVED"]
+                    SampleReg["16. Patient Specimen Registry - 72h Expiry Rule"]
+                    CompatCheck{"17. CDSS ABO/RhD Compatibility Matcher"}
+                    AntibodyCheck{"18. Historical Antibody Screen and EXM/AHG Router"}
+                    CrossRecord["19. Compatibility Crossmatching CROSSMATCHED"]
+                    HospIssue["20. Issuance and 30-min Return Rule Timer ISSUED"]
+                    BedsideVerify["21. Bedside Scan-to-Verify Double Verification"]
+                    TransfusionDone["22. Transfusion Completed TRANSFUSED"]
+                    
+                    RecvHosp --> SampleReg
+                    SampleReg --> CompatCheck
+                    CompatCheck -->|"Compatible"| AntibodyCheck
+                    AntibodyCheck -->|"Route"| CrossRecord
+                    CrossRecord --> HospIssue
+                    HospIssue --> BedsideVerify
+                    BedsideVerify -->|"Double Verified"| TransfusionDone
+                end
+
+                subgraph M5 ["Subsystem 5: Adverse Reaction Monitoring"]
+                    ReactionReport["23. Post-Transfusion Adverse Reaction Reporting"]
+                    LBLock["24. Automated Bidirectional Lookback Locking"]
+                    AlertBroadcast["25. Global Alert and Immutable Audit Ledger Logging"]
+                    
+                    ReactionReport --> LBLock
+                    LBLock --> AlertBroadcast
+                end
+
+                subgraph M1 ["Subsystem 1: Donor Management and LIMS"]
+                    DonorReg["1. Donor Registration and CCCD Chip Scanning"]
+                    ExamCheck["2. Physical Exam and Circular 26 Deferral Checks"]
+                    BloodColl["3. Blood Collection and ISBT-128 DIN Bag Binding"]
+                    LabTesting["4. LIMS Infectious Disease Screen - HIV/HBV/HCV/Syphilis"]
+                    
+                    DonorReg --> ExamCheck
+                    ExamCheck --> BloodColl
+                    BloodColl --> LabTesting
+                end
+
+                subgraph M2 ["Subsystem 2: Inventory and Component Processing"]
+                    SepProc["5. Whole Blood Separation - PRBC/FFP/PLT Lineage"]
+                    LabGate{"6. LIMS IDM Quality Gating"}
+                    LabelPrint["7. ISBT-128 Blood Bag Label Printing"]
+                    VerifyScan["8. Force Verify-Scan Digital Verification"]
+                    StockInv[("9. AVAILABLE Blood Inventory Database")]
+                    
+                    SepProc --> LabGate
+                    LabGate -->|"Negative Cleared"| LabelPrint
+                    LabelPrint --> VerifyScan
+                    VerifyScan --> StockInv
+                end
+
+                %% Terminal states
+                DiscardBag(["[SOP 3] Force Discard DISCARDED"])
+                Restock["Return to AVAILABLE Stock"]
+                Waste(["[SOP 8] Overtime WASTED"])
+
+                %% Cross-Subsystem Interconnections
+                PushEvent -.->|"1. Resume Sync"| Dispatch
+                Transport -.->|"2. Hospital Delivery Scan"| RecvHosp
+                MtpCase -.->|"3. Break-Glass Emergency release bypass"| HospIssue
+                
+                %% Return Loop
+                BedsideVerify -.->|"4. Within 30 min and Cold Chain Compliant"| Restock
+                Restock -.-> StockInv
+                BedsideVerify -.->|"5. Overtime or Temp Deviation"| Waste
+                
+                %% Lookback Loop
+                TransfusionDone -.->|"6. Reaction Reported"| ReactionReport
+                LBLock -.->|"7. Lock Co-components"| SepProc
+                LBLock -.->|"8. Flag Donor Deferral"| ExamCheck
+                
+                %% IDMReactive
+                LabGate -->|"9. Reactive Block"| DiscardBag
+                BloodColl -->|"10. Status: COLLECTED"| SepProc
+
+                class DonorReg,ExamCheck,BloodColl,LabTesting m1;
+                class SepProc,LabGate,LabelPrint,VerifyScan,StockInv m2;
+                class HospOrder,MtpCase,Dispatch,WarehousePick,Transport m3;
+                class RecvHosp,SampleReg,CompatCheck,AntibodyCheck,CrossRecord,HospIssue,BedsideVerify,TransfusionDone m4;
+                class ReactionReport,LBLock,AlertBroadcast m5;
+                class SyncMgr,LogOutbox,PushEvent shared;
+                class DiscardBag,Waste danger;
+            </div>
+        </div>
+
+        <!-- Vietnamese Diagram 1 -->
+        <div id="diagram1-vi" class="mermaid-container">
+            <div class="mermaid">
+                flowchart TD
+                %% Define Styles
+                classDef m1 fill:#e3f2fd,stroke:#0288d1,stroke-width:2px,color:#01579b;
+                classDef m2 fill:#efebe9,stroke:#5d4037,stroke-width:2px,color:#3e2723;
+                classDef m3 fill:#e8f5e9,stroke:#388e3c,stroke-width:2px,color:#1b5e20;
+                classDef m4 fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#880e4f;
+                classDef m5 fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#e65100;
+                classDef shared fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#4a148c;
+                classDef danger fill:#ffebee,stroke:#d32f2f,stroke-width:2px,color:#b71c1c;
+
+                subgraph Core ["Lõi Ngoại Tuyến và Sao Lưu"]
+                    SyncMgr["Bộ quản lý đồng bộ ngoại tuyến Outbox Pattern Sync"]
+                    LogOutbox["Mất kết nối: Tạm lưu sự kiện Outbox"]
+                    PushEvent["Có mạng lại: Đẩy sự kiện Outbox"]
+                    SyncMgr --> LogOutbox
+                    LogOutbox --> PushEvent
+                end
+
+                subgraph M3 ["Phân hệ 3: Đơn hàng B2B và Chuỗi lạnh Logistics"]
+                    HospOrder["10. Đặt hàng B2B Bệnh viện và Xếp hạng AI HICI"]
+                    MtpCase["11. Kích hoạt Phác đồ truyền máu khối lượng lớn MTP"]
+                    Dispatch["12. Duyệt đơn hàng và Khóa túi máu RESERVED"]
+                    WarehousePick["13. Quét xuất kho PICKED"]
+                    Transport["14. Giám sát chuỗi lạnh IoT thời gian thực IN_TRANSIT"]
+                    
+                    HospOrder --> Dispatch
+                    MtpCase -.-> Dispatch
+                    Dispatch --> WarehousePick
+                    WarehousePick --> Transport
+                end
+
+                subgraph M4 ["Phân hệ 4: Phản ứng chéo và Phát máu lâm sàng"]
+                    RecvHosp["15. Nhận hàng tại viện và Quét đối chiếu RECEIVED"]
+                    SampleReg["16. Đăng ký mẫu máu bệnh nhân - Hạn dùng 72 giờ"]
+                    CompatCheck{"17. So khớp tương thích tự động ABO/RhD"}
+                    AntibodyCheck{"18. Tiền sử kháng thể và Phân luồng EXM/AHG"}
+                    CrossRecord["19. Ghi nhận kết quả phản ứng chéo CROSSMATCHED"]
+                    HospIssue["20. Duyệt phát máu ISSUED và Đếm ngược 30 phút"]
+                    BedsideVerify["21. Đối chiếu kép ba bên tại giường bệnh"]
+                    TransfusionDone["22. Hoàn tất truyền máu lâm sàng TRANSFUSED"]
+                    
+                    RecvHosp --> SampleReg
+                    SampleReg --> CompatCheck
+                    CompatCheck -->|"Tương thích"| AntibodyCheck
+                    AntibodyCheck -->|"Phân luồng"| CrossRecord
+                    CrossRecord --> HospIssue
+                    HospIssue --> BedsideVerify
+                    BedsideVerify -->|"Đối chiếu đạt"| TransfusionDone
+                end
+
+                subgraph M5 ["Phân hệ 5: Giám sát Tai biến truyền máu"]
+                    ReactionReport["23. Báo cáo phản ứng có hại sau truyền máu"]
+                    LBLock["24. Tự động kích hoạt truy xuất hai chiều Lookback"]
+                    AlertBroadcast["25. Cảnh báo toàn hệ thống và Ghi nhật ký Audit"]
+                    
+                    ReactionReport --> LBLock
+                    LBLock --> AlertBroadcast
+                end
+
+                subgraph M1 ["Phân hệ 1: Quản lý Người hiến và LIMS"]
+                    DonorReg["1. Đăng ký người hiến và Quét CCCD"]
+                    ExamCheck["2. Khám sức khỏe và Kiểm tra Thông tư 26"]
+                    BloodColl["3. Thu nhập máu và Ràng buộc nhãn ISBT-128 DIN"]
+                    LabTesting["4. Xét nghiệm LIMS HIV/HBV/HCV/Giang mai"]
+                    
+                    DonorReg --> ExamCheck
+                    ExamCheck --> BloodColl
+                    BloodColl --> LabTesting
+                end
+
+                subgraph M2 ["Phân hệ 2: Chế tạo và Quản lý tồn kho"]
+                    SepProc["5. Ly tâm tách thành phần PRBC/FFP/PLT phả hệ"]
+                    LabGate{"6. Cổng duyệt LIMS IDM an toàn"}
+                    LabelPrint["7. In nhãn máu chuẩn ISBT-128"]
+                    VerifyScan["8. Bắt buộc quét kiểm tra Verify-Scan"]
+                    StockInv[("9. Cơ sở dữ liệu kho hàng AVAILABLE")]
+                    
+                    SepProc --> LabGate
+                    LabGate -->|"Âm tính duyệt"| LabelPrint
+                    LabelPrint --> VerifyScan
+                    VerifyScan --> StockInv
+                end
+
+                %% Terminal states
+                DiscardBag(["[SOP 3] Bắt buộc hủy bỏ DISCARDED"])
+                Restock["Trả lại AVAILABLE"]
+                Waste(["[SOP 8] Quá giờ WASTED"])
+
+                %% Cross-Subsystem Interconnections
+                PushEvent -.->|"1. Đồng bộ lại"| Dispatch
+                Transport -.->|"2. Quét nhận hàng"| RecvHosp
+                MtpCase -.->|"3. Chế độ khẩn Break-glass phát khẩn"| HospIssue
+                
+                %% Return Loop
+                BedsideVerify -.->|"4. Trong 30 phút và Đạt chuỗi lạnh"| Restock
+                Restock -.-> StockInv
+                BedsideVerify -.->|"5. Quá giờ hoặc Lệch nhiệt"| Waste
+                
+                %% Lookback Loop
+                TransfusionDone -.->|"6. Báo tai biến"| ReactionReport
+                LBLock -.->|"7. Khóa cách ly túi cùng DIN"| SepProc
+                LBLock -.->|"8. Đình chỉ người hiến"| ExamCheck
+                
+                %% IDMReactive
+                LabGate -->|"9. Chặn dương tính"| DiscardBag
+                BloodColl -->|"10. Trạng thái: COLLECTED"| SepProc
+
+                class DonorReg,ExamCheck,BloodColl,LabTesting m1;
+                class SepProc,LabGate,LabelPrint,VerifyScan,StockInv m2;
+                class HospOrder,MtpCase,Dispatch,WarehousePick,Transport m3;
+                class RecvHosp,SampleReg,CompatCheck,AntibodyCheck,CrossRecord,HospIssue,BedsideVerify,TransfusionDone m4;
+                class ReactionReport,LBLock,AlertBroadcast m5;
+                class SyncMgr,LogOutbox,PushEvent shared;
+                class DiscardBag,Waste danger;
+            </div>
+        </div>
+
+
+        <!-- Diagram 2: SOPs' Operational Workflow -->
+        <h2 class="section-title" id="diag2-title">II. 10 Core SOPs Operational Lifecycle Diagram</h2>
+        
+        <!-- Chinese Diagram 2 -->
+        <div id="diagram2-zh" class="mermaid-container">
+            <div class="mermaid">
+                flowchart TD
+                %% Define Styles
+                classDef sop fill:#e8eaf6,stroke:#3f51b5,stroke-width:2px,color:#1a237e;
+                classDef state fill:#e0f2f1,stroke:#004d40,stroke-width:1.5px,color:#004d40;
+                classDef gate fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#f57f17;
+                classDef terminal fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#b71c1c;
+
+                Start(["血液安全生命週期起點"]) --> SOP1["SOP 1: 捐血登記與資格檢核"]
+                SOP1 --> StCollected["狀態: COLLECTED 採集完成"]
+                
+                StCollected --> SOP2["SOP 2: 全血成分拆分與親子袋樹"]
+                SOP2 --> StQuarantine["狀態: QUARANTINE 隔離"]
+                
+                StQuarantine --> SOP3["SOP 3: LIMS 檢驗與 QA 數位閘門"]
+                SOP3 --> GateIDM{"IDM 傳染病指標核對"}
+                
+                GateIDM -->|"陽性 REACTIVE"| TermDiscard["SOP 3 終端狀態: DISCARDED 銷毀"]
+                GateIDM -->|"陰性 CLEARED"| SOP4["SOP 4: 標籤列印與 Verify-Scan 二次核對"]
+                
+                SOP4 --> StAvailable["狀態: AVAILABLE 可用庫存"]
+                
+                StAvailable --> SOP10["SOP 10: 醫院 B2B 訂購與 HICI AI 排序"]
+                SOP10 --> GateMtp{"大量輸血 MTP 啟動?"}
+                
+                GateMtp -->|"常規調度"| StReserved["狀態: RESERVED 已保留"]
+                GateMtp -->|"MTP Break-Glass 緊急釋放"| StIssued["狀態: ISSUED 已發出"]
+                
+                StReserved --> SOP5["SOP 5: 冷鏈物流與 IoT Telemetry 監控"]
+                SOP5 --> StReceived["狀態: RECEIVED 醫院接收"]
+                
+                StReceived --> SOP7["SOP 7: 醫院端交叉配血與檢體效期管制"]
+                SOP7 --> GateAntibody{"病患是否有抗體史?"}
+                
+                GateAntibody -->|"有抗體史 強制 AHG"| StCrossmatched["狀態: CROSSMATCHED 已配血"]
+                GateAntibody -->|"無抗體史 允許 EXM"| StCrossmatched
+                
+                StCrossmatched --> SOP8["SOP 8: 醫院發血出庫計時"]
+                SOP8 --> StIssued
+                
+                StIssued --> SOP6["SOP 6: 床邊 Scan-to-Verify 三方核對"]
+                SOP6 --> GateBedside{"床邊核對相容?"}
+                
+                GateBedside -->|"不相容 鎖死中斷"| TermWasted["SOP 8 終端狀態: WASTED 廢棄"]
+                GateBedside -->|"相容"| StTransfused["狀態: TRANSFUSED 輸注完成"]
+                
+                %% Return flow under SOP 8
+                StIssued -.->|"SOP 8: 臨床退回"| Gate30Min{"退回時間是否小於 30 分鐘?"}
+                Gate30Min -.->|"超過 30 分鐘"| TermWasted
+                Gate30Min -.->|"30分鐘內 且 溫控外觀合格"| StReturned["狀態: RETURNED 退回可用"]
+                StReturned -.-> StAvailable
+                
+                %% Reaction Flow
+                StTransfused -.->|"SOP 9: 發生輸血反應"| SOP9["SOP 9: 不良反應通報與雙向 Lookback"]
+                SOP9 -.->|"1. 凍結同源在庫庫存"| StQuarantine
+                SOP9 -.->|"2. 限制捐血者資格"| SOP1
+
+                class SOP1,SOP2,SOP3,SOP4,SOP5,SOP6,SOP7,SOP8,SOP9,SOP10 sop;
+                class StCollected,StQuarantine,StAvailable,StReserved,StReceived,StCrossmatched,StIssued,StReturned,StTransfused state;
+                class GateIDM,GateMtp,GateAntibody,GateBedside,Gate30Min gate;
+                class TermDiscard,TermWasted terminal;
+            </div>
+        </div>
+
+        <!-- English Diagram 2 -->
+        <div id="diagram2-en" class="mermaid-container">
+            <div class="mermaid">
+                flowchart TD
+                %% Define Styles
+                classDef sop fill:#e8eaf6,stroke:#3f51b5,stroke-width:2px,color:#1a237e;
+                classDef state fill:#e0f2f1,stroke:#004d40,stroke-width:1.5px,color:#004d40;
+                classDef gate fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#f57f17;
+                classDef terminal fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#b71c1c;
+
+                Start(["Blood Safety Lifecycle Start"]) --> SOP1["SOP 1: Donor Qualification and Interval Checks"]
+                SOP1 --> StCollected["Status: COLLECTED"]
+                
+                StCollected --> SOP2["SOP 2: Whole Blood Component Separation and Lineage"]
+                SOP2 --> StQuarantine["Status: QUARANTINE"]
+                
+                StQuarantine --> SOP3["SOP 3: NAT/IDM LIMS Testing and QA Gate"]
+                SOP3 --> GateIDM{"IDM Assay Screening"}
+                
+                GateIDM -->|"REACTIVE Positive"| TermDiscard["SOP 3 Terminal: DISCARDED"]
+                GateIDM -->|"CLEARED Negative"| SOP4["SOP 4: ISBT-128 Print and Force Verify-Scan"]
+                
+                SOP4 --> StAvailable["Status: AVAILABLE"]
+                
+                StAvailable --> SOP10["SOP 10: Hospital B2B Ordering and AI HICI"]
+                SOP10 --> GateMtp{"MTP Activation?"}
+                
+                GateMtp -->|"Routine"| StReserved["Status: RESERVED"]
+                GateMtp -->|"MTP Break-Glass Bypass"| StIssued["Status: ISSUED"]
+                
+                StReserved --> SOP5["SOP 5: Logistics Cold Chain IoT Transport"]
+                SOP5 --> StReceived["Status: RECEIVED"]
+                
+                StReceived --> SOP7["SOP 7: Patient Specimen Registry and Crossmatching"]
+                SOP7 --> GateAntibody{"Historical Antibodies?"}
+                
+                GateAntibody -->|"Has Antibodies Force AHG"| StCrossmatched["Status: CROSSMATCHED"]
+                GateAntibody -->|"No Antibodies EXM Route"| StCrossmatched
+                
+                StCrossmatched --> SOP8["SOP 8: Hospital Issuance Chronometer Start"]
+                SOP8 --> StIssued
+                
+                StIssued --> SOP6["SOP 6: Bedside Scan-to-Verify Double Verification"]
+                SOP6 --> GateBedside{"Bedside Compatibility?"}
+                
+                GateBedside -->|"Incompatible Hard Block"| TermWasted["SOP 8 Terminal: WASTED"]
+                GateBedside -->|"Compatible"| StTransfused["Status: TRANSFUSED"]
+                
+                %% Return flow under SOP 8
+                StIssued -.->|"SOP 8: Clinical Return"| Gate30Min{"Returned within 30 min?"}
+                Gate30Min -.->|"Over 30 min"| TermWasted
+                Gate30Min -.->|"Under 30 min and Telemetry Compliant"| StReturned["Status: RETURNED"]
+                StReturned -.-> StAvailable
+                
+                %% Reaction Flow
+                StTransfused -.->|"SOP 9: Reaction Occurs"| SOP9["SOP 9: Adverse Reaction Report and Lookback"]
+                SOP9 -.->|"1. Auto-Quarantine Co-components"| StQuarantine
+                SOP9 -.->|"2. Defer Donor"| SOP1
+
+                class SOP1,SOP2,SOP3,SOP4,SOP5,SOP6,SOP7,SOP8,SOP9,SOP10 sop;
+                class StCollected,StQuarantine,StAvailable,StReserved,StReceived,StCrossmatched,StIssued,StReturned,StTransfused state;
+                class GateIDM,GateMtp,GateAntibody,GateBedside,Gate30Min gate;
+                class TermDiscard,TermWasted terminal;
+            </div>
+        </div>
+
+        <!-- Vietnamese Diagram 2 -->
+        <div id="diagram2-vi" class="mermaid-container">
+            <div class="mermaid">
+                flowchart TD
+                %% Define Styles
+                classDef sop fill:#e8eaf6,stroke:#3f51b5,stroke-width:2px,color:#1a237e;
+                classDef state fill:#e0f2f1,stroke:#004d40,stroke-width:1.5px,color:#004d40;
+                classDef gate fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#f57f17;
+                classDef terminal fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#b71c1c;
+
+                Start(["Khởi đầu chu kỳ an toàn máu"]) --> SOP1["SOP 1: Đăng ký và Kiểm tra Thông tư 26"]
+                SOP1 --> StCollected["Trạng thái: COLLECTED"]
+                
+                StCollected --> SOP2["SOP 2: Ly tâm tách thành phần và Phả hệ"]
+                SOP2 --> StQuarantine["Trạng thái: QUARANTINE"]
+                
+                StQuarantine --> SOP3["SOP 3: Cổng duyệt xét nghiệm LIMS IDM"]
+                SOP3 --> GateIDM{"Kiểm tra chỉ số IDM"}
+                
+                GateIDM -->|"REACTIVE Dương tính"| TermDiscard["SOP 3 Hủy bỏ: DISCARDED"]
+                GateIDM -->|"CLEARED Âm tính"| SOP4["SOP 4: In nhãn máu và Quét Verify-Scan"]
+                
+                SOP4 --> StAvailable["Trạng thái: AVAILABLE"]
+                
+                StAvailable --> SOP10["SOP 10: Đặt hàng B2B và Ưu tiên AI HICI"]
+                SOP10 --> GateMtp{"Kích hoạt MTP?"}
+                
+                GateMtp -->|"Thông thường"| StReserved["Trạng thái: RESERVED"]
+                GateMtp -->|"Break-Glass Cấp phát khẩn"| StIssued["Trạng thái: ISSUED"]
+                
+                StReserved --> SOP5["SOP 5: Vận chuyển chuỗi lạnh và Giám sát IoT"]
+                SOP5 --> StReceived["Trạng thái: RECEIVED"]
+                
+                StReceived --> SOP7["SOP 7: Đăng ký mẫu máu và Phản ứng chéo"]
+                SOP7 --> GateAntibody{"Tiền sử kháng thể bệnh nhân?"}
+                
+                GateAntibody -->|"Có kháng thể Bắt buộc AHG"| StCrossmatched["Trạng thái: CROSSMATCHED"]
+                GateAntibody -->|"Không kháng thể Cho phép EXM"| StCrossmatched
+                
+                StCrossmatched --> SOP8["SOP 8: Phát máu và Đếm ngược server"]
+                SOP8 --> StIssued
+                
+                StIssued --> SOP6["SOP 6: Đối chiếu kép tại giường bệnh"]
+                SOP6 --> GateBedside{"So khớp tại giường đạt?"}
+                
+                GateBedside -->|"Không đạt Khóa cứng"| TermWasted["SOP 8 Hủy bỏ: WASTED"]
+                GateBedside -->|"Hòa hợp"| StTransfused["Trạng thái: TRANSFUSED"]
+                
+                %% Return flow under SOP 8
+                StIssued -.->|"SOP 8: Trả lại máu"| Gate30Min{"Thời gian trả lại dưới 30 phút?"}
+                Gate30Min -.->|"Quá 30 phút"| TermWasted
+                Gate30Min -.->|"Trong 30 phút và Đạt cảm quan"| StReturned["Trạng thái: RETURNED"]
+                StReturned -.-> StAvailable
+                
+                %% Reaction Flow
+                StTransfused -.->|"SOP 9: Tai biến xảy ra"| SOP9["SOP 9: Báo tai biến Hemovigilance và Lookback"]
+                SOP9 -.->|"1. Khóa cách ly túi cùng DIN"| StQuarantine
+                SOP9 -.->|"2. Hoãn hiến người hiến"| SOP1
+
+                class SOP1,SOP2,SOP3,SOP4,SOP5,SOP6,SOP7,SOP8,SOP9,SOP10 sop;
+                class StCollected,StQuarantine,StAvailable,StReserved,StReceived,StCrossmatched,StIssued,StReturned,StTransfused state;
+                class GateIDM,GateMtp,GateAntibody,GateBedside,Gate30Min gate;
+                class TermDiscard,TermWasted terminal;
+            </div>
+        </div>
+
+        <!-- Section 3 -->
+        <h2 class="section-title" id="sec1-title-matrix">III. Subsystem Correlation Matrix</h2>
+
+        <table class="matrix-table">
+            <thead>
+                <tr>
+                    <th style="width: 25%" id="th-subsystem">Subsystem</th>
+                    <th style="width: 15%" id="th-sops">SOPs</th>
+                    <th style="width: 60%" id="th-interlink">Subsystem Inter-Connection &amp; Safety Integrity</th>
+                </tr>
+            </thead>
+            <tbody id="matrix-body">
+                <!-- Translated dynamically -->
+            </tbody>
+        </table>
+
+        <!-- Section 4 -->
+        <h2 class="section-title" id="sec2-title">IV. Granular Stage Operational &amp; Clinical Safety Analysis</h2>
+        
+        <div id="phases-container">
+            <!-- Rendered dynamically -->
+        </div>
+    </div>
+
+    <script>
+        const dict = {
+            en: {
+                mainTitle: "VN-BECS-V1 Alignment Whitepaper",
+                mainSub: "Subsystem Cross-Connection & 10 SOP Integration",
+                docType: "Technical Whitepaper",
+                sopRef: "AABB / ISBT-128 / Circular 26",
+                diag1Title: "I. Subsystem Inter-Connections Blueprint",
+                diag2Title: "II. 10 Core SOPs Operational Lifecycle Diagram",
+                sec1TitleMatrix: "III. Subsystem Correlation Matrix",
+                sec2Title: "IV. Granular Stage Operational & Clinical Safety Analysis",
+                thSubsystem: "Subsystem",
+                thSops: "SOPs",
+                thInterlink: "Subsystem Inter-Connection & Safety Integrity",
+                matrix: [
+                    { sub: "M1: Donor & LIMS", sop: "SOP 1, 3", desc: "Performs donor identity via CCCD card scan. Standardizes Circular 26 age/weight checks. Core IDM (HIV, HBV, HCV, Syphilis) laboratory results are fed directly into the system, locking reactives at the database layer to quarantine (SOP 3) and automatically defers the donor in MDM." },
+                    { sub: "M2: Inventory & Prep", sop: "SOP 2, 4", desc: "Manages centrifugation and splitting parents into child components (PRBC, FFP, PLT). Ensures parent-child lineage. Restricts release to AVAILABLE stock by enforcing a physical verify-scan against printed ISBT-128 barcodes to prevent label mismatch (SOP 4)." },
+                    { sub: "M3: Ordering & Logistics", sop: "SOP 5, 10", desc: "Coordinates hospital B2B orders using HICI AI priority scoring. Controls STAT urgent notifications and emergency MTP uncrossmatched Break-glass releases. Tracks transport boxes in real-time via IoT sensors; auto-holds blood bags experiencing temperature excursions (>6°C or <2°C for >30 minutes)." },
+                    { sub: "M4: Crossmatch & Bedside", sop: "SOP 6, 7, 8", desc: "Enforces 72-hour specimen freshness limits. Blocks electronic crossmatching (EXM) when patient has a positive antibody screening history (SOP 7). Tracks issue record timestamps; server-side chronometer overrides nurse check if returned after 30 minutes, marking units as WASTED (SOP 8). Bedside verification (SOP 6) stops transfusions instantly if ABO/Rh mismatches are scanned." },
+                    { sub: "M5: Hemovigilance", sop: "SOP 9", desc: "Logs post-transfusion reactions. Instantly launches automated bidirectional Lookback: quarantines all other sibling components from the same donation ID (DIN) in stock/transit and suspends donor eligibility in MDM to prevent multiple exposures (SOP 9)." }
+                ],
+                phases: [
+                    {
+                        step: "01",
+                        title: "SOP 1: Donor Qualification & Interval Checks",
+                        flow: "Donor registries scan CCCD identity chips. Physical checks record hemoglobin, weight, and blood pressure. Core database scans history and deferral blacklists.",
+                        io: "Input: CCCD data, age, weight, donation type. Output: eligibilityStatus. DB: writes Donors record, generates DIN code, status = COLLECTED.",
+                        cdss: "Circular 26 Compliance: blocks donors under 18 or over 60, males <45kg, females <42kg. Enforces whole blood interval of 12 weeks, platelets of 2 weeks.",
+                        alert: "TECHNICAL RISK: Donation checks must execute on the backend API. If done solely on the frontend, an API interceptor can bypass interval rules, introducing high-risk donors."
+                    },
+                    {
+                        step: "02",
+                        title: "SOP 2 & 3: Component Prep, LIMS & Quarantine Gating",
+                        flow: "High-speed centrifugation separates Whole Blood into PRBC, FFP, and PLT components. LIMS feeds HIV, HBV, HCV, and Syphilis assay metrics directly.",
+                        io: "Input: parentDin, componentTypes. Output: childUnitIds. DB: creates BloodComponents child tree, status = QUARANTINE.",
+                        cdss: "Quarantine Gate: restricts any reservations or issuances. Clears to AVAILABLE only if all IDM markers are Non-Reactive. Reactive results automatically trigger immediate DISCARDED and quarantine related co-components.",
+                        alert: "CONCURRENCY RACE: Saving LIMS updates and changing status must run inside a single ACID Database Transaction with a row-level lock (SELECT FOR UPDATE) on all co-components."
+                    },
+                    {
+                        step: "03",
+                        title: "SOP 4: ISBT-128 Print & Force Verify-Scan",
+                        flow: "Once cleared, standard ISBT-128 label prints. Medical staff must scan the physical label barcode and match it against the digital record prior to shelving.",
+                        io: "Input: scannedDin, operatorId. Output: verificationStatus. DB: updates status = AVAILABLE, logs AuditEvent.",
+                        cdss: "Verify-Scan Defenses: blocks shelf registration if barcodes do not match digital records (e.g. A-type bag labeled as B-type), routing unit to an isolated HOLD state.",
+                        alert: "DATA DRIFT: If a manager updates bag attributes after printing but before verify-scan, the barcode mismatch must fail. Verify-Scan API must query live DB state."
+                    },
+                    {
+                        step: "04",
+                        title: "SOP 10: B2B Order, HICI AI & STAT Prioritization",
+                        flow: "Hospitals place orders online. AI HICI rates urgency. Emergency STAT triggers alarms. Clinicians activate Massive Transfusion Protocol (MTP) for trauma.",
+                        io: "Input: Qty, BloodType, priority, isBreakGlass. Output: orderId, reservedComponents. DB: creates OrderItems, status = RESERVED.",
+                        cdss: "MTP Break-Glass Bypass: standard MTP blocks uncrossmatched release if specimen has expired (>72h) or patient has antibodies. Setting isBreakGlass = true bypasses checks, forcing O-type release, but logs un-reconciled cases for retrospective review.",
+                        alert: "OVER-ALLOCATION RISK: Multiple operators dispatching blood can cause double-reservations. The backend must enforce Optimistic Locking (version column check) on inventory tables."
+                    },
+                    {
+                        step: "05",
+                        title: "SOP 5: Logistics & IoT Telemetry Temperature tracking",
+                        flow: "Blood bags are placed in transport boxes equipped with continuous IoT temperature loggers. Couriers scan QR driver tokens to dispatch.",
+                        io: "Input: courierToken, scannedDin, temperature readings. Output: telemetryStatus. DB: writes TelemetryLogs, status = IN_TRANSIT.",
+                        cdss: "Excursion Lock: if IoT box temperature drifts outside 2-6°C for a cumulative >30 minutes, an excursion alarm fires, locking the bags as WASTED upon hospital arrival.",
+                        alert: "OFFLINE BLINDSPOT: If cellular signal drops, temperature drifts are missed. System must require receiving terminal to download local data logger logs to verify."
+                    },
+                    {
+                        step: "06",
+                        title: "SOP 7: Recipient Specimen Registry & Compatibility Matcher",
+                        flow: "Hospital lab receives blood bags and registers patient samples. Runs Immediate Spin (IS), Antiglobulin (AHG), or Electronic (EXM) crossmatching.",
+                        io: "Input: componentId, patientId, method, specimenDate. Output: crossmatchResult. DB: creates Crossmatches, status = CROSSMATCHED.",
+                        cdss: "AABB SOP 7 Gating: validates specimen date; blocks if >72h. If the patient has a positive antibody screen history, EXM and IS are strictly blocked, forcing AHG manual crossmatching.",
+                        alert: "OUT-OF-SYNC ANTIBODIES: If patient antibody records in LIS have a sync lag, EXM might pass on a sensitized patient. Crossmatch API must invoke live LIS queries."
+                    },
+                    {
+                        step: "07",
+                        title: "SOP 8: Hospital Issuance & 30-Minute Golden Rule",
+                        flow: "Crossmatched bags are issued to ward nurses. If the transfusion is delayed, the bag must be returned to the blood bank within 30 minutes.",
+                        io: "Input: issueRecordId, coldChainOk, visualOk. Output: returnStatus. DB: updates IssueRecord, status = AVAILABLE / WASTED.",
+                        cdss: "Server Chronometer Override: server computes issue-to-return delta. If >30 minutes, it overrides manual approval, forces Timeout status, and wastes the unit.",
+                        alert: "CLOCK DRIFT: If local hospital servers have clock desynchronization, the 30-min window is compromised. Servers must enforce NTP sync and compute using UTC."
+                    },
+                    {
+                        step: "08",
+                        title: "SOP 6: Bedside Double-Verification & Transfusion",
+                        flow: "At the bedside, two qualified nurses scan the patient's wristband, the blood bag barcode, and their nurse ID badges before transfusion.",
+                        io: "Input: patientMrn, scannedDin, nurseId1, nurseId2. Output: matcherStatus. DB: creates Transfusions, status = TRANSFUSED.",
+                        cdss: "Rigid Bedside Matcher: blocks transfusion if ABO/Rh is incompatible, if the bag is not RESERVED for this patient, or if status is not ISSUED. No bypass button allowed.",
+                        alert: "OFFLINE LATENCY: If nurse PDA is offline, local cache is used. If a bag was recalled centrally while offline, the scan might pass. Local cache must have a strict <2h TTL."
+                    },
+                    {
+                        step: "09",
+                        title: "SOP 9: Adverse Reaction Report & Bidirectional Lookback",
+                        flow: "If the patient shows fever, hemolytic reaction, or hives during transfusion, the nurse stops the flow and reports a Hemovigilance reaction.",
+                        io: "Input: transfusionId, symptoms, severity. Output: lookbackTriggered. DB: writes AdverseReactions, status = TRANSFUSED (with reaction flag).",
+                        cdss: "Automated Bidirectional Lookback: immediately quarantines all sibling components (FFP, PLT from same DIN) in stock or transit, and temporarily defers the donor in MDM.",
+                        alert: "ASYNC BREAKAGE: If Lookback runs as a background task and fails (OOM or db timeout), sibling bags remain active. Lookback must run inside the main transaction block."
+                    },
+                    {
+                        step: "10",
+                        title: "Offline Sync Manager & Conflict Reconciliation",
+                        flow: "During network drops, edge nodes log scans locally. Upon reconnection, Sync Manager pushes events chronologically to central servers.",
+                        io: "Input: offlineEventsList. Output: syncStatus. DB: reconciles SyncQueue, updates Inventory and Issues.",
+                        cdss: "Suspended Conflict Routing: if a bag is issued offline but centrally transferred, the central server blocks Last-Write-Wins, marks status = SUSPENDED_CONFLICT, and alerts QA.",
+                        alert: "DATA CORRUPTION: Network latency can replay events out of order. System must sort events by strict client physical scanned_at timestamp to rebuild lineage."
+                    }
+                ]
+            },
+            zh: {
+                mainTitle: "VN-BECS-V1 系統子系統關聯與 10 大 SOP 流程對齊白皮書",
+                mainSub: "子系統跨模組關聯與 10 大核心 SOP 整合流程總覽",
+                docType: "技術白皮書",
+                sopRef: "AABB 規範 / ISBT-128 標準 / 越南 Circular 26",
+                diag1Title: "一、 子系統互聯互通關聯圖 (Subsystem Inter-Connections)",
+                diag2Title: "二、 10 大 SOP 作業生命週期流程圖 (10 Core SOPs)",
+                sec1TitleMatrix: "三、 跨子系統多維度關聯矩陣",
+                sec2Title: "四、 各流程階段之詳細臨床作業與技術安全分析",
+                thSubsystem: "子系統模組",
+                thSops: "核心 SOPs",
+                thInterlink: "子系統跨模組關聯與安全防禦機制",
+                matrix: [
+                    { sub: "M1: 捐血者與 LIMS", sop: "SOP 1, 3", desc: "掃描 CCCD 身份證，自動計算 Circular 26 年齡/體重。檢驗科 LIMS 自動回傳 HIV/HBV/HCV/梅毒數值。陽性血袋在資料庫層級鎖定為 Quarantine (SOP 3)，並在 MDM 中自動將該捐贈者設為永久/暫時禁捐。" },
+                    { sub: "M2: 製備與庫存管理", sop: "SOP 2, 4", desc: "控制全血成分分離與親子袋衍生。為防止貼錯標籤，系統強制要求進行 ISBT-128 實體標籤回掃（Verify-Scan）比對，吻合後狀態才變更為 AVAILABLE (SOP 4)。" },
+                    { sub: "M3: 需求與訂單物流", sop: "SOP 5, 10", desc: "使用 HICI AI 演算法評估訂單與 STAT 警報。MTP 啟動時支援 Break-glass 繞過配血。運送中 IoT 傳感器實時溫控；溫度偏離 2-6°C 超過 30 分鐘，系統自動鎖定血袋，到貨點收時強制廢棄 (SOP 5)。" },
+                    { sub: "M4: 交叉配血與發血", sop: "SOP 6, 7, 8", desc: "嚴格管制檢體 72 小時時效。若病患具備歷史抗體紀錄，硬性封鎖電子配血（EXM）強迫 AHG 手工配血 (SOP 7)。發血後退回設有伺服器端 30 分鐘硬阻斷 (SOP 8)。床邊雙人雙核對 (SOP 6) 掃描不符即鎖死，不提供忽略選項。" },
+                    { sub: "M5: 不良反應通報", sop: "SOP 9", desc: "臨床回報不良反應時，系統立即觸發自動化「雙向追溯 (Lookback)」：自動將全庫房或在途的同 DIN 兄弟袋狀態強制更新為 QUARANTINE 隔離，並暫停捐血者登記資格，阻斷二次傷害 (SOP 9)。" }
+                ],
+                phases: [
+                    {
+                        step: "01",
+                        title: "SOP 1: 捐血者資格篩選與間隔限制",
+                        flow: "掃描越南 CCCD 晶片導入身份，進行血壓、血紅素與體檢。伺服器即時查詢歷史捐血間隔與黑名單。",
+                        io: "輸入：CCCD個資、體重、捐血類型。輸出：eligibilityStatus。DB：寫入 Donors，建立採集編號，狀態 = COLLECTED。",
+                        cdss: "越南 Circular 26/2013/TT-BYT 強制防護：年齡必須在 18~60 歲，男性體重 >= 45kg，女性 >= 42kg。全血捐血間隔強鎖 12 週，血小板分離術強鎖 2 週。",
+                        alert: "技術漏洞診斷：間隔檢查必須由伺服器 API 執行。若寫在前端 UI，攻擊者可透過直連 API 繞過間隔，強行登記不合格捐血者，引發生物安全危機。"
+                    },
+                    {
+                        step: "02",
+                        title: "SOP 2 & 3: 成分分離、LIMS 檢驗與隔離安全門",
+                        flow: "全血高速離心拆分為 PRBC、FFP、PLT。檢驗科 LIMS 儀器回傳 HIV、HBV、HCV、梅毒四項篩檢指標。",
+                        io: "輸入：parentDin、成分類型。輸出：childUnitIds. DB：寫入 BloodComponents 子袋，狀態 = QUARANTINE。",
+                        cdss: "隔離安全門：嚴禁對 Quarantine 袋進行配發血。LIMS 陰性放行轉為 AVAILABLE。若任一指標呈陽性，觸發連鎖報廢，同 DIN 所有兄弟袋一併轉為 DISCARDED。",
+                        alert: "併發漏洞診斷：更新檢驗與血袋狀態必須在同一個 ACID 資料庫事務（Transaction）中執行，並對該 DIN 子袋實施行級鎖（SELECT FOR UPDATE），防止高併發下漏鎖變更。"
+                    },
+                    {
+                        step: "03",
+                        title: "SOP 4: ISBT-128 二次回掃 Verify-Scan 驗證",
+                        flow: "血袋品管放行後列印 ISBT-128 實體標籤。系統強制人員掃描袋上條碼與畫面比對，無誤後才能上架可用。",
+                        io: "輸入：scannedDin、操作員ID。輸出：verificationStatus。DB：更新狀態 = AVAILABLE，寫入 AuditEvent。",
+                        cdss: "Verify-Scan 限制：若條碼回掃與資料庫登記屬性不符（如 A 型血被貼成 B 型標籤），系統紅字警報並鎖死該袋血，更新為隔離 HOLD 狀態待查。",
+                        alert: "技術細節：在列印與回掃的「時間差」內，若管理員修改了資料庫屬性，回掃必須依據伺服器即時狀態比對，不能僅在瀏覽器端做靜態字串比較。"
+                    },
+                    {
+                        step: "04",
+                        title: "SOP 10: 醫院 B2B 訂購、HICI AI 評估與 MTP 啟動",
+                        flow: "醫院線上訂用血品。AI 演算法評估訂單優先級。大量輸血協定（MTP）在危急創傷時由臨床醫生啟動。",
+                        io: "輸入：品項數量、優先級、isBreakGlass。輸出：orderId、assignedComponents. DB：寫入 OrderItems，狀態 = RESERVED。",
+                        cdss: "MTP 破窗緊急釋放：正常訂單在檢體過期或病患有歷史抗體時由 CDSS 攔截。設定 isBreakGlass = true 時特許繞過配血，強制放行 O 型血，但會在補登看板掛載追蹤。",
+                        alert: "併發超賣防護：多名調度員併發揀選同一袋血時，必須在 `Inventory` 導入樂觀鎖（Optimistic Locking，版本號校驗），避免一血雙配。"
+                    },
+                    {
+                        step: "05",
+                        title: "SOP 5: 冷鏈物流、物聯網監控與到貨接收",
+                        flow: "血袋移入備有 IoT 溫控儀的運送箱。司機掃描 QR Token 開始運輸，途中 GPS 與溫度計每分鐘回傳數據。",
+                        io: "輸入：courierToken、scannedDin、即時溫度。輸出：telemetryStatus. DB：寫入 TelemetryLogs，狀態 = IN_TRANSIT。",
+                        cdss: "冷鏈超溫自動判定：若紅血球偏離 2~6°C 區間累計超過 30 分鐘，系統發出超溫警報，並在醫院收貨掃描時強制變更為 WASTED 廢棄。",
+                        alert: "離線盲區：運送車輛行經無信號區時數據中斷。系統必須要求醫院點收端強制讀取物理 Data Logger 的全段離線溫度紀錄並上傳，由後端 API 補齊判定。"
+                    },
+                    {
+                        step: "06",
+                        title: "SOP 7: 醫院交叉配血與檢體 72 小時時效管制",
+                        flow: "醫院接收血袋，登記受血者新鮮檢體。執行即時離心（IS）、抗球蛋白（AHG）或電子配血（EXM）。",
+                        io: "輸入：componentId、patientId、配血方法、檢體日期。輸出：crossmatchResult. DB: 寫入 Crossmatches，狀態 = CROSSMATCHED。",
+                        cdss: "AABB SOP 7 強制分流：檢體日期 > 72 小時 API 強制報錯阻斷。若病患具備歷史抗體紀錄，硬性封鎖 EXM 和 IS 電子配血，強制只能使用 AHG 手工配血。",
+                        alert: "同步遲滯：若院內 LIMS 的病患新抗體數據與本系統同步存在遲滯，電子配血可能放行。API 必須在執行配血前，向 LIMS 發起即時的病患最新抗體狀態查詢。"
+                    },
+                    {
+                        step: "07",
+                        title: "SOP 8: 發血退回黃金 30 分鐘限制",
+                        flow: "交叉配相容的血袋發往臨床病房。若因故暫停輸注，必須在黃金 30 分鐘內將血袋退回醫院血庫。",
+                        io: "輸入：issueRecordId、冷鏈與外觀檢核。輸出：returnStatus。DB：更新 IssueRecord，狀態 = AVAILABLE / WASTED。",
+                        cdss: "伺服器時間覆寫機制：退回時 API 自動讀取 `issuedAt`，計算相差分鐘。若 > 30 分鐘，不論手動檢核是否合格，伺服器直接覆寫為 Timeout 並強制變更為 WASTED。",
+                        alert: "時間偏差：若邊緣節點與中央伺服器時間不同步（Clock Drift），計時將失效。所有邊緣節點必須配置 NTP 網路校時，且一律使用 UTC 時間計算。"
+                    },
+                    {
+                        step: "08",
+                        title: "SOP 6: 床邊雙盲核對與輸注防呆",
+                        flow: "輸注前最後關卡。雙護理師在床邊使用 PDA 掃描病患手環、血袋 ISBT-128 DIN，以及雙人識別證。",
+                        io: "輸入：patientMrn、scannedDin、雙護理師ID。輸出：matcherStatus。DB：寫入 Transfusions，狀態 = TRANSFUSED。",
+                        cdss: "Matcher 三方防呆：比對 ABO/Rh 是否相容、reserved_patient_id 是否吻合，且血袋狀態必須為 ISSUED。判定失敗時直接鎖死，不提供任何忽略/繼續按鈕。",
+                        alert: "離線危機：離線模式下若使用本地快取比對，若中央在斷網期間發出了「緊急召回」，離線 PDA 將無法得知而允許輸注。離線快取必須設定嚴格的 TTL (<2h)。"
+                    },
+                    {
+                        step: "09",
+                        title: "SOP 9: 不良反應通報與雙向追溯 (Lookback)",
+                        flow: "輸注中或輸注後若病患出現發燒、溶血等症狀，護理師立即停止輸血，並在系統中啟動不良反應通報。",
+                        io: "輸入：transfusionId、不良反應症狀、嚴重度。輸出：lookbackTriggered。DB：寫入 AdverseReactions，狀態 = TRANSFUSED。",
+                        cdss: "自動化雙向 Lookback 引擎：一鍵觸發，自動向後追查捐血者並於 MDM 暫停其捐血；同時向前追尋庫房與在途的同 DIN 兄弟袋，強制將其狀態改寫為 QUARANTINE 凍結。",
+                        alert: "非同步失效：若 Lookback 寫在背景非同步任務中，一旦任務超時失敗，兄弟袋將繼續暴露在危險中。Lookback 必須與不良反應寫入放在同一個強一致性 Transaction 中。"
+                    },
+                    {
+                        step: "10",
+                        title: "離線同步管理器與衝突對帳機制",
+                        flow: "斷網期間邊緣節點本地暫存掃描。網通後離線同步管理器自動上傳，依據 physical scanned_at 時間重播對帳。",
+                        io: "輸入：offlineEventsList。輸出：syncStatus。DB：重播對帳，更新 Inventory 與 Issues。",
+                        cdss: "衝突路由：若血袋離線發給病人，但中央在其斷網時已調撥給他院，同步時會引發狀態衝突。系統拒絕使用 Last-Write-Win 覆寫，將血袋標記為 SUSPENDED_CONFLICT 鎖定並推至 QA 看板。",
+                        alert: "數據損毀風險：網路延遲可能導致重播順序錯亂。系統必須完全依據終端物理掃描的絕對時間戳（Client Physical Timestamp）進行流水帳排序重播對帳。"
+                    }
+                ]
+            },
+            vi: {
+                mainTitle: "Bạch thư Đối chiếu Phân hệ và SOPs VN-BECS-V1",
+                mainSub: "Tích hợp Liên kết Phân hệ và 10 Quy trình SOP Tiêu chuẩn",
+                docType: "Bạch thư Kỹ thuật",
+                sopRef: "Tiêu chuẩn AABB / ISBT-128 / Thông tư 26",
+                diag1Title: "I. Sơ đồ liên kết liên kết phân hệ (Subsystem Inter-Connections)",
+                diag2Title: "II. Sơ đồ quy trình hoạt động 10 SOP tiêu chuẩn (10 Core SOPs)",
+                sec1TitleMatrix: "III. Ma trận quan hệ đa chiều giữa các phân hệ",
+                sec2Title: "IV. Phân tích chi tiết vận hành & CDSS an toàn lâm sàng",
+                thSubsystem: "Phân hệ Hệ thống",
+                thSops: "Quy trình SOP",
+                thInterlink: "Kiên kết Phân hệ & Cơ chế Phòng vệ CDSS",
+                matrix: [
+                    { sub: "M1: Người hiến & LIMS", sop: "SOP 1, 3", desc: "Quét chip CCCD tự động đối chiếu tuổi/cân nặng Thông tư 26. LIMS tự động trả kết quả HIV/HBV/HCV/Giang mai. Túi máu dương tính tự động khóa cách ly (SOP 3), đồng thời hoãn hiến vĩnh viễn/tạm thời người hiến trên hệ thống MDM." },
+                    { sub: "M2: Kho hàng & Ly tâm tách", sop: "SOP 2, 4", desc: "Giám sát tách thành phần máu cha-con. Bắt buộc quét đối chiếu nhãn vật lý (Verify-Scan) với mã vạch ISBT-128 đã in trước khi đưa túi máu vào trạng thái AVAILABLE để tránh dán sai nhãn (SOP 4)." },
+                    { sub: "M3: Đơn hàng B2B & Logistics", sop: "SOP 5, 10", desc: "Thuật toán AI HICI xếp hạng đơn hàng khẩn STAT. Phác đồ MTP Break-glass cho phép giải phóng máu khẩn cấp. Cảm biến IoT theo dõi nhiệt độ; lệch 2-6°C quá 30 phút tự động hủy bỏ túi máu khi đến viện (SOP 5)." },
+                    { sub: "M4: Phản ứng chéo & Phát máu", sop: "SOP 6, 7, 8", desc: "Chặn mẫu máu quá 72 giờ. Chặn truyền máu điện tử EXM khi bệnh nhân có tiền sử kháng thể (SOP 7). Đồng hồ server đếm ngược 30 phút trả máu; quá giờ tự động ghi đè sang WASTED (SOP 8). Quét đối chiếu kép giường bệnh (SOP 6) khóa cứng nếu phát hiện bất tương thích ABO/RhD." },
+                    { sub: "M5: Giám sát Hemovigilance", sop: "SOP 9", desc: "Ghi nhận phản ứng có hại. Kích hoạt tự động truy xuất hai chiều (Lookback): khóa cách ly khẩn cấp toàn bộ sản phẩm cùng DIN trong kho hoặc trên đường đi, hoãn quyền hiến máu của người hiến để tránh nguy cơ tiếp xúc (SOP 9)." }
+                ],
+                phases: [
+                    {
+                        step: "01",
+                        title: "SOP 1: Tiêu chuẩn người hiến & Kiểm tra khoảng cách",
+                        flow: "Quét chip CCCD tiếp nhận danh tính, đo huyết áp, huyết sắc tố. Server quét tiền sử hiến máu và danh sách hoãn hiến quốc gia thời gian thực.",
+                        io: "Input: cá nhân CCCD, cân nặng, loại hiến. Output: eligibilityStatus. DB: ghi Donors, tạo mã DIN, trạng thái = COLLECTED.",
+                        cdss: "Tuân thủ Thông tư 26/2013/TT-BYT: tuổi từ 18-60, Nam >= 45kg, Nữ >= 42kg. Khoảng cách hiến máu toàn phần khóa 12 tuần, hiến tiểu cầu khóa 2 tuần.",
+                        alert: "RỦI RO KỸ THUẬT: Việc kiểm tra khoảng cách hiến phải chạy trên server API. Nếu chỉ chạy ở giao diện frontend, kẻ tấn công có thể giả lập API để đăng ký người hiến không đủ tiêu chuẩn."
+                    },
+                    {
+                        step: "02",
+                        title: "SOP 2 & 3: Tách thành phần, LIMS & Cổng cách ly an toàn",
+                        flow: "Ly tâm tốc độ cao tách máu toàn phần thành PRBC, FFP, PLT. Phòng xét nghiệm LIMS trả kết quả HIV, HBV, HCV và Giang mai.",
+                        io: "Input: parentDin, loại thành phần. Output: childUnitIds. DB: tạo BloodComponents con, trạng thái = QUARANTINE.",
+                        cdss: "Cổng cách ly: nghiêm cấm phát máu trạng thái Quarantine. Trả kết quả âm tính chuyển sang AVAILABLE. Bất kỳ chỉ số nào dương tính tự động chuyển sang DISCARDED và khóa cách ly các túi máu liên đới cùng DIN.",
+                        alert: "XUNG ĐỘT GHI ĐỒNG THỜI: Cập nhật xét nghiệm và chuyển trạng thái túi máu phải chạy trong cùng một ACID Database Transaction, sử dụng row-level lock (SELECT FOR UPDATE) trên toàn bộ túi cùng DIN."
+                    },
+                    {
+                        step: "03",
+                        title: "SOP 4: In nhãn ISBT-128 & Bắt buộc quét Verify-Scan",
+                        flow: "Sau khi duyệt QA, nhãn chuẩn ISBT-128 được in. Bắt buộc nhân viên quét mã vạch trên nhãn vật lý đối chiếu dữ liệu hệ thống trước khi đưa vào kho.",
+                        io: "Input: scannedDin, ID nhân viên. Output: verificationStatus. DB: cập nhật trạng thái = AVAILABLE, ghi AuditEvent.",
+                        cdss: "Cơ chế Verify-Scan: nếu quét đối chiếu lệch thuộc tính hệ thống (ví dụ túi máu A dán nhãn B), hệ thống báo động đỏ, khóa cứng túi máu sang trạng thái HOLD cách ly.",
+                        alert: "SAI LỆCH DỮ LIỆU: Trong thời gian từ lúc in đến lúc quét, nếu quản trị viên sửa thuộc tính trên DB, Verify-Scan phải check live DB chứ không chỉ so khớp chuỗi tĩnh ở trình duyệt."
+                    },
+                    {
+                        step: "04",
+                        title: "SOP 10: Đơn hàng B2B, AI HICI & Ưu tiên STAT",
+                        flow: "Bệnh viện đặt máu online. Thuật toán AI HICI đánh giá mức độ khẩn cấp. Yêu cầu STAT STAT kích hoạt chuông báo. Bác sĩ kích hoạt phác đồ truyền máu khối lượng lớn (MTP) khi chấn thương cấp cứu.",
+                        io: "Input: số lượng, nhóm máu, độ khẩn, isBreakGlass. Output: orderId, reservedComponents. DB: ghi OrderItems, trạng thái = RESERVED.",
+                        cdss: "Chế độ khẩn cấp MTP Break-Glass: đơn hàng chuẩn bị chặn nếu mẫu máu hết hạn (>72g) hoặc bệnh nhân có kháng thể. Kích hoạt isBreakGlass = true cho phép bỏ qua kiểm tra, phát khẩn cấp máu O, nhưng bắt buộc hậu kiểm trong 24g.",
+                        alert: "RỦI RO BÁN QUÁ SỐ LƯỢNG: Nhiều điều phối viên cùng chọn một túi máu có thể gây trùng lặp. Server phải áp dụng khóa lạc quan (Optimistic Locking, check cột version) trên bảng tồn kho."
+                    },
+                    {
+                        step: "05",
+                        title: "SOP 5: Vận chuyển chuỗi lạnh & Giám sát nhiệt độ IoT",
+                        flow: "Túi máu được xếp vào thùng chuyên dụng tích hợp thiết bị đo nhiệt độ IoT. Tài xế quét QR Token để bắt đầu di chuyển, GPS và nhiệt độ cập nhật mỗi phút.",
+                        io: "Input: courierToken, scannedDin, nhiệt độ thực tế. Output: telemetryStatus. DB: ghi TelemetryLogs, trạng thái = IN_TRANSIT.",
+                        cdss: "Khóa vượt ngưỡng nhiệt độ: nếu nhiệt độ thùng lệch khỏi 2-6°C tích lũy quá 30 phút, hệ thống kích hoạt cảnh báo, tự động khóa túi máu sang WASTED khi quét nhận hàng.",
+                        alert: "ĐIỂM MÙ NGOẠI TUYẾN: Xe đi vào vùng mất sóng không thể cập nhật nhiệt độ. Hệ thống bắt buộc trạm nhận hàng đọc toàn bộ nhật ký nhiệt độ offline từ Data Logger vật lý để hậu kiểm."
+                    },
+                    {
+                        step: "06",
+                        title: "SOP 7: Đăng ký mẫu máu bệnh nhân & Khớp nhóm hòa hợp",
+                        flow: "Phòng lab bệnh viện tiếp nhận túi máu, đăng ký mẫu máu tươi bệnh nhân. Tiến hành phản ứng chéo IS, AHG hoặc truyền máu điện tử (EXM).",
+                        io: "Input: componentId, patientId, phương pháp, ngày lấy mẫu. Output: crossmatchResult. DB: ghi Crossmatches, trạng thái = CROSSMATCHED.",
+                        cdss: "Phân luồng AABB SOP 7: Mẫu máu quá 72 giờ bị chặn hoàn toàn. Nếu bệnh nhân có tiền sử xét nghiệm kháng thể dương tính, hệ thống khóa cứng phương pháp EXM và IS, bắt buộc làm phản ứng chéo thủ công AHG.",
+                        alert: "ĐỒNG BỘ TRỄ KHÁNG THỂ: Nếu hồ sơ kháng thể bệnh nhân từ LIS đồng bộ trễ, EXM có thể cho qua túi máu bất tương thích. API Crossmatch phải truy vấn trực tiếp LIS thời gian thực."
+                    },
+                    {
+                        step: "07",
+                        title: "SOP 8: Quy tắc 30 phút vàng phát và trả máu",
+                        flow: "Túi máu hòa hợp phát cho điều dưỡng. Nếu hoãn truyền, túi máu phải được trả về kho máu trong vòng 30 phút.",
+                        io: "Input: issueRecordId, trạng thái chuỗi lạnh & cảm quan. Output: returnStatus. DB: cập nhật IssueRecord, trạng thái = AVAILABLE / WASTED.",
+                        cdss: "Ghi đè đồng hồ Server: Server tính thời gian phát-trả. Nếu >30 phút, bất kể điều dưỡng check đạt cảm quan, server tự động chuyển trạng thái thành Timeout và hủy bỏ túi máu sang WASTED.",
+                        alert: "LỆCH GIỜ SERVER: Nếu server bệnh viện lệch giờ với server trung tâm, tính giờ 30 phút bị lỗi. Tất cả edge node phải đồng bộ NTP và tính theo múi giờ chuẩn UTC."
+                    },
+                    {
+                        step: "08",
+                        title: "SOP 6: Đối chiếu kép tại giường bệnh & Truyền máu",
+                        flow: "Bước kiểm tra cuối cùng. Hai điều dưỡng tại giường bệnh quét mã vòng tay bệnh nhân, mã vạch túi máu ISBT-128 DIN và ID điều dưỡng trước khi truyền.",
+                        io: "Input: patientMrn, scannedDin, ID 2 điều dưỡng. Output: matcherStatus. DB: tạo Transfusions, trạng thái = TRANSFUSED.",
+                        cdss: "Khóa cứng đối chiếu Matcher: Chặn truyền máu nếu nhóm ABO/Rh bất tương thích, túi máu không được đặt trước (RESERVED) cho bệnh nhân này, hoặc trạng thái không phải ISSUED. Không có nút bỏ qua.",
+                        alert: "ĐỘ TRỄ NGOẠI TUYẾN: Nếu PDA điều dưỡng offline, dữ liệu local cache được dùng. Nếu trung tâm phát lệnh 'Thu hồi khẩn cấp' lúc offline, quét giường bệnh có thể lọt. Cache local phải cài TTL < 2g."
+                    },
+                    {
+                        step: "09",
+                        title: "SOP 9: Báo cáo phản ứng lâm sàng & Truy xuất hai chiều",
+                        flow: "Bệnh nhân sốt, phản ứng lâm sàng, dị ứng lúc truyền máu, điều dưỡng khóa van truyền ngay, gửi báo cáo tai biến Hemovigilance lên hệ thống.",
+                        io: "Input: transfusionId, triệu chứng, mức độ. Output: lookbackTriggered. DB: ghi AdverseReactions, trạng thái = TRANSFUSED (kèm cờ phản ứng).",
+                        cdss: "Truy xuất hai chiều Lookback tự động: ngay lập tức quét toàn bộ kho, khóa cách ly (QUARANTINE) khẩn cấp các túi máu thành phần cùng DIN (FFP, PLT), hoãn quyền hiến của người hiến trên MDM.",
+                        alert: "LỖI TIẾN TRÌNH NỀN: Nếu chạy Lookback ở dạng background task bất đồng bộ gặp lỗi (OOM hoặc quá hạn DB), túi máu liên đới vẫn trôi nổi. Lookback bắt buộc chạy chung Transaction đồng bộ ghi báo cáo."
+                    },
+                    {
+                        step: "10",
+                        title: "Đồng bộ hóa ngoại tuyến & Bảng đối chiếu giải quyết xung đột",
+                        flow: "Mất mạng edge node lưu offline. Khi có mạng lại, Sync Manager tự động đẩy sự kiện lên server theo thứ tự physical scanned_at thời gian thực.",
+                        io: "Input: offlineEventsList. Output: syncStatus. DB: đối chiếu SyncQueue, cập nhật Inventory và Issues.",
+                        cdss: "Giải quyết xung đột dữ liệu: Nếu túi máu phát offline tại viện nhưng trung tâm đã chuyển đi nơi khác lúc mất mạng, server chặn ghi đè Last-Write-Win, khóa trạng thái SUSPENDED_CONFLICT đẩy lên QA xét duyệt.",
+                        alert: "HỎNG DỮ LIỆU: Mạng chập chờn gây replay sự kiện lộn xộn. Hệ thống bắt buộc sắp xếp sự kiện theo thời gian quét vật lý của client (Client Physical Timestamp) trước khi đối chiếu."
+                    }
+                ]
+            }
+        };
+
+        function switchLanguage(lang) {
+            // Toggle active tab class
+            document.querySelectorAll('.lang-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.getAttribute('onclick') && tab.getAttribute('onclick').includes(`'${lang}'`)) {
+                    tab.classList.add('active');
+                }
+            });
+
+            // Toggle active diagrams
+            document.querySelectorAll('.mermaid-container').forEach(c => {
+                c.classList.remove('active');
+            });
+            document.getElementById(`diagram1-${lang}`).classList.add('active');
+            document.getElementById(`diagram2-${lang}`).classList.add('active');
+
+            const data = dict[lang];
+            
+            // Text values updates
+            document.getElementById('main-title').innerText = data.mainTitle;
+            document.getElementById('main-sub').innerText = data.mainSub;
+            document.getElementById('doc-type').innerText = data.docType;
+            document.getElementById('sop-ref').innerText = data.sopRef;
+            document.getElementById('diag1-title').innerText = data.diag1Title;
+            document.getElementById('diag2-title').innerText = data.diag2Title;
+            document.getElementById('sec1-title-matrix').innerText = data.sec1TitleMatrix;
+            document.getElementById('sec2-title').innerText = data.sec2Title;
+            document.getElementById('th-subsystem').innerText = data.thSubsystem;
+            document.getElementById('th-sops').innerText = data.thSops;
+            document.getElementById('th-interlink').innerText = data.thInterlink;
+
+            // Matrix Table Translation Rendering
+            let matrixHtml = '';
+            data.matrix.forEach(row => {
+                matrixHtml += `
+                    <tr>
+                        <td class="matrix-subsystem">${row.sub}</td>
+                        <td><span class="matrix-sop">${row.sop}</span></td>
+                        <td>${row.desc}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('matrix-body').innerHTML = matrixHtml;
+
+            // Phase blocks Rendering
+            let phasesHtml = '';
+            data.phases.forEach((p, idx) => {
+                const labels = {
+                    en: { flow: "Operational Flow", io: "Data I/O & State Transitions", cdss: "Safety CDSS & Guardrails", alert: "Technical Vulnerability & Concurrency Diagnostics" },
+                    zh: { flow: "臨床與作業流程說明", io: "數據 I/O 與系統狀態轉移", cdss: "CDSS 臨床安全檢核防護", alert: "底層技術分析與潛在漏洞診斷" },
+                    vi: { flow: "Mô tả Quy trình Lâm sàng & Vận hành", io: "Dữ liệu I/O & Chuyển trạng thái hệ thống", cdss: "Cơ chế CDSS An toàn Lâm sàng", alert: "Phân tích kỹ thuật & Chẩn đoán rủi ro ẩn" }
+                }[lang];
+
+                phasesHtml += `
+                    <div class="phase-block">
+                        <div class="phase-header">
+                            <div class="phase-badge">${p.step}</div>
+                            <div class="phase-title">${p.title}</div>
+                        </div>
+                        <div class="phase-grid">
+                            <div class="phase-col">
+                                <div>
+                                    <div class="phase-item-title">${labels.flow}</div>
+                                    <div class="phase-item-desc">${p.flow}</div>
+                                </div>
+                                <div>
+                                    <div class="phase-item-title">${labels.io}</div>
+                                    <div class="phase-item-desc">${p.io}</div>
+                                </div>
+                            </div>
+                            <div class="phase-col">
+                                <div>
+                                    <div class="phase-item-title">${labels.cdss}</div>
+                                    <div class="phase-item-desc">${p.cdss}</div>
+                                </div>
+                                <div class="clinical-alert">
+                                    <strong>${labels.alert}</strong><br>
+                                    ${p.alert}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('phases-container').innerHTML = phasesHtml;
+        }
+
+        function initThemeSync() {
+            try {
+                if (window.parent && window.parent.document) {
+                    const parentHtml = window.parent.document.documentElement;
+                    
+                    const updateTheme = () => {
+                        const isDark = parentHtml.classList.contains('dark');
+                        if (isDark) {
+                            document.documentElement.classList.remove('light');
+                            document.documentElement.classList.add('dark');
+                        } else {
+                            document.documentElement.classList.remove('dark');
+                            document.documentElement.classList.add('light');
+                        }
+                    };
+                    
+                    // Perform initial sync
+                    updateTheme();
+                    
+                    // Observe class changes dynamically
+                    const observer = new MutationObserver(updateTheme);
+                    observer.observe(parentHtml, { attributes: true, attributeFilter: ['class'] });
+                } else {
+                    throw new Error("No parent window access");
+                }
+            } catch (e) {
+                console.log('Using local theme fallback:', e);
+                const savedTheme = localStorage.getItem('vnbbms_theme');
+                if (savedTheme) {
+                    const isDark = ['slate-corporate', 'tech-lavender', 'minty-aqua', 'aurora-glow'].includes(savedTheme);
+                    if (isDark) {
+                        document.documentElement.classList.remove('light');
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                        document.documentElement.classList.add('light');
+                    }
+                } else {
+                    // Default to dark mode if no parent and no saved theme
+                    document.documentElement.classList.remove('light');
+                    document.documentElement.classList.add('dark');
+                }
+            }
+        }
+
+        // Initialize language on load, support query parameter or hash
+        window.onload = function() {
+            // Run theme synchronization
+            initThemeSync();
+
+            const urlParams = new URLSearchParams(window.location.search);
+            let lang = urlParams.get('lang') || window.location.hash.replace('#', '');
+            if (lang === 'zh-TW' || lang === 'zh-CN' || lang === 'zh' || lang === 'tw') {
+                lang = 'zh';
+            }
+            if (lang !== 'en' && lang !== 'zh' && lang !== 'vi') {
+                lang = 'en'; // default
+            }
+            switchLanguage(lang);
+        }
+    </script>
+</body>
+</html>

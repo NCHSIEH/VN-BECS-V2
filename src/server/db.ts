@@ -1,11 +1,15 @@
 import { supabase } from '../lib/supabaseClient';
 import { hashPassword } from './crypto';
+import { orders } from './repositories/orderRepo';
+import { inventory } from './repositories/inventoryRepo';
+import { patients } from './repositories/patientRepo';
+
 if (!supabase) {
   console.warn('DB API: Supabase client is not initialized. Check your environment variables.');
 }
 
 // Helper to detect if a table is missing in the database schema cache
-function isTableMissingError(error: any): boolean {
+export function isTableMissingError(error: any): boolean {
   if (!error) return false;
   const errMsg = error.message || '';
   const errCode = error.code || '';
@@ -52,7 +56,7 @@ export const fallbackStores = {
   ] as any[],
   audit_events: [] as any[],
   orders: [
-    { id: 'ORD-HCM-901', hospital: 'HOSP-HCM-02', priority: 'EMERGENCY', status: 'IN_TRANSIT', hiciScore: 8.5, type: 'RBC', items: '[{"productCode":"P-RBC-01","quantity":1}]', patientId: 'MRN-HCM-887766', clinicalIndication: 'Acute Bleeding', specialRequirements: 'None', allocatedUnits: '["CMP-HCM-01-RBC"]', escalationReason: '', submittedAt: '2026-05-24T09:10:00Z' }
+    { id: 'ORD-HCM-901', hospital: 'HOSP-HCM-02', priority: 'EMERGENCY', status: 'IN_TRANSIT', hiciScore: 8.5, type: 'RBC', items: [], patientId: 'MRN-HCM-887766', clinicalIndication: 'Acute Bleeding', specialRequirements: 'None', allocatedUnits: [], escalationReason: '', submittedAt: '2026-05-24T09:10:00Z' }
   ] as any[],
   mtp_cases: [] as any[],
   product_catalog: [
@@ -90,6 +94,13 @@ export const fallbackStores = {
   ] as any[],
   rare_donors: [
     { id: 'RD-01', name: '阮小龍 (Nguyen Tieu Long)', nationalId: '001099008877', bloodType: 'O', rhd: 'Negative', phenotype: 'Bombay O (h/h)', hlaTyping: '{"A":"02, 24","B":"46, 54"}', hpaTyping: '{"1":"a,a"}', location: 'Hanoi', contact: '+84901234567', status: 'Available', lastDonationDate: '2026-02-15', orgId: 'BC-HN-01' }
+  ] as any[],
+  order_items: [
+    { orderId: 'ORD-HCM-901', productCode: 'P-RBC-01', quantity: 1, allocatedUnits: 'CMP-HCM-01-RBC' }
+  ] as any[],
+  patient_antibodies: [
+    { patientId: 'MRN-HCM-887766', antibody: 'Anti-E' },
+    { patientId: 'MRN-DN-445566', antibody: 'Anti-Kell' }
   ] as any[]
 };
 
@@ -932,93 +943,6 @@ export const auditEvents = {
 };
 export const audit_events = auditEvents;
 
-export const orders = {
-  async getAll() {
-    try {
-      const { data: rows, error } = await supabase.from('orders').select('*').order('submittedAt', { ascending: false });
-      if (error) {
-        if (isTableMissingError(error)) {
-          return fallbackStores.orders.map(r => ({ 
-            ...r, 
-            items: typeof r.items === 'string' ? JSON.parse(r.items) : (r.items || []),
-            allocatedUnits: typeof r.allocatedUnits === 'string' ? JSON.parse(r.allocatedUnits) : (r.allocatedUnits || [])
-          }));
-        }
-        throw error;
-      }
-      
-      if (!rows || rows.length === 0) {
-        return fallbackStores.orders.map(r => ({ 
-          ...r, 
-          items: typeof r.items === 'string' ? JSON.parse(r.items) : (r.items || []),
-          allocatedUnits: typeof r.allocatedUnits === 'string' ? JSON.parse(r.allocatedUnits) : (r.allocatedUnits || [])
-        }));
-      }
-      
-      return rows.map(r => ({ 
-        ...r, 
-        items: typeof r.items === 'string' ? JSON.parse(r.items) : (r.items || []),
-        allocatedUnits: typeof r.allocatedUnits === 'string' ? JSON.parse(r.allocatedUnits) : (r.allocatedUnits || [])
-      }));
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        return fallbackStores.orders.map(r => ({ 
-          ...r, 
-          items: typeof r.items === 'string' ? JSON.parse(r.items) : (r.items || []),
-          allocatedUnits: typeof r.allocatedUnits === 'string' ? JSON.parse(r.allocatedUnits) : (r.allocatedUnits || [])
-        }));
-      }
-      throw e;
-    }
-  },
-  async create(data: any) {
-    const payload = {
-      ...data,
-      items: JSON.stringify(data.items),
-      allocatedUnits: JSON.stringify(data.allocatedUnits || [])
-    };
-    try {
-      const { error } = await supabase.from('orders').insert(payload);
-      if (error) {
-        if (isTableMissingError(error)) {
-          fallbackStores.orders.unshift(payload);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        fallbackStores.orders.unshift(payload);
-        return;
-      }
-      throw e;
-    }
-  },
-  async update(id: string, data: any) {
-    const payload = { ...data };
-    if (data.items) payload.items = JSON.stringify(data.items);
-    if (data.allocatedUnits) payload.allocatedUnits = JSON.stringify(data.allocatedUnits);
-    
-    try {
-      const { error } = await supabase.from('orders').update(payload).eq('id', id);
-      if (error) {
-        if (isTableMissingError(error)) {
-          const order = fallbackStores.orders.find(o => o.id === id);
-          if (order) Object.assign(order, payload);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        const order = fallbackStores.orders.find(o => o.id === id);
-        if (order) Object.assign(order, payload);
-        return;
-      }
-      throw e;
-    }
-  }
-};
 
 export const mtpCases = {
   async getAll() {
@@ -1157,44 +1081,6 @@ export const productCatalog = {
 };
 export const product_catalog = productCatalog;
 
-export const inventory = {
-  async getAll() {
-    try {
-      const { data, error } = await supabase.from('inventory').select('*');
-      if (error) {
-        if (isTableMissingError(error)) return fallbackStores.inventory;
-        throw error;
-      }
-      if (!data || data.length === 0) return fallbackStores.inventory;
-      return data;
-    } catch (e: any) {
-      if (isTableMissingError(e)) return fallbackStores.inventory;
-      throw e;
-    }
-  },
-  async create(data: any) {
-    try {
-      const { error } = await supabase.from('inventory').upsert(data);
-      if (error) {
-        if (isTableMissingError(error)) {
-          const index = fallbackStores.inventory.findIndex(item => item.unitId === data.unitId);
-          if (index >= 0) fallbackStores.inventory[index] = data;
-          else fallbackStores.inventory.push(data);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        const index = fallbackStores.inventory.findIndex(item => item.unitId === data.unitId);
-        if (index >= 0) fallbackStores.inventory[index] = data;
-        else fallbackStores.inventory.push(data);
-        return;
-      }
-      throw e;
-    }
-  },
-};
 
 export const transportJobs = {
   async getAll() {
@@ -1393,48 +1279,6 @@ export const resources = {
   }
 };
 
-export const patients = {
-  async getAll() {
-    try {
-      const { data, error } = await supabase.from('patients').select('*');
-      if (error) {
-        if (isTableMissingError(error)) {
-          return fallbackStores.patients;
-        }
-        throw error;
-      }
-      if (!data || data.length === 0) return fallbackStores.patients;
-      return data || [];
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        return fallbackStores.patients;
-      }
-      throw e;
-    }
-  },
-  async create(data: any) {
-    const payload = {
-      ...data,
-      antibodyHistory: JSON.stringify(data.antibodyHistory || [])
-    };
-    try {
-      const { error } = await supabase.from('patients').insert(payload);
-      if (error) {
-        if (isTableMissingError(error)) {
-          fallbackStores.patients.unshift(payload);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        fallbackStores.patients.unshift(payload);
-        return;
-      }
-      throw e;
-    }
-  },
-};
 
 export const transfusions = {
   async getAll() {
@@ -1858,3 +1702,5 @@ export async function resetDb() {
 }
 
 export default supabase;
+
+export { orders, inventory, patients };

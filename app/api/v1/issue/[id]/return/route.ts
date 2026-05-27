@@ -16,13 +16,23 @@ export async function POST(
     const body = await request.json();
     const { coldChainOk, visualOk } = body;
 
-    // Calculate return status: if both conditions met, it's safe to return to inventory.
-    // Otherwise, the unit must be wasted.
-    const returnStatus = (coldChainOk && visualOk) ? 'ColdChainOK' : 'WASTED';
+    // SOP 8: 30-minute return rule
+    // If returned > 30 minutes after issue, it MUST be wasted regardless of visual/cold chain ok.
+    const issuedTime = new Date(record.issuedAt).getTime();
+    const returnTime = Date.now();
+    const diffMinutes = (returnTime - issuedTime) / (1000 * 60);
+
+    let returnStatus = (coldChainOk && visualOk) ? 'ColdChainOK' : 'WASTED';
+    let timeoutWasted = false;
+
+    if (diffMinutes > 30) {
+      returnStatus = 'Timeout';
+      timeoutWasted = true;
+    }
 
     const updatedData = {
       ...record,
-      returnedAt: new Date().toISOString(),
+      returnedAt: new Date(returnTime).toISOString(),
       returnStatus
     };
 
@@ -41,7 +51,7 @@ export async function POST(
       eventType: 'Blood Unit Returned',
       objectId: record.componentId,
       actorRole: 'Nurse',
-      details: `Blood unit ${record.componentId} returned with status: ${returnStatus} (Cold-chain: ${coldChainOk ? 'OK' : 'FAIL'}, Visual: ${visualOk ? 'OK' : 'FAIL'})`,
+      details: `Blood unit ${record.componentId} returned with status: ${returnStatus} (Cold-chain: ${coldChainOk ? 'OK' : 'FAIL'}, Visual: ${visualOk ? 'OK' : 'FAIL'}, Timeout: ${timeoutWasted ? 'YES' : 'NO'})`,
       timestamp: new Date().toISOString()
     });
 

@@ -5,6 +5,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Package, Undo2, Clock, AlertTriangle, CheckCircle2, ShieldAlert } from "lucide-react";
 import { useI18n } from "../lib/i18n";
+import { useBarcodeScanner } from "../lib/hooks/useBarcodeScanner";
 
 interface IssueRecord {
   id: string;
@@ -41,6 +42,14 @@ export function IssueReturnView() {
   };
 
   useEffect(() => { loadData(); }, []);
+
+  useBarcodeScanner((barcode) => {
+    if (barcode.startsWith('=')) {
+      setComponentId(barcode);
+    } else {
+      setPatientId(barcode);
+    }
+  });
 
   // Calculate time since issue for active records
   const activeRecords = useMemo(() => {

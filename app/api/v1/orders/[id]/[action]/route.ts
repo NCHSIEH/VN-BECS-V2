@@ -278,6 +278,15 @@ export async function POST(
 
     } else if (action === 'deliver') {
       const { handoverCode } = requestBody;
+
+      // SOP 5: Cold chain integrity validation on the backend before delivery
+      const transportJob = await db.transport_jobs.getByOrderId(id);
+      if (transportJob && transportJob.coldChainViolation) {
+         return NextResponse.json({ 
+           error: '🚨 SAFETY BLOCK: Cold Chain Violation detected in transit telemetry! Delivery is aborted. Shipment must be quarantined/wasted.' 
+         }, { status: 400 });
+      }
+
       updatedOrder.status = 'DELIVERED';
       await db.orders.update(id, { status: 'DELIVERED' });
 
@@ -327,6 +336,17 @@ export async function POST(
         details: `Shipment reported wasted due to cold chain breach.`,
         timestamp: new Date().toISOString()
       });
+    } else if (action === 'telemetry') {
+      const { temp, isWasted } = requestBody;
+      
+      await db.transport_jobs.upsertTemperature(
+        id,
+        'SENSOR-COURIER-01',
+        [{ time: new Date().toISOString(), temp }],
+        isWasted
+      );
+      
+      return NextResponse.json({ success: true, recordedTemp: temp, violation: isWasted });
     } else {
       return NextResponse.json({ error: 'Unsupported action type' }, { status: 400 });
     }

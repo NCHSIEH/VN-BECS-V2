@@ -5,14 +5,19 @@ import { ArrowLeft, BookOpen, Layers, Settings, Truck, Syringe, ClipboardCheck, 
 
 export function DocsView({ onBack }: { onBack: () => void }) {
   const { t, lang, setLang } = useI18n();
-  const [activeDoc, setActiveDoc] = useState<keyof DocsLanguageDict>('Sys');
+  const [activeDoc, setActiveDoc] = useState<keyof DocsLanguageDict | 'Node0'>('Sys');
 
   // Load the current language dictionary from our docs mapping. Fallback to 'en'.
   const currentDocs = docsTranslations[lang] || docsTranslations['en'];
-  const moduleData: DocModule = currentDocs[activeDoc];
+  const moduleData: DocModule | null = activeDoc !== 'Node0' ? currentDocs[activeDoc] : null;
 
   const menuItems = [
     { id: 'Sys', icon: <Layers size={18} />, label: currentDocs.Sys.title },
+    { 
+      id: 'Node0', 
+      icon: <ClipboardCheck size={18} />, 
+      label: lang === 'zh-TW' ? 'Node 0: 子系統與SOPs對齊' : lang === 'vi' ? 'Node 0: Đối chiếu Phân hệ và SOPs' : 'Node 0: Systems and SOPs Alignment' 
+    },
     { id: 'LIMS', icon: <Activity size={18} />, label: currentDocs.LIMS.title },
     { id: 'LAB', icon: <Beaker size={18} />, label: currentDocs.LAB.title },
     { id: 'HUB', icon: <Package size={18} />, label: currentDocs.HUB.title },
@@ -150,48 +155,61 @@ export function DocsView({ onBack }: { onBack: () => void }) {
               <button 
                 key={item.id}
                 onClick={() => setActiveDoc(item.id)}
-                className={`flex items-center gap-3 p-3.5 rounded-xl text-sm transition-all text-left group ${activeDoc === item.id ? 'bg-indigo-900/40 text-indigo-600 border border-indigo-800/50 font-bold shadow-lg' : 'text-clinical-muted hover:bg-clinical-bg hover:text-white border border-transparent'}`}
+                className={`flex items-start gap-3 p-3.5 rounded-xl text-sm transition-all text-left group ${activeDoc === item.id ? 'bg-indigo-900/40 text-indigo-600 border border-indigo-800/50 font-bold shadow-lg' : 'text-clinical-muted hover:bg-clinical-bg hover:text-white border border-transparent'}`}
               >
-                <div className={`${activeDoc === item.id ? 'text-indigo-600' : 'text-clinical-muted group-hover:text-clinical-text'}`}>
+                <div className={`shrink-0 mt-0.5 ${activeDoc === item.id ? 'text-indigo-600' : 'text-clinical-muted group-hover:text-clinical-text'}`}>
                   {item.icon}
                 </div>
-                <span className="truncate">{item.label}</span>
+                <span className="whitespace-normal break-words leading-tight flex-1">{item.label}</span>
               </button>
             ))}
           </div>
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 p-6 lg:p-12 overflow-y-auto bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-900/10 via-[#0b1120] to-[#0b1120]">
-          
-          {/* External Manual Call-to-Action */}
-          <div className="max-w-4xl mx-auto mb-8 bg-gradient-to-r from-cyan-900/40 to-indigo-900/40 border border-cyan-800/50 rounded-2xl p-6 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div>
-              <h3 className="text-cyan-400 font-bold text-lg mb-1">{lang === 'zh-TW' ? '需要更詳細的情境式教學？' : lang === 'vi' ? 'Cần hướng dẫn chi tiết theo tình huống?' : 'Need detailed scenario-based training?'}</h3>
-              <p className="text-clinical-muted text-sm">{lang === 'zh-TW' ? '我們準備了萬字級的圖文手把手外部手冊，非常適合初次接觸系統的新手。' : lang === 'vi' ? 'Chúng tôi đã chuẩn bị một sổ tay bên ngoài với hàng ngàn từ và hình ảnh.' : 'We have prepared an extensive external manual with step-by-step guides.'}</p>
+        <div className="flex-1 p-6 lg:p-12 overflow-y-auto bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-900/10 via-[#0b1120] to-[#0b1120] flex flex-col">
+          {activeDoc === 'Node0' ? (
+            <div className="w-full flex-1 flex flex-col min-h-[500px] bg-clinical-bg/40 backdrop-blur-md border border-clinical-border rounded-3xl overflow-hidden shadow-2xl animate-in fade-in duration-500">
+              <iframe 
+                src={`/system_sop_alignment.html?lang=${lang === 'zh-TW' ? 'zh' : lang}`} 
+                className="w-full flex-1 border-none"
+                title="Node 0 Systems & SOPs Alignment"
+              />
             </div>
-            <a 
-              href={`/docs/manual_${lang === 'zh-TW' ? 'zh' : lang}.html`} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-clinical-text font-bold rounded-xl transition-all shadow-[0_0_15px_rgba(8,145,178,0.5)] shrink-0"
-            >
-              <BookOpen size={18} /> {lang === 'zh-TW' ? '開啟完整圖文操作手冊' : lang === 'vi' ? 'Mở Sổ tay Vận hành Đầy đủ' : 'Open Complete Training Manual'} <ExternalLink size={16} />
-            </a>
-          </div>
+          ) : (
+            <>
+              {/* External Manual Call-to-Action */}
+              <div className="max-w-4xl mx-auto mb-8 bg-gradient-to-r from-cyan-900/40 to-indigo-900/40 border border-cyan-800/50 rounded-2xl p-6 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 w-full">
+                <div>
+                  <h3 className="text-cyan-400 font-bold text-lg mb-1">{lang === 'zh-TW' ? '需要更詳細的情境式教學？' : lang === 'vi' ? 'Cần hướng dẫn chi tiết theo tình huống?' : 'Need detailed scenario-based training?'}</h3>
+                  <p className="text-clinical-muted text-sm">{lang === 'zh-TW' ? '我們準備了萬字級的圖文手把手外部手冊，非常適合初次接觸系統的新手。' : lang === 'vi' ? 'Chúng tôi đã chuẩn bị một sổ tay bên ngoài với hàng ngàn từ và hình ảnh.' : 'We have prepared an extensive external manual with step-by-step guides.'}</p>
+                </div>
+                <a 
+                  href={`/docs/manual_${lang === 'zh-TW' ? 'zh' : lang}.html`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-clinical-text font-bold rounded-xl transition-all shadow-[0_0_15px_rgba(8,145,178,0.5)] shrink-0"
+                >
+                  <BookOpen size={18} /> {lang === 'zh-TW' ? '開啟完整圖文操作手冊' : lang === 'vi' ? 'Mở Sổ tay Vận hành Đầy đủ' : 'Open Complete Training Manual'} <ExternalLink size={16} />
+                </a>
+              </div>
 
-          <div className="max-w-4xl mx-auto bg-clinical-bg/80 backdrop-blur-md border border-clinical-border rounded-3xl p-8 lg:p-12 shadow-2xl">
-             <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
-               <div className="mb-10 pb-6 border-b border-clinical-border">
-                 <h2 className="text-3xl font-black text-clinical-text mb-4 tracking-tight">{moduleData.title}</h2>
-                 <p className="text-clinical-muted text-lg leading-relaxed font-light">{moduleData.desc}</p>
-               </div>
-               
-               <div className="space-y-4">
-                 {moduleData.sections.map((section, idx) => renderSection(section, idx))}
-               </div>
-             </div>
-          </div>
+              <div className="max-w-4xl mx-auto bg-clinical-bg/80 backdrop-blur-md border border-clinical-border rounded-3xl p-8 lg:p-12 shadow-2xl w-full">
+                 {moduleData && (
+                   <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
+                     <div className="mb-10 pb-6 border-b border-clinical-border">
+                       <h2 className="text-3xl font-black text-clinical-text mb-4 tracking-tight">{moduleData.title}</h2>
+                       <p className="text-clinical-muted text-lg leading-relaxed font-light">{moduleData.desc}</p>
+                     </div>
+                     
+                     <div className="space-y-4">
+                       {moduleData.sections.map((section, idx) => renderSection(section, idx))}
+                     </div>
+                   </div>
+                 )}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

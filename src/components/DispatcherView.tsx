@@ -3,6 +3,7 @@ import { CheckCircle2, ShieldAlert, Activity, GitCommitHorizontal, AlertCircle, 
 import { Order } from "../types";
 import { getDosColorLevel, COLOR_CLASSES } from "../lib/alertThresholds";
 import { useI18n } from "../lib/i18n";
+import { useClinicalUtils } from "../lib/hooks/useClinicalUtils";
 
 export function DispatcherView() {
   const { t } = useI18n();
@@ -12,14 +13,7 @@ export function DispatcherView() {
   const [activeMTP, setActiveMTP] = useState<any | null>(null);
   const [inventory, setInventory] = useState<any[]>([]);
 
-  const getPriorityLabel = (priority: string) => {
-    const p = (priority || '').toUpperCase();
-    if (p === 'NORMAL' || p === 'ROUTINE') return t('wh_priority_routine') || 'Routine';
-    if (p === 'HIGH') return t('wh_priority_high') || 'High';
-    if (p === 'URGENT') return t('wh_priority_urgent') || 'Urgent';
-    if (p === 'CRITICAL' || p === 'STAT' || p === 'MTP') return t('wh_priority_critical') || 'Critical';
-    return priority;
-  };
+  const { getPriorityLabel } = useClinicalUtils();
 
   const fetchOrders = () => {
     setIsRefreshing(true);

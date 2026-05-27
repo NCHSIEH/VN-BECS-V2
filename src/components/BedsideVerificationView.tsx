@@ -16,6 +16,7 @@ import {
 import { validateISBT128 } from "../lib/bloodSafety";
 import { useI18n } from "../lib/i18n";
 import { SearchableSelect } from "./SearchableSelect";
+import { useBarcodeScanner } from "../lib/hooks/useBarcodeScanner";
 
 export function BedsideVerificationView() {
   const { t } = useI18n();
@@ -45,6 +46,10 @@ export function BedsideVerificationView() {
     }
     loadPatients();
   }, []);
+
+  useBarcodeScanner((barcode) => {
+    setUnitBarcodeRaw(barcode);
+  });
 
   const handlePatientIdChange = (val: string) => {
     setPatientId(val);

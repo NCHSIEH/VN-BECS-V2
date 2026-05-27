@@ -3,6 +3,8 @@ import { ScanBarcode, PackageCheck, AlertOctagon, CheckCircle, Database, Package
 import { Order } from "../types";
 import { validateISBT128 } from "../lib/bloodSafety";
 import { useI18n } from "../lib/i18n";
+import { useBarcodeScanner } from "../lib/hooks/useBarcodeScanner";
+import { useClinicalUtils } from "../lib/hooks/useClinicalUtils";
 import { motion } from "framer-motion";
 
 interface WarehouseViewProps {
@@ -21,14 +23,7 @@ export function WarehouseView({ activeTab: propActiveTab, setActiveTab: propSetA
   const setActiveTab = propSetActiveTab || setLocalActiveTab;
   const [inventory, setInventory] = useState<any[]>([]);
 
-  const getPriorityLabel = (priority: string) => {
-    const p = (priority || '').toUpperCase();
-    if (p === 'NORMAL' || p === 'ROUTINE') return t('wh_priority_routine') || 'Routine';
-    if (p === 'HIGH') return t('wh_priority_high') || 'High';
-    if (p === 'URGENT') return t('wh_priority_urgent') || 'Urgent';
-    if (p === 'CRITICAL' || p === 'STAT' || p === 'MTP') return t('wh_priority_critical') || 'Critical';
-    return priority;
-  };
+  const { getPriorityLabel } = useClinicalUtils();
 
   const fetchData = () => {
     fetch('/api/v1/orders')
@@ -52,14 +47,13 @@ export function WarehouseView({ activeTab: propActiveTab, setActiveTab: propSetA
     fetchData();
   }, []);
 
-  const handleScan = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedOrder || !scannedCode) return;
+  const processScan = async (barcodeToScan: string) => {
+    if (!selectedOrder || !barcodeToScan) return;
     setScanResult(null);
 
-    const isbtCheck = validateISBT128(scannedCode);
+    const isbtCheck = validateISBT128(barcodeToScan);
     if (!isbtCheck.valid) {
-       setScanResult({ status: 'error', message: `🚨 ${isbtCheck.error!} (掃描內容：${scannedCode})` });
+       setScanResult({ status: 'error', message: `🚨 ${isbtCheck.error!} (掃描內容：${barcodeToScan})` });
        return;
     }
 
@@ -67,7 +61,7 @@ export function WarehouseView({ activeTab: propActiveTab, setActiveTab: propSetA
       const res = await fetch(`/api/v1/orders/${selectedOrder.id}/dispatch`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scannedCode })
+        body: JSON.stringify({ scannedCode: barcodeToScan })
       });
       const data = await res.json();
       
@@ -77,7 +71,7 @@ export function WarehouseView({ activeTab: propActiveTab, setActiveTab: propSetA
         const handoverToken = Math.floor(1000 + Math.random() * 9000).toString();
         setScanResult({ 
           status: 'success', 
-          message: `✅ Verification Complete. ISBT ${scannedCode} assigned. Handover Token: ${handoverToken}` 
+          message: `✅ Verification Complete. ISBT ${barcodeToScan} assigned. Handover Token: ${handoverToken}` 
         });
         setSelectedOrder(data);
         fetchData();
@@ -86,6 +80,18 @@ export function WarehouseView({ activeTab: propActiveTab, setActiveTab: propSetA
     } catch (err) {
       console.error(err);
     }
+  };
+
+  useBarcodeScanner((barcode) => {
+    if (activeTab === 'DISPATCH' && selectedOrder) {
+      setScannedCode(barcode);
+      processScan(barcode);
+    }
+  });
+
+  const handleScan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    processScan(scannedCode);
   };
 
   return (
@@ -236,7 +242,7 @@ export function WarehouseView({ activeTab: propActiveTab, setActiveTab: propSetA
                                              ) : (
                                                <button 
                                                  type="button"
-                                                 onClick={() => setScannedCode(unitId)}
+                                                 onClick={() => { setScannedCode(unitId); processScan(unitId); }}
                                                  className="text-[9px] font-black text-emerald-500 hover:text-emerald-400 uppercase tracking-widest leading-none"
                                                >
                                                  {t('wh_btn_autofill_inline') || 'Pick'}

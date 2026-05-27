@@ -60,12 +60,17 @@ export async function POST(request: Request) {
 
     // Perform Strict Validation
     const isCompatible = isAboRhdCompatible(donor.bloodType, donor.rhd, patient.abo, patient.rhd);
-
     let result = isCompatible ? 'Compatible' : 'Incompatible';
 
-    // If method is EXM but patient has antibodies, it should fail conceptually, but UI handles that.
-    if (method === 'EXM' && patient.antibodyHistory && patient.antibodyHistory.length > 0) {
-      result = 'Incompatible';
+    const hasAntibodies = patient.antibodyHistory && patient.antibodyHistory.length > 0;
+
+    // AABB SOP 7: Method validations based on antibody history
+    if (method === 'EXM' && hasAntibodies) {
+      return NextResponse.json({ error: '🚨 SAFETY BLOCK: EXM (Electronic Crossmatch) is NOT permitted for patients with a history of antibodies. Full AHG crossmatch is required by AABB standards.' }, { status: 400 });
+    }
+
+    if (method === 'IS' && hasAntibodies) {
+      return NextResponse.json({ error: '🚨 SAFETY BLOCK: IS (Immediate Spin) is NOT sufficient for patients with known antibodies. Full AHG crossmatch is required.' }, { status: 400 });
     }
 
     const record = {

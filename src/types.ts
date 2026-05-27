@@ -253,6 +253,7 @@ export interface BloodComponent {
   coldChainViolation?: boolean;
   createdAt: string;
   releasedAt?: string;
+  version?: number;
 }
 
 // ─── Dispatch & Logistics (SOP 4, 5, 10) ─────────────────────────────────────
@@ -292,6 +293,7 @@ export interface Order {
   };
   allocatedUnits?: string[];
   verifiedUnits?: string[];
+  version?: number;
 }
 
 /** AI allocation proposal — SOP 4. */
