@@ -13,3 +13,8 @@ coverage/
 firestore-debug.log
 ui_harmonized_*.png
 *.tsbuildinfo
+
+# Test artifacts & scratch (should not be version-controlled)
+test-results/
+playwright-report/
+scratch/

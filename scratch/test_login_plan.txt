@@ -1,4 +1,0 @@
-// This script requires a running Next.js server to test the actual route.
-// But we can test the logic if we mock the Request.
-// Since we want to be sure, I'll just explain the fix to the user.
-console.log("Ready to test login with admin/admin123");
