@@ -15,6 +15,7 @@
  *   --role       role (default: Admin)
  *   --org        orgId / facility (default: HUB-DN-03)
  *   --id         user id (default: U-<random>)
+ *   --apply      insert directly into the DB using DATABASE_URL (needs: npm i pg)
  */
 const bcrypt = require('bcryptjs');
 
@@ -60,7 +61,32 @@ VALUES (
 ON CONFLICT (username) DO UPDATE
   SET password = EXCLUDED.password, role = EXCLUDED.role, "isActive" = 1;`;
 
-console.log('\n=== bcrypt hash ===\n' + hash);
-console.log('\n=== SQL to run in Supabase ===');
-console.log(sql + '\n');
-console.log(`Login afterwards with username "${username}" and the password you supplied.`);
+if (process.argv.includes('--apply')) {
+  const conn = process.env.DATABASE_URL;
+  if (!conn) {
+    console.error('--apply needs DATABASE_URL set. e.g. $env:DATABASE_URL = "postgresql://..."');
+    process.exit(1);
+  }
+  let Client;
+  try { ({ Client } = require('pg')); } catch { console.error('Missing "pg". Run: npm i pg'); process.exit(1); }
+  (async () => {
+    const client = new Client({ connectionString: conn, ssl: { rejectUnauthorized: false } });
+    try {
+      await client.connect();
+      await client.query(sql);
+      console.log(`\n✅ Admin user "${username}" created/updated in the database.`);
+      console.log(`Login with username "${username}" and the password you supplied.`);
+    } catch (e) {
+      console.error('\nDB ERROR:', e.message);
+      process.exitCode = 1;
+    } finally {
+      await client.end().catch(() => {});
+    }
+  })();
+} else {
+  console.log('\n=== bcrypt hash ===\n' + hash);
+  console.log('\n=== SQL to run in Supabase ===');
+  console.log(sql + '\n');
+  console.log(`Login afterwards with username "${username}" and the password you supplied.`);
+  console.log('(Tip: add --apply to insert directly using DATABASE_URL.)');
+}
