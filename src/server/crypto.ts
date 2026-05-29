@@ -18,7 +18,9 @@ export function hashPassword(password: string): string {
 export function verifyPassword(password: string, hash: string): boolean {
   if (!password || !hash) return false;
   if (!hash.startsWith('$2a$') && !hash.startsWith('$2b$')) {
-    // Legacy plaintext password support
+    // Legacy plaintext password support — permitted ONLY outside production
+    // (demo/seed data). Production must never accept a non-bcrypt credential.
+    if (process.env.NODE_ENV === 'production') return false;
     return password === hash;
   }
   try {

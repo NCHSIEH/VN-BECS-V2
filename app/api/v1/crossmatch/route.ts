@@ -9,7 +9,7 @@ import {
 } from '@/src/server/services/bloodUnitCommands';
 import type { Role } from '@/src/types';
 import { apiErrorResponse, getRequestId, internalErrorResponse } from '@/src/server/apiResponses';
-import { authorizeApiRole, rbacErrorBody } from '@/src/server/rbacPolicy';
+import { authorizeApiRole, authorizeFacilityScope, facilityIdOf, facilityScopeErrorBody, rbacErrorBody } from '@/src/server/rbacPolicy';
 
 export async function GET(request: Request) {
   try {
@@ -74,6 +74,12 @@ export async function POST(request: Request) {
 
     if (!patient) {
       return apiErrorResponse({ request, code: 'PATIENT_NOT_FOUND', message: 'Patient not found', status: 404 });
+    }
+
+    // ABAC: a crossmatch must be performed within the patient's own facility.
+    const scope = authorizeFacilityScope({ decision: authz, resourceOrgId: facilityIdOf(patient) });
+    if (!scope.allowed) {
+      return NextResponse.json(facilityScopeErrorBody(authz, facilityIdOf(patient)), { status: 403 });
     }
 
     if (patient.abo === 'Unknown' || patient.rhd === 'Unknown') {

@@ -188,6 +188,37 @@ export function authorizeFacilityScope(args: {
     : { allowed: false, reason: 'FACILITY_SCOPE_MISMATCH' };
 }
 
+/**
+ * Extract a resource's facility/org identifier from the common field names used
+ * across the schema and in-memory fallback stores. Returns null when none is
+ * present (e.g. demo data without facility scoping), in which case the facility
+ * guard is a safe no-op until the DB backfills `facility_id`.
+ */
+export function facilityIdOf(resource: unknown): string | null {
+  if (!resource || typeof resource !== 'object') return null;
+  const r = resource as Record<string, unknown>;
+  const candidate =
+    r.facility_id ?? r.facilityId ?? r.orgId ?? r.hospitalId ?? r.hospital ?? r.location;
+  return typeof candidate === 'string' && candidate.length > 0 ? candidate : null;
+}
+
+/**
+ * Error body for a facility-scope (ABAC) denial. Mirrors rbacErrorBody so
+ * callers can return a consistent 403 shape.
+ */
+export function facilityScopeErrorBody(decision: ApiRbacDecision, resourceOrgId?: string | null) {
+  return {
+    success: false,
+    error: 'FORBIDDEN',
+    code: 'FACILITY_SCOPE_MISMATCH',
+    action: decision.action,
+    actorRole: decision.actorRole || null,
+    actorOrgId: decision.actorOrgId || null,
+    resourceOrgId: resourceOrgId || null,
+    message: 'The actor is not permitted to act on a resource outside their own facility.',
+  };
+}
+
 export function rbacErrorBody(decision: ApiRbacDecision) {
   return {
     success: false,

@@ -34,7 +34,7 @@
 |---|---|---|---|---|---|---|---|
 | RTM-AUTH-01 | FDA211, ISO27799 | 每次 API 請求的操作者身分須由伺服器驗證，不得由用戶端自填 | — | `src/server/session.ts`, `src/server/rbacPolicy.ts:resolveActorIdentity` | `src/__tests__/sessionIdentity.test.ts` | 簽章會話 token；生產忽略 header 角色 | ✅ |
 | RTM-AUTH-02 | FDA211 | 高風險動作須 RBAC 授權（角色比對） | — | `rbacPolicy.ts:authorizeApiRole` | `rbacDynamicMatrix.test.ts`, `sessionIdentity.test.ts` | 生產強制；非生產可 opt-in | ✅ |
-| RTM-AUTH-03 | ISO27799, EU-GMP | 機構範圍隔離 (ABAC facility scope) 於 API 與 DB | — | `rbacPolicy.authorizeFacilityScope`（API）, `db-migrations/001`（DB RLS+facility_id） | `db-migrations/001_tests.sql` (TEST 3/4) | API 助手+DB 遷移已備；待連線測試庫執行並附證據 | 🟠 |
+| RTM-AUTH-03 | ISO27799, EU-GMP | 機構範圍隔離 (ABAC facility scope) 於 API 與 DB | — | `rbacPolicy.authorizeFacilityScope` **已接入** `issue`/`crossmatch`/`orders/[id]/[action]`（bedside 自有比對）; `rlsContext.applyFacilityScope`（DB GUC 原語）; `db-migrations/001`（RLS+facility_id） | `facilityScope.test.ts`(7), `rlsContext.test.ts`(5), `db-migrations/001_tests.sql` (TEST 3/4) | API 防禦縱深層已接線並有測試；DB GUC 原語已備（fail-closed）。待提供非-BYPASSRLS 連線並連線測試庫執行附證據 | 🟠 |
 | RTM-AUTH-04 | FDA211 | demo/fallback 登入於生產一律禁用 | — | `authPolicy.ts:isDemoLoginAllowed`, `db.ts` | `authPolicy.test.ts`, `productionHardening.test.ts` | fail-closed | ✅ |
 | RTM-AUTH-05 | FDA211 | 前端每個 `/api` 請求附帶已驗證會話 token | — | `src/lib/apiClient.ts`, `src/App.tsx` | (手動/E2E) | 全域 fetch 攔截器，零侵入既有元件 | ✅ |
 | RTM-STATE-01 | AABB, FDA606 | 血袋生命週期狀態轉移集中受控、非法轉移阻擋 | All SOP | `src/lib/stateMachine.ts` | `stateMachine.test.ts` | terminal 不可逆 | ✅ |

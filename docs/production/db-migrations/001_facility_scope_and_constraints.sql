@@ -51,7 +51,14 @@ WITH mapping(status, q, i, a) AS (VALUES
   ('RETURNED','RELEASED','RETURN_PENDING','PATIENT_ASSIGNED'),
   ('TRANSFUSED','RELEASED','TRANSFUSED','PATIENT_ASSIGNED'),
   ('WASTED','NONCONFORMING','WASTED','UNASSIGNED'),
-  ('DISCARDED','DISCARDED','WASTED','UNASSIGNED')
+  ('DISCARDED','DISCARDED','WASTED','UNASSIGNED'),
+  -- Legacy status aliases (mirror LEGACY_STATUS_TO_STATE in stateMachine.ts) so
+  -- rows still carrying pre-canonical status strings are also backfilled.
+  ('QUARANTINED','HOLD_IDM','NOT_IN_STOCK','UNASSIGNED'),
+  ('RELEASED','RELEASED','AVAILABLE','UNASSIGNED'),
+  ('ALLOCATED','RELEASED','ORDER_RESERVED','ORDER_ALLOCATED'),
+  ('HUB INTRANSIT','RELEASED','IN_TRANSIT','ORDER_ALLOCATED'),
+  ('EXPIRED','NONCONFORMING','WASTED','UNASSIGNED')
 )
 UPDATE components c SET
   quality_status    = m.q::blood_quality_status,
@@ -72,7 +79,14 @@ WITH mapping(status, q, i, a) AS (VALUES
   ('RETURNED','RELEASED','RETURN_PENDING','PATIENT_ASSIGNED'),
   ('TRANSFUSED','RELEASED','TRANSFUSED','PATIENT_ASSIGNED'),
   ('WASTED','NONCONFORMING','WASTED','UNASSIGNED'),
-  ('DISCARDED','DISCARDED','WASTED','UNASSIGNED')
+  ('DISCARDED','DISCARDED','WASTED','UNASSIGNED'),
+  -- Legacy status aliases (mirror LEGACY_STATUS_TO_STATE in stateMachine.ts) so
+  -- rows still carrying pre-canonical status strings are also backfilled.
+  ('QUARANTINED','HOLD_IDM','NOT_IN_STOCK','UNASSIGNED'),
+  ('RELEASED','RELEASED','AVAILABLE','UNASSIGNED'),
+  ('ALLOCATED','RELEASED','ORDER_RESERVED','ORDER_ALLOCATED'),
+  ('HUB INTRANSIT','RELEASED','IN_TRANSIT','ORDER_ALLOCATED'),
+  ('EXPIRED','NONCONFORMING','WASTED','UNASSIGNED')
 )
 UPDATE inventory inv SET
   quality_status    = m.q::blood_quality_status,

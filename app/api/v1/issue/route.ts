@@ -7,7 +7,7 @@ import {
 } from '@/src/server/services/bloodUnitCommands';
 import type { Role } from '@/src/types';
 import { apiErrorResponse, getRequestId, internalErrorResponse } from '@/src/server/apiResponses';
-import { authorizeApiRole, rbacErrorBody } from '@/src/server/rbacPolicy';
+import { authorizeApiRole, authorizeFacilityScope, facilityIdOf, facilityScopeErrorBody, rbacErrorBody } from '@/src/server/rbacPolicy';
 
 export async function GET(request: Request) {
   try {
@@ -61,7 +61,20 @@ export async function POST(request: Request) {
     }
 
     const inventoryItem = allInventory.find((i: any) => i.unitId === componentId);
-    
+
+    // ABAC: confine the action to the actor's own facility (defence-in-depth
+    // layer; DB RLS is the second layer once facility_id is populated).
+    const scope = authorizeFacilityScope({
+      decision: authz,
+      resourceOrgId: facilityIdOf(inventoryItem) ?? facilityIdOf(component),
+    });
+    if (!scope.allowed) {
+      return NextResponse.json(
+        facilityScopeErrorBody(authz, facilityIdOf(inventoryItem) ?? facilityIdOf(component)),
+        { status: 403 },
+      );
+    }
+
     // Concurrency locking check
     const clientVersion = body.baseVersion ?? body.version;
     if (clientVersion !== undefined && inventoryItem && inventoryItem.version !== undefined && Number(clientVersion) !== Number(inventoryItem.version)) {

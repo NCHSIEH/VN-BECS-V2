@@ -57,9 +57,17 @@ you must do ONE of:
   `app.facility_id` / `app.role` via `set_config(...)` at the start of each
   request (wire into `src/server/db.ts`).
 
-The application-level `authorizeFacilityScope()` (already shipped in
-`src/server/rbacPolicy.ts`) is the defence-in-depth layer; this migration adds
-the database-enforced layer. Both should be on for production.
+The application-level `authorizeFacilityScope()` (in `src/server/rbacPolicy.ts`)
+is the defence-in-depth layer and is now **wired into the high-risk clinical
+routes** (`issue`, `crossmatch`, `orders/[id]/[action]`; `bedside-verify` already
+enforces its own verifier↔patient facility match). This migration adds the
+database-enforced layer. Both should be on for production.
+
+To wire the DB layer, use the shipped primitive `src/server/rlsContext.ts`:
+`applyFacilityScope(pgClient, identity)` issues the transaction-local
+`set_config('app.facility_id', …)` / `set_config('app.role', …)` calls the
+policies read. Route the scoped queries through a non-`BYPASSRLS` connection and
+call it right after `BEGIN`.
 
 ## Acceptance evidence to capture (for Gate 1 sign-off)
 
@@ -75,4 +83,16 @@ the database-enforced layer. Both should be on for production.
   and wrap component+inventory+audit in a single SQL transaction (completes
   RTM-STATE-03 true atomicity).
 - Replace the legacy single `status` column once all readers use multi-axis.
-- Set `app.facility_id` / `app.role` GUCs in the DB access layer.
+- Set `app.facility_id` / `app.role` GUCs in the DB access layer — primitive
+  now shipped (`src/server/rlsContext.ts`, unit-tested); remaining work is to
+  provision a non-`BYPASSRLS` connection and route scoped queries through it.
+
+## Changelog
+
+- Backfill mapping extended with legacy status aliases (`QUARANTINED`,
+  `RELEASED`, `ALLOCATED`, `HUB INTRANSIT`, `EXPIRED`) to mirror
+  `LEGACY_STATUS_TO_STATE` so no legacy-status row is left with NULL multi-axis
+  columns (STATE-04 completeness).
+- `applyFacilityScope` / `buildFacilityScopeConfig` primitive added for the
+  DB-layer GUC cut-over (AUTH-03), with fail-closed handling for
+  non-session identities.

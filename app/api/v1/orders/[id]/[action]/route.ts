@@ -9,7 +9,7 @@ import {
 } from '@/src/server/services/bloodUnitCommands';
 import type { BloodUnitStatus, Role } from '@/src/types';
 import { apiErrorResponse, getRequestId, internalErrorResponse } from '@/src/server/apiResponses';
-import { authorizeApiRole, rbacErrorBody } from '@/src/server/rbacPolicy';
+import { authorizeApiRole, authorizeFacilityScope, facilityIdOf, facilityScopeErrorBody, rbacErrorBody } from '@/src/server/rbacPolicy';
 
 type InventoryItem = {
   unitId: string;
@@ -308,6 +308,13 @@ export async function POST(
       });
       if (!authz.allowed) {
         return NextResponse.json(rbacErrorBody(authz), { status: 403 });
+      }
+
+      // ABAC: order actions are confined to the order's owning hospital/facility
+      // (defence-in-depth; DB RLS is the second layer once facility_id exists).
+      const scope = authorizeFacilityScope({ decision: authz, resourceOrgId: facilityIdOf(order) });
+      if (!scope.allowed) {
+        return NextResponse.json(facilityScopeErrorBody(authz, facilityIdOf(order)), { status: 403 });
       }
     }
 
