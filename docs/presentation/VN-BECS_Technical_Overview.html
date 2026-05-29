@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VN-BECS V2 — Technical Overview / 技術總覽 / Tổng quan Kỹ thuật</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  :root{
+    --rose:#e11d48; --rose-d:#be123c; --rose-l:#fb7185;
+    --ink:#0f172a; --slate:#475569; --mut:#64748b;
+    --bg:#f1f5f9; --card:#ffffff; --line:#e2e8f0;
+    --green:#16a34a; --amber:#d97706; --red:#dc2626; --blue:#2563eb; --violet:#7c3aed;
+    --ok:#dcfce7; --okT:#166534; --warn:#fef3c7; --warnT:#92400e; --gap:#fee2e2; --gapT:#991b1b; --plan:#e2e8f0; --planT:#475569;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:"Segoe UI",-apple-system,"Noto Sans TC","Noto Sans","Microsoft JhengHei",system-ui,sans-serif;
+    color:var(--ink);background:var(--bg);line-height:1.65;font-size:16px}
+  /* i18n */
+  .L{display:none}
+  body.lang-zh .L.zh{display:block}
+  body.lang-en .L.en{display:block}
+  body.lang-vi .L.vi{display:block}
+  span.L{display:none}
+  body.lang-zh span.L.zh{display:inline}
+  body.lang-en span.L.en{display:inline}
+  body.lang-vi span.L.vi{display:inline}
+  /* layout */
+  header.hero{background:linear-gradient(135deg,var(--rose-d),var(--rose) 55%,var(--rose-l));color:#fff;
+    padding:64px 24px 56px;text-align:center;position:relative;overflow:hidden}
+  header.hero::after{content:"";position:absolute;inset:0;background:
+    radial-gradient(circle at 18% 120%,rgba(255,255,255,.18),transparent 45%),
+    radial-gradient(circle at 82% -20%,rgba(255,255,255,.14),transparent 40%)}
+  .hero .logo{width:64px;height:64px;border-radius:18px;background:rgba(255,255,255,.16);
+    display:inline-flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:16px;backdrop-filter:blur(4px)}
+  .hero h1{margin:.1em 0;font-size:2.5rem;letter-spacing:.5px;font-weight:800;position:relative;z-index:1}
+  .hero .sub{font-size:1.05rem;opacity:.95;font-weight:500;position:relative;z-index:1}
+  .hero .meta{margin-top:18px;font-size:.85rem;opacity:.9;position:relative;z-index:1}
+  .hero .pill{display:inline-block;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);
+    padding:3px 12px;border-radius:999px;margin:3px;font-size:.8rem}
+  /* language switcher */
+  .langbar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);display:flex;gap:6px;justify-content:center;padding:8px;box-shadow:0 1px 6px rgba(0,0,0,.04)}
+  .langbar button{font:inherit;font-weight:700;font-size:.85rem;border:1px solid var(--line);background:#fff;color:var(--slate);
+    padding:6px 16px;border-radius:999px;cursor:pointer;transition:.15s}
+  .langbar button:hover{border-color:var(--rose-l);color:var(--rose-d)}
+  .langbar button.active{background:var(--rose);color:#fff;border-color:var(--rose)}
+  main{max-width:980px;margin:0 auto;padding:8px 22px 80px}
+  section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:30px 32px;margin:24px 0;
+    box-shadow:0 2px 14px rgba(15,23,42,.05)}
+  section.toc{background:linear-gradient(180deg,#fff,#fafbff)}
+  h2{font-size:1.6rem;margin:.1em 0 .6em;border-left:5px solid var(--rose);padding-left:14px;line-height:1.25}
+  h2 .num{color:var(--rose);font-weight:800;margin-right:6px}
+  h3{font-size:1.15rem;margin:1.2em 0 .4em;color:var(--rose-d)}
+  p{margin:.5em 0}
+  ul,ol{margin:.4em 0;padding-left:1.3em}
+  li{margin:.3em 0}
+  .lead{font-size:1.05rem;color:var(--slate)}
+  .grid{display:grid;gap:16px}
+  .grid.c2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .grid.c3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+  .card{border:1px solid var(--line);border-radius:12px;padding:18px;background:#fff}
+  .card.sub{border-top:4px solid var(--rose)}
+  .card h4{margin:.1em 0 .3em;font-size:1.05rem}
+  .card .tag{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.4px;color:var(--rose-d);
+    background:#fff1f2;border:1px solid #fecdd3;padding:2px 9px;border-radius:6px;margin-bottom:8px}
+  .card .role{font-size:.8rem;color:var(--mut);margin-top:8px}
+  table{width:100%;border-collapse:collapse;font-size:.85rem;margin:.6em 0}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:#f8fafc;font-weight:700;color:var(--slate)}
+  tbody tr:nth-child(even){background:#fbfcfe}
+  .badge{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:6px;white-space:nowrap}
+  .b-ok{background:var(--ok);color:var(--okT)} .b-warn{background:var(--warn);color:var(--warnT)}
+  .b-gap{background:var(--gap);color:var(--gapT)} .b-plan{background:var(--plan);color:var(--planT)}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin:14px 0 4px;font-size:.85rem}
+  .legend .item{display:flex;align-items:center;gap:7px}
+  .legend .swatch{width:26px;height:4px;border-radius:2px;display:inline-block}
+  .diagram{background:#fff;border:1px dashed var(--line);border-radius:12px;padding:12px;overflow-x:auto;text-align:center}
+  .note{background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 16px;margin:14px 0;font-size:.9rem;color:#854d0e}
+  .note.info{background:#eff6ff;border-color:#bfdbfe;color:#1e40af}
+  .kpi{display:flex;gap:16px;flex-wrap:wrap;margin:8px 0}
+  .kpi .box{flex:1;min-width:130px;background:linear-gradient(135deg,#fff,#fff5f6);border:1px solid #fecdd3;border-radius:12px;padding:16px;text-align:center}
+  .kpi .box .n{font-size:1.8rem;font-weight:800;color:var(--rose-d)}
+  .kpi .box .l{font-size:.78rem;color:var(--mut)}
+  .toc ol{columns:2;column-gap:34px}
+  .toc a{color:var(--slate);text-decoration:none;font-weight:600}
+  .toc a:hover{color:var(--rose-d)}
+  code{background:#f1f5f9;padding:1px 6px;border-radius:5px;font-size:.85em;font-family:"Cascadia Code",Consolas,monospace;color:#be123c}
+  footer{text-align:center;color:var(--mut);font-size:.8rem;padding:30px}
+  @media print{
+    .langbar{position:static} body{background:#fff} section{box-shadow:none;break-inside:avoid}
+    .L{display:none!important} body.lang-zh .L.zh,body.lang-en .L.en,body.lang-vi .L.vi{display:block!important}
+  }
+</style>
+</head>
+<body class="lang-zh">
+
+<div class="langbar">
+  <button data-l="zh" class="active" onclick="setLang('zh')">繁體中文</button>
+  <button data-l="en" onclick="setLang('en')">English</button>
+  <button data-l="vi" onclick="setLang('vi')">Tiếng Việt</button>
+</div>
+
+<header class="hero">
+  <div class="logo">🩸</div>
+  <h1>VN-BECS V2</h1>
+  <div class="sub">
+    <span class="L zh">越南血液管理系統 — 企業級血液電腦作業系統</span>
+    <span class="L en">Vietnam Blood Establishment Computer System</span>
+    <span class="L vi">Hệ thống Quản lý Máu Lâm sàng Doanh nghiệp</span>
+  </div>
+  <div class="meta">
+    <span class="pill">Next.js 16 · Supabase/PostgreSQL · Firebase App Hosting</span>
+    <span class="pill">ISBT 128 · HL7 FHIR R4</span>
+    <span class="pill">
+      <span class="L zh">技術總覽簡報</span>
+      <span class="L en">Technical Overview</span>
+      <span class="L vi">Tổng quan Kỹ thuật</span>
+      · 2026-06-08</span>
+  </div>
+</header>
+
+<main>
+
+<!-- TOC -->
+<section class="toc">
+  <h2><span class="num">≡</span>
+    <span class="L zh">目錄</span><span class="L en">Contents</span><span class="L vi">Mục lục</span></h2>
+  <ol>
+    <li><a href="#s1"><span class="L zh">專案名稱與識別</span><span class="L en">Project Identity</span><span class="L vi">Định danh Dự án</span></a></li>
+    <li><a href="#s2"><span class="L zh">專案目的</span><span class="L en">Project Purpose</span><span class="L vi">Mục đích Dự án</span></a></li>
+    <li><a href="#s3"><span class="L zh">系統範圍</span><span class="L en">System Scope</span><span class="L vi">Phạm vi Hệ thống</span></a></li>
+    <li><a href="#s4"><span class="L zh">系統合規性檢核</span><span class="L en">Regulatory Compliance</span><span class="L vi">Tuân thủ Quy định</span></a></li>
+    <li><a href="#s5"><span class="L zh">系統關聯圖</span><span class="L en">System Relationships</span><span class="L vi">Quan hệ Hệ thống</span></a></li>
+    <li><a href="#s6"><span class="L zh">主要作業程序</span><span class="L en">Core Operating Procedure</span><span class="L vi">Quy trình Vận hành Chính</span></a></li>
+    <li><a href="#s7"><span class="L zh">各子系統目的與功能</span><span class="L en">Subsystems</span><span class="L vi">Các Phân hệ</span></a></li>
+    <li><a href="#s8"><span class="L zh">血袋狀態機生命週期</span><span class="L en">Blood Unit State Machine</span><span class="L vi">Máy Trạng thái Túi máu</span></a></li>
+    <li><a href="#s9"><span class="L zh">角色權限與資安稽核</span><span class="L en">RBAC, Security & Audit</span><span class="L vi">RBAC, Bảo mật & Kiểm toán</span></a></li>
+    <li><a href="#s10"><span class="L zh">技術架構與雲端部署</span><span class="L en">Architecture & Deployment</span><span class="L vi">Kiến trúc & Triển khai</span></a></li>
+    <li><a href="#s11"><span class="L zh">互通性 · 離線容錯</span><span class="L en">Interoperability & Offline</span><span class="L vi">Liên thông & Ngoại tuyến</span></a></li>
+    <li><a href="#s12"><span class="L zh">驗證測試與風險待辦</span><span class="L en">V&V & Roadmap</span><span class="L vi">Kiểm thử & Lộ trình</span></a></li>
+    <li><a href="#s13"><span class="L zh">名詞縮寫表</span><span class="L en">Glossary</span><span class="L vi">Thuật ngữ</span></a></li>
+  </ol>
+</section>
+
+<!-- 1 IDENTITY -->
+<section id="s1">
+  <h2><span class="num">1</span>
+    <span class="L zh">專案名稱與識別</span><span class="L en">Project Name & Identity</span><span class="L vi">Tên & Định danh Dự án</span></h2>
+  <table>
+    <tr><th style="width:28%"><span class="L zh">項目</span><span class="L en">Item</span><span class="L vi">Mục</span></th>
+        <th><span class="L zh">內容</span><span class="L en">Value</span><span class="L vi">Nội dung</span></th></tr>
+    <tr><td><span class="L zh">專案代號</span><span class="L en">Code name</span><span class="L vi">Mã dự án</span></td><td><b>VN-BECS V2</b> (Vietnam Blood Establishment Computer System, v2.0)</td></tr>
+    <tr><td><span class="L zh">中文名稱</span><span class="L en">Chinese name</span><span class="L vi">Tên tiếng Hoa</span></td><td>越南血液管理系統 — 企業級血液電腦作業系統</td></tr>
+    <tr><td><span class="L zh">越南文名稱</span><span class="L en">Vietnamese name</span><span class="L vi">Tên tiếng Việt</span></td><td>Hệ thống Quản lý Máu Lâm sàng Doanh nghiệp</td></tr>
+    <tr><td><span class="L zh">定位</span><span class="L en">Positioning</span><span class="L vi">Định vị</span></td><td>
+      <span class="L zh">血液機構電腦作業系統（BECS）— 涵蓋捐血、檢驗、製備、庫存、配送、配血、發血、輸注與血液警訊的端到端平台。</span>
+      <span class="L en">An end-to-end Blood Establishment Computer System covering donation, testing, processing, inventory, distribution, crossmatch, issue, transfusion and haemovigilance.</span>
+      <span class="L vi">Hệ thống máy tính cơ sở máu (BECS) đầu-cuối: hiến máu, xét nghiệm, chế tạo, kho, phân phối, hòa hợp, cấp phát, truyền máu và cảnh giác máu.</span></td></tr>
+    <tr><td><span class="L zh">目標場域</span><span class="L en">Target setting</span><span class="L vi">Bối cảnh</span></td><td>
+      <span class="L zh">越南血液中心與醫院輸血科（台越合作試點）</span>
+      <span class="L en">Vietnam blood centers & hospital transfusion services (Taiwan–Vietnam pilot)</span>
+      <span class="L vi">Trung tâm máu & khoa truyền máu bệnh viện Việt Nam (thí điểm Đài–Việt)</span></td></tr>
+    <tr><td><span class="L zh">目前狀態</span><span class="L en">Current status</span><span class="L vi">Trạng thái</span></td><td>
+      <span class="badge b-warn">PILOT / VALIDATION</span>
+      <span class="L zh"> 試點/驗證階段，尚未授權真實臨床輸血決策。</span>
+      <span class="L en"> Pilot/validation; not yet authorized for live clinical transfusion decisions.</span>
+      <span class="L vi"> Thí điểm/kiểm định; chưa được phép quyết định truyền máu lâm sàng thực tế.</span></td></tr>
+  </table>
+</section>
+
+<!-- 2 PURPOSE -->
+<section id="s2">
+  <h2><span class="num">2</span>
+    <span class="L zh">專案目的</span><span class="L en">Project Purpose</span><span class="L vi">Mục đích Dự án</span></h2>
+  <div class="L zh">
+    <p class="lead">以單一受控平台貫穿「捐血者 → 受血者」的完整血液鏈，將每一個高風險環節轉化為可稽核、可阻斷、可追溯的數位作業，把安全規則寫進系統而非依賴人工記憶。</p>
+    <ul>
+      <li><b>輸血安全優先</b>：以血袋狀態機強制生命週期，任何違規轉移（未檢驗放行、不相容配血、過期發血）一律於系統層阻斷。</li>
+      <li><b>端到端可追溯</b>：依 ISBT 128 對捐血、製品與標籤統一編碼，支援捐血者↔受血者雙向追溯（Lookback）。</li>
+      <li><b>法規對齊</b>：對照越南 Circular 26、AABB、cGMP（21 CFR 606）、電子紀錄（21 CFR Part 11）、ISO 15189/27799 等基準設計。</li>
+      <li><b>韌性與在地化</b>：支援網路不穩環境的離線緊急作業與事後對帳；介面三語（繁中／英文／越南文）。</li>
+      <li><b>互通性</b>：透過 HL7 FHIR R4 與 HIS/LIS 交換病人、檢體、報告、製品與不良事件資料。</li>
+    </ul>
+  </div>
+  <div class="L en">
+    <p class="lead">A single controlled platform spanning the full vein-to-vein blood chain, turning every high-risk step into an auditable, blockable, traceable digital operation — encoding safety rules into the system rather than relying on human memory.</p>
+    <ul>
+      <li><b>Transfusion safety first</b>: a blood-unit state machine enforces the lifecycle; illegal transitions (release before testing, incompatible crossmatch, expired issue) are blocked at the system layer.</li>
+      <li><b>End-to-end traceability</b>: ISBT 128 coding for donation, product and label; full donor↔recipient lookback in both directions.</li>
+      <li><b>Regulatory alignment</b>: designed against Vietnam Circular 26, AABB, cGMP (21 CFR 606), e-records (21 CFR Part 11), ISO 15189/27799.</li>
+      <li><b>Resilience & localization</b>: offline emergency operations for unstable networks with later reconciliation; trilingual UI (zh-TW / EN / VI).</li>
+      <li><b>Interoperability</b>: HL7 FHIR R4 exchange of patient, specimen, report, product and adverse-event data with HIS/LIS.</li>
+    </ul>
+  </div>
+  <div class="L vi">
+    <p class="lead">Một nền tảng kiểm soát duy nhất bao trùm toàn bộ chuỗi máu "người hiến → người nhận", biến mỗi bước rủi ro cao thành thao tác số có thể kiểm toán, chặn và truy vết — mã hóa quy tắc an toàn vào hệ thống thay vì dựa vào trí nhớ con người.</p>
+    <ul>
+      <li><b>An toàn truyền máu hàng đầu</b>: máy trạng thái túi máu thực thi vòng đời; mọi chuyển trạng thái trái phép (cấp phát trước khi xét nghiệm, hòa hợp không tương thích, cấp phát hết hạn) bị chặn ở tầng hệ thống.</li>
+      <li><b>Truy vết đầu-cuối</b>: mã hóa ISBT 128 cho lần hiến, sản phẩm và nhãn; truy vết người hiến↔người nhận hai chiều (Lookback).</li>
+      <li><b>Tuân thủ quy định</b>: thiết kế theo Thông tư 26 Việt Nam, AABB, cGMP (21 CFR 606), hồ sơ điện tử (21 CFR Part 11), ISO 15189/27799.</li>
+      <li><b>Bền vững & bản địa hóa</b>: thao tác khẩn cấp ngoại tuyến cho mạng không ổn định, đối soát sau; giao diện ba ngôn ngữ.</li>
+      <li><b>Liên thông</b>: trao đổi HL7 FHIR R4 dữ liệu bệnh nhân, bệnh phẩm, báo cáo, sản phẩm và biến cố bất lợi với HIS/LIS.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 3 SCOPE -->
+<section id="s3">
+  <h2><span class="num">3</span>
+    <span class="L zh">系統範圍</span><span class="L en">System Scope</span><span class="L vi">Phạm vi Hệ thống</span></h2>
+  <div class="grid c2">
+    <div class="card">
+      <h4>✅ <span class="L zh">範圍內 (In Scope)</span><span class="L en">In Scope</span><span class="L vi">Trong phạm vi</span></h4>
+      <ul>
+        <li><span class="L zh">捐血者登記、問卷、暫緩判定、採血</span><span class="L en">Donor registration, questionnaire, deferral, collection</span><span class="L vi">Đăng ký người hiến, bảng hỏi, hoãn hiến, lấy máu</span></li>
+        <li><span class="L zh">實驗室檢驗（IDM 傳染病、ABO/Rh 血型）與放行</span><span class="L en">Laboratory testing (IDM, ABO/Rh) and release</span><span class="L vi">Xét nghiệm (IDM, ABO/Rh) và cấp phát</span></li>
+        <li><span class="L zh">成分製備、ISBT 128 貼碼、庫存與效期/溫控</span><span class="L en">Component prep, ISBT 128 labeling, inventory & expiry/temperature</span><span class="L vi">Chế tạo thành phần, dán nhãn ISBT 128, kho & hạn dùng/nhiệt độ</span></li>
+        <li><span class="L zh">醫院訂單、調度、揀貨、冷鏈配送、簽收</span><span class="L en">Hospital ordering, dispatch, picking, cold-chain delivery, receipt</span><span class="L vi">Đặt hàng bệnh viện, điều phối, soạn, giao chuỗi lạnh, nhận</span></li>
+        <li><span class="L zh">交叉配對、發血、退回、床邊核對、輸注完成</span><span class="L en">Crossmatch, issue, return, bedside verification, transfusion</span><span class="L vi">Hòa hợp, cấp phát, trả, xác minh tại giường, truyền máu</span></li>
+        <li><span class="L zh">不良反應通報與血液警訊、雙向追溯</span><span class="L en">Adverse reaction reporting, haemovigilance, lookback</span><span class="L vi">Báo cáo phản ứng, cảnh giác máu, truy vết</span></li>
+        <li><span class="L zh">大量輸血協定 (MTP) 與緊急放行</span><span class="L en">Massive Transfusion Protocol (MTP) & emergency release</span><span class="L vi">Phác đồ truyền máu khối lượng lớn (MTP) & cấp khẩn</span></li>
+        <li><span class="L zh">主檔治理 (MDM)、身分與權限 (IAM/RBAC)、稽核軌跡、KPI 看板</span><span class="L en">MDM, IAM/RBAC, audit trail, KPI dashboards</span><span class="L vi">MDM, IAM/RBAC, nhật ký kiểm toán, bảng KPI</span></li>
+        <li><span class="L zh">離線緊急作業與對帳；HL7 FHIR / ISBT 128 互通</span><span class="L en">Offline emergency ops & reconciliation; HL7 FHIR / ISBT 128</span><span class="L vi">Khẩn cấp ngoại tuyến & đối soát; HL7 FHIR / ISBT 128</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>⛔ <span class="L zh">範圍外 / 待政策決定</span><span class="L en">Out of Scope / Pending Policy</span><span class="L vi">Ngoài phạm vi / Chờ chính sách</span></h4>
+      <ul>
+        <li><span class="L zh">越南法規正式對應與 12 項臨床政策的書面簽核（待主管機關/試點醫院）</span><span class="L en">Formal Vietnam legal mapping & 12 clinical policy sign-offs (authorities/pilot hospitals)</span><span class="L vi">Ánh xạ pháp lý chính thức & 12 quyết định chính sách lâm sàng (cơ quan/bệnh viện)</span></li>
+        <li><span class="L zh">經驗證之實體冷鏈量測裝置整合（目前為模擬遙測）</span><span class="L en">Validated physical cold-chain device integration (currently simulated telemetry)</span><span class="L vi">Tích hợp thiết bị chuỗi lạnh đã kiểm định (hiện mô phỏng)</span></li>
+        <li><span class="L zh">正式 ICCBBA 機構碼/產品目錄授權（試點用樣本碼）</span><span class="L en">Licensed ICCBBA facility/product catalog (pilot uses sample codes)</span><span class="L vi">Cấp phép cơ sở/danh mục ICCBBA chính thức (thí điểm dùng mã mẫu)</span></li>
+        <li><span class="L zh">完整 CSV 驗證套件（IQ/OQ/PQ）之簽核交付</span><span class="L en">Full CSV validation package (IQ/OQ/PQ) sign-off</span><span class="L vi">Gói kiểm định CSV đầy đủ (IQ/OQ/PQ)</span></li>
+        <li><span class="L zh">醫療器材法規查驗登記（如適用）</span><span class="L en">Medical-device regulatory registration (if applicable)</span><span class="L vi">Đăng ký quản lý trang thiết bị y tế (nếu áp dụng)</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 4 COMPLIANCE -->
+<section id="s4">
+  <h2><span class="num">4</span>
+    <span class="L zh">系統合規性檢核（詳述）</span><span class="L en">Regulatory Compliance Check (Detailed)</span><span class="L vi">Kiểm tra Tuân thủ (Chi tiết)</span></h2>
+  <div class="L zh"><p class="lead">合規以<b>需求可追溯矩陣 (RTM)</b> 管理：每條法規需求都連到「實作程式 → 驗證測試 → 證據 → 狀態」，作為 IQ/OQ/PQ 與 Gate 簽核的單一事實來源。狀態僅在「測試存在且通過、且經審核簽核」時才標示為已達成。</p></div>
+  <div class="L en"><p class="lead">Compliance is governed by a <b>Requirements Traceability Matrix (RTM)</b>: every requirement links to implementing code → verifying test → evidence → status, as the single source of truth for IQ/OQ/PQ and Gate sign-off. Status is marked Done only when a passing test and a reviewer sign-off both exist.</p></div>
+  <div class="L vi"><p class="lead">Tuân thủ được quản lý bằng <b>Ma trận Truy vết Yêu cầu (RTM)</b>: mỗi yêu cầu liên kết mã thực thi → kiểm thử → bằng chứng → trạng thái, là nguồn sự thật duy nhất cho IQ/OQ/PQ và phê duyệt Gate.</p></div>
+
+  <h3><span class="L zh">4.1 參照法規與標準</span><span class="L en">4.1 Reference standards</span><span class="L vi">4.1 Tiêu chuẩn tham chiếu</span></h3>
+  <table>
+    <tr><th><span class="L zh">代碼</span><span class="L en">Code</span><span class="L vi">Mã</span></th><th><span class="L zh">來源 / 範疇</span><span class="L en">Source / Scope</span><span class="L vi">Nguồn / Phạm vi</span></th></tr>
+    <tr><td><b>VN26</b></td><td>越南 Circular 26/2013/TT-BYT — <span class="L zh">輸血專業技術規範</span><span class="L en">Vietnam transfusion technical regulation</span><span class="L vi">Quy chế kỹ thuật truyền máu Việt Nam</span></td></tr>
+    <tr><td><b>AABB</b></td><td>AABB Standards for Blood Banks & Transfusion Services</td></tr>
+    <tr><td><b>FDA606</b></td><td>21 CFR 606 — cGMP for Blood and Blood Components</td></tr>
+    <tr><td><b>FDA211</b></td><td>21 CFR Part 11 — <span class="L zh">電子紀錄／電子簽章</span><span class="L en">Electronic records / signatures</span><span class="L vi">Hồ sơ/chữ ký điện tử</span></td></tr>
+    <tr><td><b>ISBT128</b></td><td>ICCBBA ISBT 128 Standard (<span class="L zh">含 ISO 7064 檢查碼</span><span class="L en">incl. ISO 7064 check char</span><span class="L vi">gồm ký tự kiểm tra ISO 7064</span>)</td></tr>
+    <tr><td><b>ISO15189</b></td><td><span class="L zh">醫學實驗室品質與能力</span><span class="L en">Medical laboratory quality & competence</span><span class="L vi">Chất lượng & năng lực phòng xét nghiệm</span></td></tr>
+    <tr><td><b>ISO27799</b></td><td><span class="L zh">健康資訊安全管理</span><span class="L en">Health information security</span><span class="L vi">An toàn thông tin y tế</span></td></tr>
+    <tr><td><b>WHO-HV</b></td><td>WHO / ISBT / IHN <span class="L zh">血液警訊</span><span class="L en">haemovigilance</span><span class="L vi">cảnh giác máu</span></td></tr>
+  </table>
+
+  <h3><span class="L zh">4.2 合規檢核重點（節錄自 RTM）</span><span class="L en">4.2 Key compliance controls (RTM excerpt)</span><span class="L vi">4.2 Kiểm soát tuân thủ chính (trích RTM)</span></h3>
+  <p style="font-size:.85rem;color:var(--mut)">
+    <span class="badge b-ok">✅ Done</span>
+    <span class="badge b-warn">🟠 Partial</span>
+    <span class="badge b-gap">🔴 Gap</span>
+    &nbsp;
+    <span class="L zh">（依 2026-05-29 實證程式碼審查）</span><span class="L en">(per code review on 2026-05-29)</span><span class="L vi">(theo rà soát mã 2026-05-29)</span>
+  </p>
+  <table>
+    <tr>
+      <th>RTM ID</th><th><span class="L zh">需求</span><span class="L en">Requirement</span><span class="L vi">Yêu cầu</span></th>
+      <th><span class="L zh">標準</span><span class="L en">Std</span><span class="L vi">TC</span></th><th><span class="L zh">狀態</span><span class="L en">Status</span><span class="L vi">TT</span></th></tr>
+    <tr><td>AUTH-01</td><td><span class="L zh">操作者身分由伺服器驗證，不可用戶端自填</span><span class="L en">Actor identity verified server-side, not client-supplied</span><span class="L vi">Danh tính do máy chủ xác minh</span></td><td>FDA211</td><td><span class="badge b-ok">✅</span></td></tr>
+    <tr><td>AUTH-04</td><td><span class="L zh">生產環境一律禁用 demo 登入 (fail-closed)</span><span class="L en">Demo login disabled in production (fail-closed)</span><span class="L vi">Vô hiệu đăng nhập demo ở môi trường thật</span></td><td>FDA211</td><td><span class="badge b-ok">✅</span></td></tr>
+    <tr><td>STATE-01</td><td><span class="L zh">血袋生命週期集中受控、非法轉移阻擋</span><span class="L en">Centralized lifecycle control, illegal transitions blocked</span><span class="L vi">Kiểm soát vòng đời tập trung, chặn chuyển trái phép</span></td><td>AABB, FDA606</td><td><span class="badge b-ok">✅</span></td></tr>
+    <tr><td>REL-01</td><td><span class="L zh">未完成 IDM 陰性檢驗不得放行為可用</span><span class="L en">No release to AVAILABLE before negative IDM testing</span><span class="L vi">Không cấp phát trước khi IDM âm tính</span></td><td>VN26, AABB</td><td><span class="badge b-ok">✅</span></td></tr>
+    <tr><td>XM-01</td><td><span class="L zh">ABO/Rh 相容性依血品類別分別判定</span><span class="L en">ABO/Rh compatibility per component class</span><span class="L vi">Tương thích ABO/Rh theo loại thành phần</span></td><td>AABB</td><td><span class="badge b-ok">✅</span></td></tr>
+    <tr><td>BED-01</td><td><span class="L zh">床邊雙人核對（兩位合格人員皆認證）</span><span class="L en">Two-person bedside verification (both authenticated)</span><span class="L vi">Xác minh tại giường hai người</span></td><td>AABB, WHO-HV</td><td><span class="badge b-ok">✅</span></td></tr>
+    <tr><td>ISS-02</td><td><span class="L zh">發出逾 30 分鐘不得回庫；不合格報廢</span><span class="L en">No return after 30 min; non-conforming units wasted</span><span class="L vi">Không trả sau 30 phút; loại bỏ nếu không đạt</span></td><td>VN26, AABB</td><td><span class="badge b-ok">✅</span></td></tr>
+    <tr><td>EMG-01</td><td><span class="L zh">緊急/MTP 強制 approver、適應症、RhD 政策、review SLA</span><span class="L en">Emergency/MTP enforces approver, indication, RhD policy, review SLA</span><span class="L vi">Khẩn/MTP bắt buộc người duyệt, chỉ định, chính sách RhD, SLA</span></td><td>AABB</td><td><span class="badge b-ok">✅</span></td></tr>
+    <tr><td>DON-01/02</td><td><span class="L zh">捐血者資格與採血量上限（年齡/體重連動）</span><span class="L en">Donor eligibility & collection volume limits (age/weight)</span><span class="L vi">Đủ điều kiện hiến & giới hạn thể tích lấy</span></td><td>VN26</td><td><span class="badge b-ok">✅</span></td></tr>
+    <tr><td>LBL-01</td><td><span class="L zh">ISBT 128 DIN/標籤解析（含 ISO 7064 檢查碼）</span><span class="L en">ISBT 128 DIN/label parse (incl. ISO 7064 check char)</span><span class="L vi">Phân tích DIN/nhãn ISBT 128</span></td><td>ISBT128</td><td><span class="badge b-ok">✅</span></td></tr>
+    <tr><td>AUD-02</td><td><span class="L zh">稽核 hash chain 完整性可驗證（驗證端點）</span><span class="L en">Verifiable audit hash-chain integrity (verify endpoint)</span><span class="L vi">Tính toàn vẹn chuỗi băm kiểm toán</span></td><td>FDA211</td><td><span class="badge b-ok">✅</span></td></tr>
+    <tr><td>FHIR-01</td><td><span class="L zh">FHIR R4 七類資源對應 + bundle 查詢</span><span class="L en">FHIR R4 seven-resource mapping + bundle query</span><span class="L vi">Ánh xạ 7 tài nguyên FHIR R4</span></td><td>HL7</td><td><span class="badge b-ok">✅</span></td></tr>
+    <tr><td>AUTH-03</td><td><span class="L zh">機構範圍隔離 (ABAC/RLS) — DB 遷移已備，待連線測試證據</span><span class="L en">Facility scope (ABAC/RLS) — migration ready, awaiting live-DB test evidence</span><span class="L vi">Phạm vi cơ sở (ABAC/RLS) — di trú sẵn, chờ bằng chứng</span></td><td>ISO27799</td><td><span class="badge b-warn">🟠</span></td></tr>
+    <tr><td>STATE-03/04</td><td><span class="L zh">多表原子交易、多軸狀態落地</span><span class="L en">Multi-table atomic transactions, multi-axis status</span><span class="L vi">Giao dịch nguyên tử đa bảng, trạng thái đa trục</span></td><td>FDA606, AABB</td><td><span class="badge b-warn">🟠</span></td></tr>
+    <tr><td>AUD-01</td><td><span class="L zh">稽核 append-only DB 層強制（trigger+RLS 待測試證據）</span><span class="L en">Append-only audit enforced at DB layer (awaiting evidence)</span><span class="L vi">Kiểm toán chỉ-thêm ở tầng DB</span></td><td>FDA211</td><td><span class="badge b-warn">🟠</span></td></tr>
+    <tr><td>COLD-01</td><td><span class="L zh">冷鏈經驗證裝置/excursion/CAPA — 目前為模擬值</span><span class="L en">Cold chain validated devices/excursions/CAPA — currently simulated</span><span class="L vi">Chuỗi lạnh thiết bị kiểm định — hiện mô phỏng</span></td><td>VN26, EU-GMP</td><td><span class="badge b-gap">🔴</span></td></tr>
+    <tr><td>VAL-01 / REG-01</td><td><span class="L zh">CSV 驗證套件、越南法規正式簽核</span><span class="L en">CSV validation package, formal Vietnam regulatory sign-off</span><span class="L vi">Gói kiểm định CSV, phê duyệt pháp lý</span></td><td>FDA-BECS, VN26</td><td><span class="badge b-gap">🔴</span></td></tr>
+  </table>
+
+  <h3><span class="L zh">4.3 合規 Gate 制度</span><span class="L en">4.3 Compliance Gates</span><span class="L vi">4.3 Cổng tuân thủ</span></h3>
+  <div class="grid c3">
+    <div class="card"><span class="tag">Gate 1</span><h4><span class="L zh">工程安全</span><span class="L en">Engineering Safety</span><span class="L vi">An toàn Kỹ thuật</span></h4>
+      <p style="font-size:.85rem">AUTH · STATE · AUDIT</p></div>
+    <div class="card"><span class="tag">Gate 2</span><h4><span class="L zh">臨床流程</span><span class="L en">Clinical Workflow</span><span class="L vi">Quy trình Lâm sàng</span></h4>
+      <p style="font-size:.85rem">CROSSMATCH · BEDSIDE · MTP · COLD CHAIN</p></div>
+    <div class="card"><span class="tag">Gate 3</span><h4><span class="L zh">法規品質</span><span class="L en">Regulatory Quality</span><span class="L vi">Chất lượng Pháp lý</span></h4>
+      <p style="font-size:.85rem">CSV (IQ/OQ/PQ) · TRACEABILITY · FHIR</p></div>
+  </div>
+  <div class="note"><span class="L zh"><b>誠實揭露：</b>系統的工程安全 (Gate 1) 與多數臨床安全規則 (Gate 2) 已實作並通過自動測試；冷鏈實機整合、機構隔離連線驗證、完整 CSV 與法規正式簽核仍為待辦，需於試點上線前完成。</span>
+    <span class="L en"><b>Honest disclosure:</b> Engineering safety (Gate 1) and most clinical safety rules (Gate 2) are implemented and unit-tested; physical cold-chain integration, facility-isolation live verification, full CSV and formal regulatory sign-off remain open and are required before pilot go-live.</span>
+    <span class="L vi"><b>Công bố trung thực:</b> An toàn kỹ thuật (Gate 1) và phần lớn quy tắc lâm sàng (Gate 2) đã triển khai và kiểm thử; tích hợp chuỗi lạnh thực, xác minh cách ly cơ sở, CSV đầy đủ và phê duyệt pháp lý vẫn còn mở.</span></div>
+</section>
+
+<!-- 5 SYSTEM RELATIONSHIPS -->
+<section id="s5">
+  <h2><span class="num">5</span>
+    <span class="L zh">系統關聯圖</span><span class="L en">System Relationship Diagram</span><span class="L vi">Sơ đồ Quan hệ Hệ thống</span></h2>
+  <div class="L zh"><p>五大子系統並非獨立運作，而是透過<b>共用資料庫、血袋狀態機與全域警報服務</b>緊密互動；嚴重事件會跨模組連動（如不良反應 → 凍結同批庫存 → 標記捐血者）。</p></div>
+  <div class="L en"><p>The five subsystems are not siloed — they interact through a <b>shared database, the blood-unit state machine, and a global alert service</b>; severe events cascade across modules (e.g. adverse reaction → freeze same-batch inventory → flag donor).</p></div>
+  <div class="L vi"><p>Năm phân hệ không tách rời — chúng tương tác qua <b>CSDL chung, máy trạng thái túi máu và dịch vụ cảnh báo toàn cục</b>; sự cố nghiêm trọng lan tỏa giữa các module.</p></div>
+  <div class="diagram">
+    <pre class="mermaid">
+flowchart TD
+  classDef m1 fill:#fef2f2,stroke:#dc2626,stroke-width:2px,color:#7f1d1d;
+  classDef m2 fill:#fffbeb,stroke:#d97706,stroke-width:2px,color:#78350f;
+  classDef m3 fill:#eff6ff,stroke:#2563eb,stroke-width:2px,color:#1e3a8a;
+  classDef m4 fill:#f0fdf4,stroke:#16a34a,stroke-width:2px,color:#14532d;
+  classDef m5 fill:#faf5ff,stroke:#7c3aed,stroke-width:2px,color:#4c1d95;
+  classDef core fill:#f1f5f9,stroke:#0f172a,stroke-width:2px,color:#0f172a;
+
+  M1["① Donor & LIMS<br/>捐血者・檢驗"]:::m1
+  M2["② Components & Inventory<br/>製備・庫存"]:::m2
+  M3["③ Orders & Logistics<br/>訂單・物流"]:::m3
+  M4["④ Crossmatch & Issue<br/>配血・發血"]:::m4
+  M5["⑤ Haemovigilance<br/>血液警訊"]:::m5
+  CORE["Shared Core<br/>State Machine · Alert · Offline Sync · Audit"]:::core
+
+  M1 -->|donation / IDM result| M2
+  M2 -->|AVAILABLE units| M3
+  M3 -->|delivered & received| M4
+  M4 -.->|adverse reaction| M5
+  M5 -.->|freeze batch| M2
+  M5 -.->|flag donor| M1
+  M1 --- CORE
+  M2 --- CORE
+  M3 --- CORE
+  M4 --- CORE
+  M5 --- CORE
+  linkStyle 0,1,2 stroke:#16a34a,stroke-width:2.5px;
+  linkStyle 3,4,5 stroke:#dc2626,stroke-width:2px,stroke-dasharray:5 4;
+  linkStyle 6,7,8,9,10 stroke:#94a3b8,stroke-width:1.5px,stroke-dasharray:2 3;
+    </pre>
+  </div>
+  <div class="legend">
+    <div class="item"><span class="swatch" style="background:#16a34a"></span><span class="L zh">正常血流（主流程）</span><span class="L en">Normal blood flow</span><span class="L vi">Dòng máu bình thường</span></div>
+    <div class="item"><span class="swatch" style="background:#dc2626"></span><span class="L zh">異常連動（追溯/凍結）</span><span class="L en">Exception cascade (lookback)</span><span class="L vi">Lan tỏa ngoại lệ</span></div>
+    <div class="item"><span class="swatch" style="background:#94a3b8"></span><span class="L zh">共用核心服務</span><span class="L en">Shared core services</span><span class="L vi">Dịch vụ lõi chung</span></div>
+  </div>
+</section>
+
+<!-- 6 CORE WORKFLOW -->
+<section id="s6">
+  <h2><span class="num">6</span>
+    <span class="L zh">主要作業程序</span><span class="L en">Core Operating Procedure</span><span class="L vi">Quy trình Vận hành Chính</span></h2>
+  <div class="L zh"><p>下圖為「捐血 → 輸注」端到端主流程，<b>不同色彩的流程線代表不同性質的轉移</b>：綠＝正常推進、紅＝拒收/銷毀/報廢、橙＝條件性退回、藍＝離線暫存與同步。</p></div>
+  <div class="L en"><p>The vein-to-vein flow below uses <b>colored flow lines to denote transition types</b>: green = normal progression, red = rejection/discard/waste, amber = conditional return, blue = offline buffering & sync.</p></div>
+  <div class="L vi"><p>Luồng "hiến → truyền" dưới đây dùng <b>màu sắc khác nhau cho loại chuyển trạng thái</b>: xanh lá = tiến trình bình thường, đỏ = loại bỏ, cam = trả có điều kiện, xanh dương = ngoại tuyến & đồng bộ.</p></div>
+  <div class="diagram">
+    <pre class="mermaid">
+flowchart TD
+  A([Donor Registration<br/>+ Questionnaire]) --> B[Collection<br/>COLLECTED]
+  B --> C[Component Prep<br/>QUARANTINE]
+  C --> D{IDM Testing<br/>ABO/Rh}
+  D -->|negative / cleared| E[Inventory<br/>AVAILABLE]
+  D -->|reactive| X1([DISCARDED]):::term
+  E --> F[Order &amp; Allocation<br/>RESERVED]
+  F --> G[Pick &amp; Cold-chain<br/>PICKED → IN_TRANSIT]
+  G --> H[Hospital Receipt<br/>RECEIVED]
+  H --> I{Crossmatch<br/>compatibility}
+  I -->|compatible| J[Issue<br/>ISSUED]
+  I -->|incompatible / expired| X2([Blocked]):::term
+  J --> K{Bedside<br/>2-person check}
+  K -->|verified| L([TRANSFUSED]):::done
+  K -->|not transfused| M{Return ≤ 30 min?}
+  M -->|cold-chain OK| E
+  M -->|fail / &gt;30min| X3([WASTED]):::term
+  L -.->|adverse reaction| N[Haemovigilance<br/>+ Lookback]
+  J -.->|network down| O[(Offline Outbox)]:::off
+  O -.->|reconnect / reconcile| J
+
+  classDef term fill:#fee2e2,stroke:#dc2626,color:#991b1b,stroke-width:2px;
+  classDef done fill:#dcfce7,stroke:#16a34a,color:#166534,stroke-width:2px;
+  classDef off fill:#eff6ff,stroke:#2563eb,color:#1e40af,stroke-width:2px;
+
+  linkStyle 0,1,2,3,5,6,7,9,12 stroke:#16a34a,stroke-width:2.5px;
+  linkStyle 4,8,11,14 stroke:#dc2626,stroke-width:2px;
+  linkStyle 13,15 stroke:#d97706,stroke-width:2px,stroke-dasharray:5 3;
+  linkStyle 10 stroke:#16a34a,stroke-width:2.5px;
+  linkStyle 16,17,18 stroke:#2563eb,stroke-width:2px,stroke-dasharray:4 3;
+    </pre>
+  </div>
+  <div class="legend">
+    <div class="item"><span class="swatch" style="background:#16a34a"></span><span class="L zh">正常推進</span><span class="L en">Normal progression</span><span class="L vi">Tiến trình bình thường</span></div>
+    <div class="item"><span class="swatch" style="background:#dc2626"></span><span class="L zh">拒收 / 銷毀 / 報廢 / 阻斷</span><span class="L en">Reject / discard / waste / block</span><span class="L vi">Loại bỏ / chặn</span></div>
+    <div class="item"><span class="swatch" style="background:#d97706"></span><span class="L zh">條件性退回</span><span class="L en">Conditional return</span><span class="L vi">Trả có điều kiện</span></div>
+    <div class="item"><span class="swatch" style="background:#2563eb"></span><span class="L zh">離線暫存 / 同步</span><span class="L en">Offline buffer / sync</span><span class="L vi">Đệm ngoại tuyến / đồng bộ</span></div>
+  </div>
+</section>
+
+<!-- 7 SUBSYSTEMS -->
+<section id="s7">
+  <h2><span class="num">7</span>
+    <span class="L zh">各子系統的目的與功能</span><span class="L en">Subsystems — Purpose & Functions</span><span class="L vi">Phân hệ — Mục đích & Chức năng</span></h2>
+  <div class="grid c2">
+
+    <div class="card sub">
+      <span class="tag">LIMS</span>
+      <h4><span class="L zh">捐血中心站（LIMS）</span><span class="L en">Donor Center Station</span><span class="L vi">Trạm Trung tâm Hiến máu</span></h4>
+      <div class="L zh"><p><b>目的：</b>捐血者前線報到與採血。</p>
+        <p><b>功能：</b>CCCD 身分驗證、健康問卷與暫緩判定、年齡/體重/採血量資格檢核、採血與 ISBT 128 DIN 編碼、實驗室 IDM 與 ABO/Rh 檢驗、放行判定，以及罕見血型捐血者管理。</p></div>
+      <div class="L en"><p><b>Purpose:</b> frontline donor intake & phlebotomy.</p>
+        <p><b>Functions:</b> CCCD identity check, health questionnaire & deferral, age/weight/volume eligibility, collection with ISBT 128 DIN, IDM & ABO/Rh testing, release decision, rare-donor registry.</p></div>
+      <div class="L vi"><p><b>Mục đích:</b> tiếp nhận người hiến & lấy máu tuyến đầu.</p>
+        <p><b>Chức năng:</b> xác minh CCCD, bảng hỏi & hoãn hiến, điều kiện tuổi/cân nặng/thể tích, lấy máu với DIN ISBT 128, xét nghiệm IDM & ABO/Rh, quyết định cấp phát, danh bạ người hiến hiếm.</p></div>
+      <div class="role">SOP1–2 · DonorScreener, Nurse, LabTech, MedicalReviewer</div>
+    </div>
+
+    <div class="card sub">
+      <span class="tag">HUB</span>
+      <h4><span class="L zh">供應鏈中樞（HUB）</span><span class="L en">Supply Chain Hub</span><span class="L vi">Hub Chuỗi Cung ứng</span></h4>
+      <div class="L zh"><p><b>目的：</b>集中式倉儲物流與冷鏈完整性。</p>
+        <p><b>功能：</b>成分製備（PRBC/FFP/PLT）與貼碼、即時庫存與效期/溫控、訂單調度與揀貨、冷鏈運輸最佳化與溫度監控、低水位/到期警報。</p></div>
+      <div class="L en"><p><b>Purpose:</b> centralized warehouse logistics & cold-chain integrity.</p>
+        <p><b>Functions:</b> component prep (PRBC/FFP/PLT) & labeling, real-time inventory with expiry/temperature, dispatch & picking, cold-chain transport optimization & monitoring, low-stock/expiry alerts.</p></div>
+      <div class="L vi"><p><b>Mục đích:</b> hậu cần kho tập trung & toàn vẹn chuỗi lạnh.</p>
+        <p><b>Chức năng:</b> chế tạo thành phần (PRBC/FFP/PLT) & dán nhãn, kho thời gian thực với hạn dùng/nhiệt độ, điều phối & soạn hàng, tối ưu vận chuyển chuỗi lạnh, cảnh báo tồn thấp/hết hạn.</p></div>
+      <div class="role">SOP3–5 · WarehouseIssuer, Dispatcher, Courier</div>
+    </div>
+
+    <div class="card sub">
+      <span class="tag">HOSPITAL</span>
+      <h4><span class="L zh">臨床節點（醫院）</span><span class="L en">Clinical Node (Hospital)</span><span class="L vi">Nút Lâm sàng (Bệnh viện)</span></h4>
+      <div class="L zh"><p><b>目的：</b>醫院端需求、配血與床邊輸血安全。</p>
+        <p><b>功能：</b>常規與緊急訂單、大量輸血協定 (MTP) 啟動、交叉配對相容性判定、發血與退回、床邊雙人核對與輸注確認、不良反應通報。</p></div>
+      <div class="L en"><p><b>Purpose:</b> hospital ordering, crossmatch & bedside transfusion safety.</p>
+        <p><b>Functions:</b> routine & emergency orders, MTP activation, crossmatch compatibility, issue & return, two-person bedside check & transfusion confirmation, adverse-reaction reporting.</p></div>
+      <div class="L vi"><p><b>Mục đích:</b> đặt hàng bệnh viện, hòa hợp & an toàn truyền máu tại giường.</p>
+        <p><b>Chức năng:</b> đơn thường & khẩn, kích hoạt MTP, hòa hợp tương thích, cấp phát & trả, xác minh hai người tại giường, báo cáo phản ứng.</p></div>
+      <div class="role">SOP6–8, SOP10 · HospitalOperator, Doctor, Nurse</div>
+    </div>
+
+    <div class="card sub">
+      <span class="tag">NATIONAL</span>
+      <h4><span class="L zh">戰略情報（國家層級）</span><span class="L en">Strategic Intelligence (National)</span><span class="L vi">Tình báo Chiến lược (Quốc gia)</span></h4>
+      <div class="L zh"><p><b>目的：</b>企業級可視性與監管監督。</p>
+        <p><b>功能：</b>全國庫存分布、跨機構 KPI 看板、合規稽核軌跡檢視、血液警訊與雙向追溯總覽、調度決策支援。</p></div>
+      <div class="L en"><p><b>Purpose:</b> enterprise visibility & regulatory oversight.</p>
+        <p><b>Functions:</b> national inventory distribution, cross-facility KPI dashboards, compliance audit-trail review, haemovigilance & lookback overview, allocation decision support.</p></div>
+      <div class="L vi"><p><b>Mục đích:</b> khả năng hiển thị doanh nghiệp & giám sát quy định.</p>
+        <p><b>Chức năng:</b> phân phối kho quốc gia, bảng KPI liên cơ sở, xem nhật ký kiểm toán, tổng quan cảnh giác máu & truy vết, hỗ trợ quyết định phân bổ.</p></div>
+      <div class="role">SOP9 · Manager, NationalCommander, Auditor</div>
+    </div>
+
+    <div class="card sub">
+      <span class="tag">MDM / IAM</span>
+      <h4><span class="L zh">主資料庫（MDM）</span><span class="L en">Master Database (MDM)</span><span class="L vi">Cơ sở Dữ liệu Chính (MDM)</span></h4>
+      <div class="L zh"><p><b>目的：</b>主檔治理與身分權限管理。</p>
+        <p><b>功能：</b>機構（HUB/血液中心/醫院）管理、使用者與 RBAC 角色矩陣、安全政策、ISBT 128 產品目錄、主資料同步與多租戶隔離。</p></div>
+      <div class="L en"><p><b>Purpose:</b> master-data governance & identity/access management.</p>
+        <p><b>Functions:</b> organizations (HUB/center/hospital), users & RBAC role matrix, security policies, ISBT 128 product catalog, master-data sync & multi-tenant isolation.</p></div>
+      <div class="L vi"><p><b>Mục đích:</b> quản trị dữ liệu gốc & quản lý định danh/truy cập.</p>
+        <p><b>Chức năng:</b> tổ chức (HUB/trung tâm/bệnh viện), người dùng & ma trận RBAC, chính sách bảo mật, danh mục sản phẩm ISBT 128, đồng bộ & cách ly đa người thuê.</p></div>
+      <div class="role">— · Admin (System Root)</div>
+    </div>
+
+    <div class="card sub" style="border-top-color:var(--violet)">
+      <span class="tag" style="color:var(--violet);background:#f5f3ff;border-color:#ddd6fe">CORE</span>
+      <h4><span class="L zh">共用核心服務</span><span class="L en">Shared Core Services</span><span class="L vi">Dịch vụ Lõi Chung</span></h4>
+      <div class="L zh"><p><b>目的：</b>跨子系統的安全與一致性守門員。</p>
+        <p><b>功能：</b>血袋狀態機（轉移守衛）、全域警報服務、append-only 稽核 hash chain、離線事件對帳、FHIR/ISBT 128 互通轉接器。</p></div>
+      <div class="L en"><p><b>Purpose:</b> cross-subsystem safety & consistency gatekeeper.</p>
+        <p><b>Functions:</b> blood-unit state machine (transition guards), global alert service, append-only audit hash chain, offline reconciliation, FHIR/ISBT 128 adapters.</p></div>
+      <div class="L vi"><p><b>Mục đích:</b> người gác an toàn & nhất quán xuyên phân hệ.</p>
+        <p><b>Chức năng:</b> máy trạng thái túi máu, dịch vụ cảnh báo toàn cục, chuỗi băm kiểm toán chỉ-thêm, đối soát ngoại tuyến, bộ chuyển đổi FHIR/ISBT 128.</p></div>
+      <div class="role">stateMachine · alertService · auditChain · offlineSync · FhirAdapter</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- 8 STATE MACHINE -->
+<section id="s8">
+  <h2><span class="num">8</span>
+    <span class="L zh">血袋狀態機生命週期</span><span class="L en">Blood Unit State Machine</span><span class="L vi">Máy Trạng thái Túi máu</span></h2>
+  <div class="L zh"><p>所有血袋實體轉移都必須經過狀態機驗證前置條件與操作者權限；<b>終端狀態不可逆</b>。色彩：綠＝正常、紅＝終端銷毀/報廢、橙＝可逆退回。</p></div>
+  <div class="L en"><p>Every physical transition passes through the state machine which checks preconditions and operator authority; <b>terminal states are irreversible</b>. Colors: green = normal, red = terminal discard/waste, amber = reversible return.</p></div>
+  <div class="L vi"><p>Mọi chuyển trạng thái vật lý đều qua máy trạng thái kiểm tra điều kiện tiên quyết và quyền; <b>trạng thái cuối không thể đảo ngược</b>.</p></div>
+  <div class="diagram">
+    <pre class="mermaid">
+stateDiagram-v2
+  [*] --> COLLECTED
+  COLLECTED --> QUARANTINE
+  QUARANTINE --> AVAILABLE: IDM cleared
+  QUARANTINE --> DISCARDED: IDM reactive
+  AVAILABLE --> RESERVED: order approved
+  RESERVED --> PICKED
+  PICKED --> IN_TRANSIT
+  IN_TRANSIT --> RECEIVED
+  RECEIVED --> CROSSMATCHED: compatible
+  CROSSMATCHED --> ISSUED: physician order
+  ISSUED --> TRANSFUSED: bedside verified
+  ISSUED --> RETURNED: not transfused
+  RETURNED --> AVAILABLE: cold-chain OK
+  RETURNED --> WASTED: fail / &gt;30min
+  DISCARDED --> [*]
+  WASTED --> [*]
+  TRANSFUSED --> [*]
+    </pre>
+  </div>
+  <div class="legend">
+    <div class="item"><span class="swatch" style="background:#16a34a"></span><span class="L zh">正常轉移</span><span class="L en">Normal</span><span class="L vi">Bình thường</span></div>
+    <div class="item"><span class="swatch" style="background:#dc2626"></span><span class="L zh">終端：DISCARDED / WASTED</span><span class="L en">Terminal: DISCARDED / WASTED</span><span class="L vi">Cuối: DISCARDED / WASTED</span></div>
+    <div class="item"><span class="swatch" style="background:#d97706"></span><span class="L zh">退回（可逆）</span><span class="L en">Return (reversible)</span><span class="L vi">Trả (đảo ngược)</span></div>
+  </div>
+  <div class="note info"><span class="L zh"><b>守門範例：</b>QUARANTINE → AVAILABLE 需 IDM 陰性放行且不在 Lookback 凍結中；ISSUED → TRANSFUSED 需床邊雙人核對通過。</span>
+    <span class="L en"><b>Guard examples:</b> QUARANTINE → AVAILABLE requires negative IDM release and no active lookback freeze; ISSUED → TRANSFUSED requires a passing two-person bedside check.</span>
+    <span class="L vi"><b>Ví dụ canh giữ:</b> QUARANTINE → AVAILABLE cần IDM âm tính và không bị đóng băng truy vết; ISSUED → TRANSFUSED cần xác minh hai người tại giường.</span></div>
+</section>
+
+<!-- 9 SECURITY -->
+<section id="s9">
+  <h2><span class="num">9</span>
+    <span class="L zh">角色權限與資安稽核</span><span class="L en">RBAC, Security & Audit</span><span class="L vi">RBAC, Bảo mật & Kiểm toán</span></h2>
+  <h3><span class="L zh">9.1 角色 × 子系統權限矩陣</span><span class="L en">9.1 Role × Subsystem matrix</span><span class="L vi">9.1 Ma trận Vai trò × Phân hệ</span></h3>
+  <table>
+    <tr><th><span class="L zh">角色</span><span class="L en">Role</span><span class="L vi">Vai trò</span></th><th>LIMS</th><th>HUB</th><th>HOSPITAL</th><th>NATIONAL</th><th>MDM</th></tr>
+    <tr><td>Admin</td><td>✔</td><td>✔</td><td>✔</td><td>✔</td><td>✔</td></tr>
+    <tr><td>LabTech / MedicalReviewer</td><td>✔</td><td>✔</td><td>—</td><td>—</td><td>—</td></tr>
+    <tr><td>WarehouseIssuer / Dispatcher / Courier</td><td>—</td><td>✔</td><td>—</td><td>—</td><td>—</td></tr>
+    <tr><td>HospitalOperator / Doctor / Nurse</td><td>✔</td><td>✔</td><td>✔</td><td>—</td><td>—</td></tr>
+    <tr><td>Manager / NationalCommander / Auditor</td><td>✔</td><td>✔</td><td>✔</td><td>✔</td><td>—</td></tr>
+  </table>
+  <p style="font-size:.82rem;color:var(--mut)"><span class="L zh">權限矩陣於 MDM 中可動態調整，並於 API 層強制（非僅前端路由）。</span><span class="L en">The matrix is configurable in MDM and enforced at the API layer (not only UI routing).</span><span class="L vi">Ma trận cấu hình trong MDM và thực thi ở tầng API.</span></p>
+
+  <h3><span class="L zh">9.2 資安與稽核機制</span><span class="L en">9.2 Security & audit mechanisms</span><span class="L vi">9.2 Cơ chế Bảo mật & Kiểm toán</span></h3>
+  <div class="grid c2">
+    <div class="card">
+      <h4>🔐 <span class="L zh">身分與授權</span><span class="L en">Identity & Authorization</span><span class="L vi">Định danh & Phân quyền</span></h4>
+      <ul>
+        <li><span class="L zh">伺服器簽章會話 token；操作者身分不由用戶端 header 決定</span><span class="L en">Server-signed session token; actor identity never from client header</span><span class="L vi">Token phiên ký bởi máy chủ; danh tính không từ header client</span></li>
+        <li><span class="L zh">API 層 RBAC + 機構範圍 ABAC（生產強制 fail-closed）</span><span class="L en">API-layer RBAC + facility-scope ABAC (production fail-closed)</span><span class="L vi">RBAC tầng API + ABAC phạm vi cơ sở</span></li>
+        <li><span class="L zh">生產禁用 demo 登入；bcrypt 雜湊密碼</span><span class="L en">Demo login disabled in prod; bcrypt-hashed passwords</span><span class="L vi">Vô hiệu demo ở prod; mật khẩu băm bcrypt</span></li>
+        <li><span class="L zh">伺服器使用 service_role 金鑰；公開 anon Data API 鎖定</span><span class="L en">Server uses service_role key; public anon Data API locked down</span><span class="L vi">Máy chủ dùng khóa service_role; khóa Data API công khai</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>📜 <span class="L zh">稽核與不可竄改</span><span class="L en">Audit & Tamper-evidence</span><span class="L vi">Kiểm toán & Chống giả mạo</span></h4>
+      <ul>
+        <li><span class="L zh">稽核紀錄 append-only（DB trigger + RLS）</span><span class="L en">Append-only audit log (DB trigger + RLS)</span><span class="L vi">Nhật ký chỉ-thêm (trigger + RLS)</span></li>
+        <li><span class="L zh">hash chain 串接，斷鏈/竄改可被偵測</span><span class="L en">Hash-chained entries; broken/tampered chain detectable</span><span class="L vi">Chuỗi băm; phát hiện đứt/giả mạo</span></li>
+        <li><span class="L zh">驗證端點 <code>/api/v1/audit-events/verify</code></span><span class="L en">Verify endpoint <code>/api/v1/audit-events/verify</code></span><span class="L vi">Điểm cuối xác minh</span></li>
+        <li><span class="L zh">紀錄 actor / before-after / request id / reason</span><span class="L en">Records actor / before-after / request id / reason</span><span class="L vi">Ghi actor / trước-sau / request id / lý do</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 10 ARCHITECTURE -->
+<section id="s10">
+  <h2><span class="num">10</span>
+    <span class="L zh">技術架構與雲端部署</span><span class="L en">Architecture & Cloud Deployment</span><span class="L vi">Kiến trúc & Triển khai Đám mây</span></h2>
+  <div class="diagram">
+    <pre class="mermaid">
+flowchart LR
+  U["Browser / Client<br/>繁中 · EN · VI"] -->|HTTPS| FH["Firebase App Hosting<br/>asia-east1 · Cloud Run"]
+  FH --> APP["Next.js 16 App<br/>React 19 + API routes"]
+  APP -->|service_role key| DB[("Supabase<br/>PostgreSQL")]
+  APP -->|signed session| SEC["Session / RBAC / Audit"]
+  APP <-->|HL7 FHIR R4| EXT["HIS / LIS"]
+  APP -. offline .-> IDB[("IndexedDB / Dexie<br/>outbox")]
+  IDB -. sync .-> APP
+  classDef c fill:#eff6ff,stroke:#2563eb,color:#1e3a8a;
+  classDef d fill:#fef2f2,stroke:#dc2626,color:#7f1d1d;
+  class FH,APP,SEC c; class DB,IDB d;
+    </pre>
+  </div>
+  <div class="grid c3">
+    <div class="card"><h4><span class="L zh">前端</span><span class="L en">Frontend</span><span class="L vi">Giao diện</span></h4><p style="font-size:.85rem">Next.js 16 · React 19 · Tailwind 4 · <span class="L zh">三語 i18n</span><span class="L en">trilingual i18n</span><span class="L vi">i18n ba ngôn ngữ</span></p></div>
+    <div class="card"><h4><span class="L zh">後端 / 資料</span><span class="L en">Backend / Data</span><span class="L vi">Backend / Dữ liệu</span></h4><p style="font-size:.85rem">Next.js API routes · Supabase/PostgreSQL · RLS</p></div>
+    <div class="card"><h4><span class="L zh">部署</span><span class="L en">Deployment</span><span class="L vi">Triển khai</span></h4><p style="font-size:.85rem">Firebase App Hosting · Cloud Run · asia-east1 · git-triggered</p></div>
+  </div>
+  <div class="note"><span class="L zh"><b>生產硬化：</b><code>NODE_ENV=production</code> 與 <code>VN_BECS_ENFORCE_API_RBAC=true</code> 關閉 demo 登入與記憶體後援、強制 API RBAC；密鑰以 Secret Manager 管理（Supabase URL/anon/service_role、session secret）。</span>
+    <span class="L en"><b>Production hardening:</b> <code>NODE_ENV=production</code> and <code>VN_BECS_ENFORCE_API_RBAC=true</code> disable demo login & in-memory fallback and force API RBAC; secrets managed in Secret Manager.</span>
+    <span class="L vi"><b>Tăng cường sản xuất:</b> tắt đăng nhập demo & dự phòng bộ nhớ, bắt buộc RBAC API; bí mật quản lý trong Secret Manager.</span></div>
+</section>
+
+<!-- 11 INTEROP & OFFLINE -->
+<section id="s11">
+  <h2><span class="num">11</span>
+    <span class="L zh">互通性與離線容錯</span><span class="L en">Interoperability & Offline Resilience</span><span class="L vi">Liên thông & Ngoại tuyến</span></h2>
+  <div class="grid c2">
+    <div class="card">
+      <h4>🔗 <span class="L zh">互通標準</span><span class="L en">Interoperability</span><span class="L vi">Liên thông</span></h4>
+      <ul>
+        <li><b>HL7 FHIR R4</b> — Patient, ServiceRequest, Specimen, DiagnosticReport, BiologicallyDerivedProduct, SupplyDelivery, Procedure, AdverseEvent</li>
+        <li><b>ISBT 128</b> — <span class="L zh">DIN/產品碼解析、ISO 7064 (MOD 37,2) 檢查碼、標籤結構</span><span class="L en">DIN/product code parse, ISO 7064 (MOD 37,2) check char, label structure</span><span class="L vi">phân tích DIN/mã SP, ký tự kiểm tra ISO 7064, cấu trúc nhãn</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>📴 <span class="L zh">離線容錯與對帳</span><span class="L en">Offline & reconciliation</span><span class="L vi">Ngoại tuyến & đối soát</span></h4>
+      <ul>
+        <li><span class="L zh">緊急作業可離線（IndexedDB/Dexie outbox）</span><span class="L en">Emergency ops work offline (IndexedDB/Dexie outbox)</span><span class="L vi">Thao tác khẩn ngoại tuyến (outbox Dexie)</span></li>
+        <li><span class="L zh">恢復連線後由狀態機重新驗證並同步</span><span class="L en">On reconnect, state machine re-validates & syncs</span><span class="L vi">Khi kết nối lại, máy trạng thái xác thực & đồng bộ</span></li>
+        <li><span class="L zh">版本/衝突檢查；衝突送審不自動覆蓋</span><span class="L en">Version/conflict checks; conflicts queued for review, no silent overwrite</span><span class="L vi">Kiểm tra phiên bản/xung đột; đưa vào hàng chờ duyệt</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 12 V&V & ROADMAP -->
+<section id="s12">
+  <h2><span class="num">12</span>
+    <span class="L zh">驗證測試與風險待辦 (Roadmap)</span><span class="L en">Verification & Validation · Roadmap</span><span class="L vi">Kiểm thử & Lộ trình</span></h2>
+  <div class="kpi">
+    <div class="box"><div class="n">220</div><div class="l"><span class="L zh">單元測試通過</span><span class="L en">unit tests passing</span><span class="L vi">kiểm thử đạt</span></div></div>
+    <div class="box"><div class="n">35</div><div class="l"><span class="L zh">測試檔</span><span class="L en">test files</span><span class="L vi">tệp kiểm thử</span></div></div>
+    <div class="box"><div class="n">5</div><div class="l"><span class="L zh">子系統</span><span class="L en">subsystems</span><span class="L vi">phân hệ</span></div></div>
+    <div class="box"><div class="n">3</div><div class="l"><span class="L zh">合規 Gate</span><span class="L en">compliance gates</span><span class="L vi">cổng tuân thủ</span></div></div>
+  </div>
+  <div class="L zh"><p>測試涵蓋狀態機轉移、API、RBAC、稽核 hash chain 不可竄改、離線衝突、緊急政策、ISBT 128、FHIR 對應等。完整 CSV（IQ/OQ/PQ）為下一階段。</p>
+    <h3>上線前主要待辦</h3>
+    <ul>
+      <li>🔴 冷鏈實體裝置整合與 excursion/CAPA 端到端驗證</li>
+      <li>🟠 機構隔離 (RLS/ABAC) 連線測試庫驗證與證據</li>
+      <li>🟠 多表原子交易與多軸狀態落地</li>
+      <li>🔴 完整 CSV 驗證套件簽核；越南法規正式對應與 12 項臨床政策決策</li>
+      <li>🟠 稽核 hash chain 排程化完整性檢查</li>
+    </ul></div>
+  <div class="L en"><p>Tests cover state transitions, APIs, RBAC, audit hash-chain immutability, offline conflicts, emergency policy, ISBT 128, FHIR mapping. A full CSV (IQ/OQ/PQ) is the next stage.</p>
+    <h3>Key pre-go-live backlog</h3>
+    <ul>
+      <li>🔴 Physical cold-chain device integration & excursion/CAPA E2E validation</li>
+      <li>🟠 Facility isolation (RLS/ABAC) verification against a live test DB</li>
+      <li>🟠 Multi-table atomic transactions & multi-axis status landing</li>
+      <li>🔴 Full CSV validation sign-off; formal Vietnam regulatory mapping & 12 clinical-policy decisions</li>
+      <li>🟠 Scheduled audit hash-chain integrity checks</li>
+    </ul></div>
+  <div class="L vi"><p>Kiểm thử bao gồm chuyển trạng thái, API, RBAC, tính bất biến chuỗi băm, xung đột ngoại tuyến, chính sách khẩn, ISBT 128, ánh xạ FHIR. CSV đầy đủ (IQ/OQ/PQ) là giai đoạn tiếp theo.</p>
+    <h3>Tồn đọng chính trước go-live</h3>
+    <ul>
+      <li>🔴 Tích hợp thiết bị chuỗi lạnh & kiểm định excursion/CAPA</li>
+      <li>🟠 Xác minh cách ly cơ sở (RLS/ABAC) trên CSDL thử</li>
+      <li>🟠 Giao dịch nguyên tử đa bảng & trạng thái đa trục</li>
+      <li>🔴 Phê duyệt CSV đầy đủ; ánh xạ pháp lý & 12 quyết định lâm sàng</li>
+      <li>🟠 Kiểm tra toàn vẹn chuỗi băm theo lịch</li>
+    </ul></div>
+</section>
+
+<!-- 13 GLOSSARY -->
+<section id="s13">
+  <h2><span class="num">13</span>
+    <span class="L zh">名詞縮寫表</span><span class="L en">Glossary</span><span class="L vi">Thuật ngữ</span></h2>
+  <table>
+    <tr><th><span class="L zh">縮寫</span><span class="L en">Abbr.</span><span class="L vi">Viết tắt</span></th><th><span class="L zh">說明</span><span class="L en">Meaning</span><span class="L vi">Ý nghĩa</span></th></tr>
+    <tr><td>BECS</td><td>Blood Establishment Computer System — <span class="L zh">血液機構電腦作業系統</span><span class="L en">血液機構電腦作業系統</span><span class="L vi">Hệ thống máy tính cơ sở máu</span></td></tr>
+    <tr><td>LIMS</td><td>Laboratory Information Management System</td></tr>
+    <tr><td>IDM</td><td>Infectious Disease Markers — <span class="L zh">傳染病篩檢</span><span class="L en">infectious disease screening</span><span class="L vi">sàng lọc bệnh truyền nhiễm</span></td></tr>
+    <tr><td>ABO/Rh</td><td><span class="L zh">血型系統</span><span class="L en">blood group systems</span><span class="L vi">hệ nhóm máu</span></td></tr>
+    <tr><td>PRBC / FFP / PLT</td><td>Packed Red Blood Cells / Fresh Frozen Plasma / Platelets</td></tr>
+    <tr><td>MTP</td><td>Massive Transfusion Protocol — <span class="L zh">大量輸血協定</span><span class="L en">大量輸血協定</span><span class="L vi">Phác đồ truyền máu khối lượng lớn</span></td></tr>
+    <tr><td>DIN</td><td>Donation Identification Number (ISBT 128)</td></tr>
+    <tr><td>Lookback</td><td><span class="L zh">雙向追溯（捐血者↔受血者）</span><span class="L en">bidirectional traceability (donor↔recipient)</span><span class="L vi">truy vết hai chiều</span></td></tr>
+    <tr><td>RBAC / ABAC</td><td>Role- / Attribute-Based Access Control</td></tr>
+    <tr><td>CSV</td><td>Computer System Validation (IQ/OQ/PQ)</td></tr>
+    <tr><td>CCCD</td><td><span class="L zh">越南公民身分證</span><span class="L en">Vietnam citizen ID</span><span class="L vi">Căn cước công dân</span></td></tr>
+  </table>
+</section>
+
+<footer>
+  VN-BECS V2 · <span class="L zh">技術總覽</span><span class="L en">Technical Overview</span><span class="L vi">Tổng quan Kỹ thuật</span> · 2026-06-08
+  &nbsp;|&nbsp; <span class="badge b-warn">PILOT / VALIDATION — not for live clinical use</span>
+</footer>
+
+</main>
+
+<script>
+  function setLang(l){
+    if(l==='zh-TW') l='zh';
+    if(l!=='zh'&&l!=='en'&&l!=='vi') l='zh';
+    document.body.className = 'lang-'+l;
+    document.documentElement.lang = (l==='zh'?'zh-Hant':l);
+    document.querySelectorAll('.langbar button').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-l')===l);
+    });
+  }
+  // Sync language from ?lang= query (used when embedded by the app)
+  (function(){ var q=new URLSearchParams(location.search).get('lang'); if(q) setLang(q); })();
+  // Allow the parent app to drive language via postMessage
+  window.addEventListener('message', function(e){ if(e.data && e.data.vnbecsLang) setLang(e.data.vnbecsLang); });
+  mermaid.initialize({startOnLoad:true, theme:'base', securityLevel:'loose',
+    themeVariables:{primaryColor:'#fff1f2',primaryBorderColor:'#e11d48',primaryTextColor:'#0f172a',
+      lineColor:'#64748b',fontFamily:'Segoe UI, Noto Sans TC, sans-serif'}});
+</script>
+</body>
+</html>

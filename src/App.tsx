@@ -45,7 +45,7 @@ import { LoginView } from './components/LoginView';
 import { PortalView } from './components/PortalView';
 import { Tooltip } from './components/Tooltip';
 import { AdminMDMView } from './components/AdminMDMView';
-import { DocsView } from './components/DocsView';
+import { DocsHub } from './components/DocsHub';
 import { CrossmatchView } from './components/CrossmatchView';
 import { IssueReturnView } from './components/IssueReturnView';
 import { HemovigilanceView } from './components/HemovigilanceView';
@@ -341,7 +341,7 @@ function AppContent() {
     />;
   };
 
-  if (showDocs) return <DocsView onBack={() => setShowDocs(false)} />;
+  if (showDocs) return <DocsHub onClose={() => setShowDocs(false)} />;
   if (!user) return <LoginView onLogin={handleLogin} onOpenDocs={() => setShowDocs(true)} />;
 
   return (
@@ -386,7 +386,6 @@ function AppContent() {
       <MessagingCenter currentUser={user} isOpen={showMessages} onClose={() => setShowMessages(false)} />
       <SystemSwitcher isOpen={showSwitcher} onClose={() => setShowSwitcher(false)} onSelect={setCurrentSystem} currentSystem={currentSystem} />
       <ThemeSwitcher isOpen={showThemeSwitcher} onClose={() => setShowThemeSwitcher(false)} currentTheme={theme} onSelectTheme={setTheme} />
-      {showDocs && <DocsView onBack={() => setShowDocs(false)} />}
       {showDiagnostic && <SystemDiagnosticView onClose={() => setShowDiagnostic(false)} />}
 
       {showConfirmReset && (
