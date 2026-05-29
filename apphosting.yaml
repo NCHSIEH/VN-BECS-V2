@@ -7,7 +7,8 @@
 # Secrets must be created once (values NOT stored in git):
 #   firebase apphosting:secrets:set NEXT_PUBLIC_SUPABASE_URL
 #   firebase apphosting:secrets:set NEXT_PUBLIC_SUPABASE_ANON_KEY
-#   firebase apphosting:secrets:set VN_BECS_SESSION_SECRET   # >= 32 random chars
+#   firebase apphosting:secrets:set SUPABASE_SERVICE_ROLE_KEY   # server-only, never in client
+#   firebase apphosting:secrets:set VN_BECS_SESSION_SECRET      # >= 32 random chars
 
 runConfig:
   minInstances: 0
@@ -42,6 +43,13 @@ env:
     secret: NEXT_PUBLIC_SUPABASE_ANON_KEY
     availability:
       - BUILD
+      - RUNTIME
+
+  # Server-only Supabase service role key. Bypasses RLS for trusted server access
+  # and keeps the public anon Data API locked down. NEVER expose to the client.
+  - variable: SUPABASE_SERVICE_ROLE_KEY
+    secret: SUPABASE_SERVICE_ROLE_KEY
+    availability:
       - RUNTIME
 
   # Server-only secret used to sign session tokens (never exposed to the client).

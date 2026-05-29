@@ -11,7 +11,13 @@ import {
 } from './auditChain';
 
 // Strict production credential check. Missing DB credentials in production must be a hard startup failure.
-if (process.env.NODE_ENV === 'production' && (!supabase || !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)) {
+// Accept either the server-only service role key (preferred) or the anon key.
+if (
+  process.env.NODE_ENV === 'production' &&
+  (!supabase ||
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !(process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY))
+) {
   throw new Error('Production Database Hardening: Supabase client is not initialized. Production database credentials are required.');
 }
 
