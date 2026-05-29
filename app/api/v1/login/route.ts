@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     const user = await db.users.getByUsername(username);
 
     if (!user) {
-      console.log(`Login failed: User "${username}" not found`);
+      console.log(`Login failed: User "${username}" not found. Active Supabase URL in use: "${process.env.NEXT_PUBLIC_SUPABASE_URL}"`);
       return apiErrorResponse({
         request,
         code: 'LOGIN_INVALID_CREDENTIALS',
