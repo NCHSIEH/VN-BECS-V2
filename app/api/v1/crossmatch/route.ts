@@ -1,14 +1,22 @@
 import { NextResponse } from 'next/server';
-import { isAboRhdCompatible } from '@/src/lib/bloodSafety';
+import { evaluateComponentCompatibility } from '@/src/lib/bloodSafety';
 import * as db from '@/src/server/db';
 import { validateSpecimenDate } from '@/src/lib/validators';
+import {
+  bloodUnitCommandErrorBody,
+  executeBloodUnitTransition,
+  isBloodUnitExpired,
+} from '@/src/server/services/bloodUnitCommands';
+import type { Role } from '@/src/types';
+import { apiErrorResponse, getRequestId, internalErrorResponse } from '@/src/server/apiResponses';
+import { authorizeApiRole, rbacErrorBody } from '@/src/server/rbacPolicy';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const records = await db.crossmatch.getAll();
     return NextResponse.json(records);
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+    return internalErrorResponse(request, error, 'CROSSMATCH_LIST_FAILED');
   }
 }
 
@@ -16,22 +24,36 @@ export async function POST(request: Request) {
   try {
     const data = await request.json();
     const { componentId, patientId, method, specimenDate, testedBy } = data;
+    const authz = authorizeApiRole({
+      request,
+      body: data,
+      allowedRoles: ['HospitalOperator'],
+      action: 'CROSSMATCH_CREATE',
+    });
+    if (!authz.allowed) {
+      return NextResponse.json(rbacErrorBody(authz), { status: 403 });
+    }
+
+    const role = (data.actorRole || data.role || 'HospitalOperator') as Role;
 
     if (!componentId || !patientId || !method || !specimenDate || !testedBy) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      return apiErrorResponse({ request, code: 'CROSSMATCH_INVALID_PAYLOAD', message: 'Missing required fields', status: 400 });
     }
 
     const specimenVal = validateSpecimenDate(specimenDate);
     if (!specimenVal.valid) {
-      return NextResponse.json({ error: specimenVal.errors.join(", ") }, { status: 400 });
+      return apiErrorResponse({ request, code: 'SPECIMEN_DATE_INVALID', message: specimenVal.errors.join(", "), status: 400 });
     }
 
     // Load Blood Component
-    const components = await db.components.getAll();
+    const [components, allInventory] = await Promise.all([
+      db.components.getAll(),
+      db.inventory.getAll(),
+    ]);
     const component = components.find(c => c.id === componentId || c.donationId === componentId);
 
     if (!component) {
-      return NextResponse.json({ error: 'Blood component not found in system' }, { status: 404 });
+      return apiErrorResponse({ request, code: 'COMPONENT_NOT_FOUND', message: 'Blood component not found in system', status: 404 });
     }
 
     // In a real system, component ABO/Rh is either on the component or joined from donations/lab_tests
@@ -43,7 +65,7 @@ export async function POST(request: Request) {
     const donor = donors.find(d => d.id === donation?.donorId);
 
     if (!donor) {
-      return NextResponse.json({ error: 'Source donor data not found for component' }, { status: 404 });
+      return apiErrorResponse({ request, code: 'SOURCE_DONOR_NOT_FOUND', message: 'Source donor data not found for component', status: 404 });
     }
 
     // Load Patient
@@ -51,26 +73,36 @@ export async function POST(request: Request) {
     const patient = patients.find(p => p.id === patientId || p.mrn === patientId);
 
     if (!patient) {
-      return NextResponse.json({ error: 'Patient not found' }, { status: 404 });
+      return apiErrorResponse({ request, code: 'PATIENT_NOT_FOUND', message: 'Patient not found', status: 404 });
     }
 
     if (patient.abo === 'Unknown' || patient.rhd === 'Unknown') {
-      return NextResponse.json({ error: 'Patient blood type is Unknown, cannot crossmatch' }, { status: 400 });
+      return apiErrorResponse({ request, code: 'PATIENT_BLOOD_TYPE_UNKNOWN', message: 'Patient blood type is Unknown, cannot crossmatch', status: 400 });
     }
 
-    // Perform Strict Validation
-    const isCompatible = isAboRhdCompatible(donor.bloodType, donor.rhd, patient.abo, patient.rhd);
+    // Perform Strict Validation — component-class aware (RBC vs plasma vs platelet).
+    // Prefer the component's tested ABO/Rh over the donor's registered type (RTM-XM-02).
+    const unitAbo = component.abo || donor.bloodType;
+    const unitRhd = component.rhd || donor.rhd;
+    const compatibility = evaluateComponentCompatibility({
+      componentClass: component.type || component.productCode,
+      donorAbo: unitAbo,
+      donorRhd: unitRhd,
+      patientAbo: patient.abo,
+      patientRhd: patient.rhd,
+    });
+    const isCompatible = compatibility.compatible;
     let result = isCompatible ? 'Compatible' : 'Incompatible';
 
     const hasAntibodies = patient.antibodyHistory && patient.antibodyHistory.length > 0;
 
     // AABB SOP 7: Method validations based on antibody history
     if (method === 'EXM' && hasAntibodies) {
-      return NextResponse.json({ error: '🚨 SAFETY BLOCK: EXM (Electronic Crossmatch) is NOT permitted for patients with a history of antibodies. Full AHG crossmatch is required by AABB standards.' }, { status: 400 });
+      return apiErrorResponse({ request, code: 'EXM_BLOCKED_BY_ANTIBODY_HISTORY', message: 'SAFETY BLOCK: EXM (Electronic Crossmatch) is NOT permitted for patients with a history of antibodies. Full AHG crossmatch is required by AABB standards.', status: 400 });
     }
 
     if (method === 'IS' && hasAntibodies) {
-      return NextResponse.json({ error: '🚨 SAFETY BLOCK: IS (Immediate Spin) is NOT sufficient for patients with known antibodies. Full AHG crossmatch is required.' }, { status: 400 });
+      return apiErrorResponse({ request, code: 'IMMEDIATE_SPIN_BLOCKED_BY_ANTIBODY_HISTORY', message: 'SAFETY BLOCK: IS (Immediate Spin) is NOT sufficient for patients with known antibodies. Full AHG crossmatch is required.', status: 400 });
     }
 
     const record = {
@@ -86,14 +118,50 @@ export async function POST(request: Request) {
 
     await db.crossmatch.create(record);
 
-    // If compatible, we could update the component status to CROSSMATCHED or RESERVED
-    if (result === 'Compatible' && component.status === 'AVAILABLE') {
-       await db.components.updateStatus(component.id, 'CROSSMATCHED');
+    if (result === 'Compatible') {
+      const inventoryItem = allInventory.find((item: any) => item.unitId === component.id);
+      const currentStatus = inventoryItem ? inventoryItem.status : component.status;
+
+      const transitionResult = await executeBloodUnitTransition(
+        {
+          unitId: component.id,
+          currentStatus,
+          targetStatus: 'CROSSMATCHED',
+          role,
+          context: {
+            crossmatchResult: result,
+            isExpired: isBloodUnitExpired(component.expiryDate),
+          },
+        },
+        authz.actorRole || 'SYSTEM',
+        'SERVER',
+        'CROSSMATCH_CREATE',
+        getRequestId(request)
+      );
+
+      if (!transitionResult.success) {
+        return NextResponse.json(
+          {
+            success: false,
+            ...bloodUnitCommandErrorBody(transitionResult.error!),
+            requestId: getRequestId(request),
+          },
+          { status: transitionResult.httpStatus || 400 },
+        );
+      }
     }
 
-    return NextResponse.json({ success: true, result, id: record.id });
+    return NextResponse.json({
+      success: true,
+      result,
+      id: record.id,
+      category: compatibility.category,
+      severity: compatibility.severity,
+      requiresReview: compatibility.requiresReview,
+      reason: compatibility.reason,
+    });
   } catch (error: any) {
     console.error("Crossmatch API Error:", error);
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+    return internalErrorResponse(request, error, 'CROSSMATCH_CREATE_FAILED');
   }
 }

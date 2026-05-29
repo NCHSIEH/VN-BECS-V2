@@ -86,6 +86,87 @@ export type BloodUnitStatus =
   | 'DISCARDED'
   | 'WASTED';
 
+/** Quality/safety release state for production-grade blood unit modeling. */
+export type BloodQualityStatus =
+  | 'PENDING_TEST'
+  | 'RELEASED'
+  | 'HOLD_IDM'
+  | 'HOLD_COLD_CHAIN'
+  | 'HOLD_LOOKBACK'
+  | 'NONCONFORMING'
+  | 'DISCARDED';
+
+/** Inventory and disposition state for production-grade blood unit modeling. */
+export type BloodInventoryStatus =
+  | 'NOT_IN_STOCK'
+  | 'AVAILABLE'
+  | 'ORDER_RESERVED'
+  | 'PICKED'
+  | 'IN_TRANSIT'
+  | 'RECEIVED'
+  | 'ISSUED'
+  | 'RETURN_PENDING'
+  | 'WASTED'
+  | 'TRANSFUSED';
+
+/** Patient/order assignment state for production-grade blood unit modeling. */
+export type BloodAssignmentStatus =
+  | 'UNASSIGNED'
+  | 'ORDER_ALLOCATED'
+  | 'PATIENT_ASSIGNED'
+  | 'CROSSMATCH_COMPATIBLE'
+  | 'EMERGENCY_RELEASED';
+
+/** Custody holder categories for chain-of-custody tracking. */
+export type CustodyHolderType =
+  | 'BloodCenter'
+  | 'Hub'
+  | 'Courier'
+  | 'HospitalBloodBank'
+  | 'Ward'
+  | 'Bedside';
+
+/** Multi-axis state snapshot used by production domain commands. */
+export interface BloodUnitStateSnapshot {
+  qualityStatus: BloodQualityStatus;
+  inventoryStatus: BloodInventoryStatus;
+  assignmentStatus: BloodAssignmentStatus;
+  currentFacilityId?: string;
+  currentLocationId?: string;
+  custodyHolderType?: CustodyHolderType;
+  custodyHolderId?: string;
+  lastCustodyEventId?: string;
+}
+
+/** Production command names for high-risk blood unit transitions. */
+export type BloodUnitCommandName =
+  | 'CollectDonation'
+  | 'RecordLabResult'
+  | 'AuthorizeRelease'
+  | 'PrepareComponent'
+  | 'AllocateToOrder'
+  | 'PickUnit'
+  | 'DispatchUnit'
+  | 'ReceiveUnit'
+  | 'RecordCrossmatch'
+  | 'IssueUnit'
+  | 'ReturnUnit'
+  | 'StartTransfusion'
+  | 'CompleteTransfusion'
+  | 'ReportAdverseReaction'
+  | 'QuarantineRelatedUnits'
+  | 'WasteUnit';
+
+/** Stable domain error shape for API and UI layers. */
+export interface DomainError {
+  code: string;
+  message: string;
+  severity: 'Info' | 'Warning' | 'HardStop';
+  actionRequired?: string;
+  auditHint?: string;
+  correlationId: string;
+}
+
 /** IDM (Infectious Disease Marker) test outcomes. */
 export type IdmStatus = 'PENDING' | 'CLEARED' | 'REACTIVE';
 
@@ -397,6 +478,12 @@ export interface AuditEvent {
   objectId: string;
   beforeHash?: string;
   afterHash?: string;
+  requestId?: string;
+  deviceId?: string;
+  reasonCode?: string;
+  previousHash?: string;
+  eventHash?: string;
+  schemaVersion?: string;
   details: string;
 }
 

@@ -1,13 +1,21 @@
 import { NextResponse } from 'next/server';
 import * as db from '@/src/server/db';
+import {
+  bloodUnitCommandErrorBody,
+  executeBloodUnitTransition,
+  isBloodUnitExpired,
+} from '@/src/server/services/bloodUnitCommands';
+import type { Role } from '@/src/types';
+import { apiErrorResponse, getRequestId, internalErrorResponse } from '@/src/server/apiResponses';
+import { authorizeApiRole, rbacErrorBody } from '@/src/server/rbacPolicy';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const data = await db.issueRecords.getAll();
     return NextResponse.json(data);
   } catch (error: any) {
     console.error('GET /api/v1/issue Error:', error);
-    return NextResponse.json({ error: error?.message || 'Internal Server Error' }, { status: 500 });
+    return internalErrorResponse(request, error, 'ISSUE_LIST_FAILED');
   }
 }
 
@@ -15,17 +23,85 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { componentId, patientId, issuedTo, issuedBy } = body;
-
-    if (!componentId || !patientId || !issuedTo || !issuedBy) {
-      return NextResponse.json({ error: 'Missing required issue parameters' }, { status: 400 });
+    const authz = authorizeApiRole({
+      request,
+      body,
+      allowedRoles: ['HospitalOperator', 'Nurse'],
+      action: 'BLOOD_UNIT_ISSUE',
+    });
+    if (!authz.allowed) {
+      return NextResponse.json(rbacErrorBody(authz), { status: 403 });
     }
 
-    // Check if the component actually exists and is AVAILABLE/RELEASED
-    const allComponents = await db.components.getAll();
+    const role = (body.actorRole || body.role || 'Nurse') as Role;
+    const isBreakGlass = body.isBreakGlass === true;
+
+    if (!componentId || !patientId || !issuedTo || !issuedBy) {
+      return apiErrorResponse({
+        request,
+        code: 'ISSUE_INVALID_PAYLOAD',
+        message: 'Missing required issue parameters',
+        status: 400,
+      });
+    }
+
+    const [allComponents, allInventory] = await Promise.all([
+      db.components.getAll(),
+      db.inventory.getAll(),
+    ]);
+
     const component = allComponents.find((c: any) => c.id === componentId);
+    if (!component) {
+      return apiErrorResponse({
+        request,
+        code: 'COMPONENT_NOT_FOUND',
+        message: `Component ${componentId} not found`,
+        status: 404,
+      });
+    }
+
+    const inventoryItem = allInventory.find((i: any) => i.unitId === componentId);
     
-    if (component && component.status !== 'RELEASED' && component.status !== 'AVAILABLE') {
-      return NextResponse.json({ error: `Component is not in an issuable state (Current status: ${component.status})` }, { status: 400 });
+    // Concurrency locking check
+    const clientVersion = body.baseVersion ?? body.version;
+    if (clientVersion !== undefined && inventoryItem && inventoryItem.version !== undefined && Number(clientVersion) !== Number(inventoryItem.version)) {
+      return apiErrorResponse({
+        request,
+        code: 'VERSION_CONFLICT',
+        message: `Concurrency Conflict: Blood unit inventory has been modified by another process (client version: ${clientVersion}, server version: ${inventoryItem.version}).`,
+        status: 409,
+      });
+    }
+
+    const currentStatus = inventoryItem ? inventoryItem.status : component.status;
+
+    const result = await executeBloodUnitTransition(
+      {
+        unitId: componentId,
+        currentStatus,
+        targetStatus: 'ISSUED',
+        role,
+        context: {
+          isBreakGlass,
+          isExpired: isBloodUnitExpired(inventoryItem?.expiryDate || component.expiryDate),
+          medicalOrderConfirmed: body.medicalOrderConfirmed ?? currentStatus === 'CROSSMATCHED',
+          baseVersion: inventoryItem?.version,
+        },
+      },
+      authz.actorRole || 'SYSTEM',
+      'SERVER',
+      'BLOOD_UNIT_ISSUE',
+      getRequestId(request)
+    );
+
+    if (!result.success) {
+      return apiErrorResponse({
+        request,
+        code: result.error?.code || 'ISSUE_FAILED',
+        message: result.error?.message || 'Failed to issue blood unit',
+        status: result.httpStatus || 400,
+        details: result.error ? bloodUnitCommandErrorBody(result.error) : undefined,
+      });
     }
 
     const newRecord = {
@@ -39,25 +115,9 @@ export async function POST(request: Request) {
 
     await db.issueRecords.create(newRecord);
 
-    // Update component status in database
-    try {
-      await db.components.updateStatus(componentId, 'ISSUED');
-    } catch (e) {
-      console.warn('Failed to update component status:', e);
-    }
-
-    // Create Audit Event
-    await db.auditEvents.create({
-      eventType: 'Blood Unit Issued',
-      objectId: componentId,
-      actorRole: 'Nurse',
-      details: `Blood unit ${componentId} issued to ward ${issuedTo} for patient ${patientId} by ${issuedBy}`,
-      timestamp: new Date().toISOString()
-    });
-
     return NextResponse.json(newRecord);
   } catch (error: any) {
     console.error('POST /api/v1/issue Error:', error);
-    return NextResponse.json({ error: error?.message || 'Internal Server Error' }, { status: 500 });
+    return internalErrorResponse(request, error, 'ISSUE_CREATE_FAILED');
   }
 }

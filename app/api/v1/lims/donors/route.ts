@@ -1,38 +1,79 @@
 import { NextResponse } from 'next/server';
 import * as db from '@/src/server/db';
 import { VietnamIdValidator, validateDonorAge, validateDonorName } from '@/src/lib/validators';
+import { DONOR_DEFERRAL_POLICY } from '@/src/lib/clinicalPolicy';
+import { authorizeApiRole, rbacErrorBody } from '@/src/server/rbacPolicy';
+import { apiErrorResponse, internalErrorResponse } from '@/src/server/apiResponses';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const authz = authorizeApiRole({
+      request,
+      allowedRoles: ['Admin', 'Manager', 'QA_Officer', 'LIMS_Simulator', 'DonorScreener'],
+      action: 'LIMS_DONOR_LIST',
+    });
+    if (!authz.allowed) {
+      return NextResponse.json(rbacErrorBody(authz), { status: 403 });
+    }
+
     const donors = await db.donors.getAll();
     return NextResponse.json(donors);
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return internalErrorResponse(request, error, 'LIMS_DONOR_LIST_FAILED');
   }
 }
 
 export async function POST(request: Request) {
   try {
     const data = await request.json();
+    const authz = authorizeApiRole({
+      request,
+      body: data,
+      allowedRoles: ['Admin', 'LIMS_Simulator', 'DonorScreener'],
+      action: 'LIMS_DONOR_CREATE',
+    });
+    if (!authz.allowed) {
+      return NextResponse.json(rbacErrorBody(authz), { status: 403 });
+    }
     
     // Server-Side Hard Gating Validation
     if (!data.name || !data.nationalId || !data.dob) {
-      return NextResponse.json({ error: 'Missing required fields (name, nationalId, dob)' }, { status: 400 });
+      return apiErrorResponse({
+        request,
+        code: 'DONOR_REQUIRED_FIELDS_MISSING',
+        message: 'Missing required fields (name, nationalId, dob)',
+        status: 400,
+      });
     }
 
     const nameVal = validateDonorName(data.name);
     if (!nameVal.valid) {
-      return NextResponse.json({ error: nameVal.errors.join(", ") }, { status: 400 });
+      return apiErrorResponse({
+        request,
+        code: 'DONOR_NAME_INVALID',
+        message: nameVal.errors.join(", "),
+        status: 400,
+      });
     }
 
     const cccdVal = VietnamIdValidator.validate(data.nationalId);
     if (!cccdVal.valid) {
-      return NextResponse.json({ error: `Vietnam CCCD Invalid: ${cccdVal.errors.join(", ")}` }, { status: 400 });
+      return apiErrorResponse({
+        request,
+        code: 'DONOR_CCCD_INVALID',
+        message: `Vietnam CCCD Invalid: ${cccdVal.errors.join(", ")}`,
+        status: 400,
+      });
     }
 
     const ageVal = validateDonorAge(data.dob);
     if (!ageVal.valid) {
-      return NextResponse.json({ error: `Age Restriction: ${ageVal.errors.join(", ")}` }, { status: 400 });
+      return apiErrorResponse({
+        request,
+        code: 'DONOR_AGE_RESTRICTED',
+        message: `Age Restriction: ${ageVal.errors.join(", ")}`,
+        status: 400,
+      });
     }
 
     const id = `D-${Math.floor(Math.random() * 90000) + 10000}`;
@@ -62,7 +103,9 @@ export async function POST(request: Request) {
       isPassed,
       createdAt: new Date().toISOString(),
       deferralReason: data.deferralReason || '',
-      deferralUntil: data.deferralUntil || ''
+      deferralUntil: data.deferralUntil || '',
+      // RTM-DON-03: stamp the deferral policy version used at decision time.
+      policyVersion: data.policyVersion || DONOR_DEFERRAL_POLICY.version,
     }).catch(e => console.error("Error creating questionnaire:", e));
 
     // Remove transient questionnaire fields from donor record if needed, though they might just be ignored by db layer if not in schema.
@@ -77,7 +120,6 @@ export async function POST(request: Request) {
     await db.donors.create(donorData);
     return NextResponse.json({ success: true, id });
   } catch (error: any) {
-    console.error("Donors API Error:", error);
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+    return internalErrorResponse(request, error, 'LIMS_DONOR_CREATE_FAILED');
   }
 }

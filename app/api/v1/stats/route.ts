@@ -1,8 +1,18 @@
 import { NextResponse } from 'next/server';
 import { inventory, donations, adverse_reactions } from '@/src/server/db';
+import { authorizeApiRole, rbacErrorBody } from '@/src/server/rbacPolicy';
+import { internalErrorResponse } from '@/src/server/apiResponses';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const authz = authorizeApiRole({
+      request,
+      allowedRoles: ['Admin', 'Manager', 'QA_Officer', 'NationalCommander', 'Dashboard'],
+      action: 'STATS_READ',
+    });
+    if (!authz.allowed) {
+      return NextResponse.json(rbacErrorBody(authz), { status: 403 });
+    }
     const invData = await inventory.getAll();
     const donData = await donations.getAll();
     const advData = await adverse_reactions.getAll();
@@ -37,7 +47,6 @@ export async function GET() {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Stats API Error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return internalErrorResponse(request, error, 'STATS_READ_FAILED');
   }
 }

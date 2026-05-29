@@ -59,6 +59,10 @@ import { LabDashboardView } from './components/LabDashboardView';
 import { IdmTestingView } from './components/IdmTestingView';
 import { offlineStore } from './lib/offlineStore';
 import { ThemeSwitcher, ThemeType } from './components/ThemeSwitcher';
+import { installAuthInterceptor, setSession, clearSession } from './lib/apiClient';
+
+// Attach the signed session token to every /api/ request (P0 identity wiring).
+installAuthInterceptor();
 
 function getSubRoles(mainRole: string): Role[] {
   if (mainRole === 'Admin' || mainRole === 'Manager') return [
@@ -132,12 +136,16 @@ function AppContent() {
   }, [role]);
 
   const handleLogin = (u: User) => {
+    // Persist the server-issued session token so the fetch interceptor can
+    // authenticate every subsequent /api/ request (P0 identity wiring).
+    setSession((u as any).sessionToken, u.role);
     setUser(u);
     setRole('Dashboard');
     if (u.permittedSystems.length === 1) setCurrentSystem(u.permittedSystems[0]);
   };
 
   const handleLogout = () => {
+    clearSession();
     setUser(null);
     setCurrentSystem(null);
   };
@@ -338,6 +346,10 @@ function AppContent() {
 
   return (
     <div className="flex flex-col h-screen bg-clinical-bg text-clinical-text overflow-hidden font-sans selection:bg-rose-500/30">
+      <div className="bg-amber-500 text-slate-900 py-1.5 px-4 text-center text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 select-none z-[200] border-b border-amber-600/30 shadow-sm shrink-0">
+        <AlertTriangle size={12} className="animate-pulse" />
+        <span>DEMO / VALIDATION MODE ONLY — This system is NOT authorized for live clinical/transfusion decisions.</span>
+      </div>
       <GlobalHeader 
         user={user} 
         isOffline={isOffline} 

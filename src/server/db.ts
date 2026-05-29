@@ -3,9 +3,27 @@ import { hashPassword } from './crypto';
 import { orders } from './repositories/orderRepo';
 import { inventory } from './repositories/inventoryRepo';
 import { patients } from './repositories/patientRepo';
+import {
+  buildChainedAuditEvent,
+  latestAuditHash,
+  legacyAuditDetailsWithChain,
+  type AuditChainEvent,
+} from './auditChain';
+
+// Strict production credential check. Missing DB credentials in production must be a hard startup failure.
+if (process.env.NODE_ENV === 'production' && (!supabase || !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)) {
+  throw new Error('Production Database Hardening: Supabase client is not initialized. Production database credentials are required.');
+}
 
 if (!supabase) {
   console.warn('DB API: Supabase client is not initialized. Check your environment variables.');
+}
+
+export function isFallbackAllowed(): boolean {
+  // Fallbacks are strictly forbidden in production mode
+  if (process.env.NODE_ENV === 'production') return false;
+  if (process.env.VN_BECS_ALLOW_FALLBACK === 'true') return true;
+  return true;
 }
 
 // Helper to detect if a table is missing in the database schema cache
@@ -13,12 +31,29 @@ export function isTableMissingError(error: any): boolean {
   if (!error) return false;
   const errMsg = error.message || '';
   const errCode = error.code || '';
-  return (
+  const isMissing = (
     errCode === 'PGRST205' ||
     errMsg.includes('Could not find') ||
     errMsg.includes('relation') ||
     errMsg.includes('does not exist') ||
-    errMsg.includes('schema cache')
+    errMsg.includes('schema cache') ||
+    errMsg.includes("Cannot read properties of null (reading 'from')")
+  );
+
+  if (isMissing && !isFallbackAllowed()) {
+    throw new Error(`Production Database Hardening: Fallback stores are disabled in production mode. Database table missing error: ${errMsg}`);
+  }
+
+  return isMissing;
+}
+
+function isAuditSchemaMismatchError(error: any): boolean {
+  if (!error) return false;
+  const errMsg = String(error.message || '');
+  return (
+    errMsg.includes('column') ||
+    errMsg.includes('schema cache') ||
+    errMsg.includes('Could not find')
   );
 }
 
@@ -538,6 +573,26 @@ export const donors = {
       }
       throw e;
     }
+  },
+  async update(id: string, updates: any) {
+    try {
+      const { error } = await supabase.from('donors').update(updates).eq('id', id);
+      if (error) {
+        if (isTableMissingError(error)) {
+          const donor = fallbackStores.donors.find(d => d.id === id);
+          if (donor) Object.assign(donor, updates);
+          return;
+        }
+        throw error;
+      }
+    } catch (e: any) {
+      if (isTableMissingError(e)) {
+        const donor = fallbackStores.donors.find(d => d.id === id);
+        if (donor) Object.assign(donor, updates);
+        return;
+      }
+      throw e;
+    }
   }
 };
 
@@ -923,19 +978,61 @@ export const auditEvents = {
   },
   async create(data: any) {
     const id = data.id || `AUD-${Date.now()}-${Math.random().toString(36).substring(2,6)}`;
+    const timestamp = data.timestamp || new Date().toISOString();
+    let previousHash = latestAuditHash(fallbackStores.audit_events);
+
     try {
-      const { error } = await supabase.from('audit_events').insert({ ...data, id });
+      const existing = await auditEvents.getAll();
+      previousHash = latestAuditHash(existing);
+    } catch {
+      previousHash = latestAuditHash(fallbackStores.audit_events);
+    }
+
+    const chainedEvent = buildChainedAuditEvent(
+      {
+        ...data,
+        id,
+        timestamp,
+        actorRole: data.actorRole || 'SYSTEM',
+        eventType: data.eventType || 'UNKNOWN_EVENT',
+        objectId: data.objectId || 'UNKNOWN_OBJECT',
+        details: data.details || '',
+      },
+      previousHash
+    );
+
+    const legacyEvent = {
+      id: chainedEvent.id,
+      actorRole: chainedEvent.actorRole,
+      eventType: chainedEvent.eventType,
+      objectId: chainedEvent.objectId,
+      details: legacyAuditDetailsWithChain(chainedEvent.details, chainedEvent),
+      timestamp: chainedEvent.timestamp,
+    };
+
+    try {
+      const { error } = await supabase.from('audit_events').insert(chainedEvent);
       if (error) {
+        if (isAuditSchemaMismatchError(error)) {
+          const { error: retryError } = await supabase.from('audit_events').insert(legacyEvent);
+          if (!retryError) return chainedEvent;
+          if (isTableMissingError(retryError)) {
+            fallbackStores.audit_events.unshift(chainedEvent);
+            return chainedEvent;
+          }
+          throw retryError;
+        }
         if (isTableMissingError(error)) {
-          fallbackStores.audit_events.unshift({ ...data, id });
-          return;
+          fallbackStores.audit_events.unshift(chainedEvent);
+          return chainedEvent;
         }
         throw error;
       }
+      return chainedEvent;
     } catch (e: any) {
       if (isTableMissingError(e)) {
-        fallbackStores.audit_events.unshift({ ...data, id });
-        return;
+        fallbackStores.audit_events.unshift(chainedEvent);
+        return chainedEvent;
       }
       throw e;
     }
@@ -1336,9 +1433,28 @@ export const offlineEvents = {
     }
   },
   async create(data: any) {
+    const legacyPayload = {
+      localEventId: data.localEventId,
+      unitBarcodeRaw: data.bagUid || data.din || data.unitBarcodeRaw,
+      patientTempId: data.patientRef || data.patientTempId,
+      authorizationDoctorId: data.authorizationDoctorId || null,
+      timestamp: data.serverTimestamp || data.clientTimestamp || data.timestamp || new Date().toISOString(),
+      syncStatus: data.syncStatus,
+      hospitalId: data.facilityId || data.hospitalId,
+    };
+
     try {
       const { error } = await supabase.from('offline_events').insert(data);
       if (error) {
+        if (isAuditSchemaMismatchError(error)) {
+          const { error: retryError } = await supabase.from('offline_events').insert(legacyPayload);
+          if (!retryError) return;
+          if (isTableMissingError(retryError)) {
+            fallbackStores.offline_events.push(data);
+            return;
+          }
+          throw retryError;
+        }
         if (isTableMissingError(error)) {
           fallbackStores.offline_events.push(data);
           return;
@@ -1432,6 +1548,38 @@ export const reconciliationReports = {
         if (report) {
           report.resolvedBy = resolvedBy;
           report.resolvedAt = new Date().toISOString();
+        }
+        return;
+      }
+      throw e;
+    }
+  },
+  async clearConflicts(id: string, resolvedBy: string) {
+    try {
+      const { error } = await supabase.from('reconciliation_reports').update({ 
+        resolvedBy, 
+        resolvedAt: new Date().toISOString(),
+        conflicts: JSON.stringify([])
+      }).eq('id', id);
+      if (error) {
+        if (isTableMissingError(error)) {
+          const report = fallbackStores.reconciliation_reports.find(r => r.id === id);
+          if (report) {
+            report.resolvedBy = resolvedBy;
+            report.resolvedAt = new Date().toISOString();
+            report.conflicts = JSON.stringify([]);
+          }
+          return;
+        }
+        throw error;
+      }
+    } catch (e: any) {
+      if (isTableMissingError(e)) {
+        const report = fallbackStores.reconciliation_reports.find(r => r.id === id);
+        if (report) {
+          report.resolvedBy = resolvedBy;
+          report.resolvedAt = new Date().toISOString();
+          report.conflicts = JSON.stringify([]);
         }
         return;
       }
@@ -1544,6 +1692,14 @@ export const issueRecords = {
 };
 export const issue_records = issueRecords;
 
+export function normalizeAdverseReactionPayload(data: any) {
+  return {
+    ...data,
+    lookbackTriggered: data.lookbackTriggered ? 1 : 0,
+    allTransfusionsPaused: data.allTransfusionsPaused ? 1 : 0
+  };
+}
+
 export const adverseReactions = {
   async getAll() {
     try {
@@ -1560,11 +1716,7 @@ export const adverseReactions = {
     }
   },
   async create(data: any) {
-    const payload = {
-      ...data,
-      lookbackTriggered: data.lookbackTriggered ? 1 : 0,
-      allTransfusionsPaused: data.allTransTransfusionsPaused ? 1 : 0
-    };
+    const payload = normalizeAdverseReactionPayload(data);
     try {
       const { error } = await supabase.from('adverse_reactions').insert(payload);
       if (error) {

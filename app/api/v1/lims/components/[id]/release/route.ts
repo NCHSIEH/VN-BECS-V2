@@ -1,5 +1,13 @@
 import { NextResponse } from 'next/server';
 import * as db from '@/src/server/db';
+import { authorizeApiRole, rbacErrorBody } from '@/src/server/rbacPolicy';
+import {
+  bloodUnitCommandErrorBody,
+  executeBloodUnitTransition,
+  isBloodUnitExpired,
+} from '@/src/server/services/bloodUnitCommands';
+import type { Role } from '@/src/types';
+import { apiErrorResponse, getRequestId, internalErrorResponse } from '@/src/server/apiResponses';
 
 export async function POST(
   request: Request,
@@ -7,49 +15,68 @@ export async function POST(
 ) {
   try {
     const compId = (await params).id;
-    // Update the component status to indicate it has been sent to the Hub
+    let body: any = {};
     try {
-      await db.components.updateStatus(compId, 'HUB INTRANSIT');
-      
-      // Fetch the component to get its details
-      const allComponents = await db.components.getAll();
-      const comp = allComponents.find((c: any) => c.id === compId);
-      
-      if (comp) {
-        // Automatically receive into the HUB inventory for a seamless flow
-        await db.inventory.create({
-          unitId: compId,
-          productCode: comp.productCode || 'E4226',
-          abo: comp.abo || 'O',
-          rhd: comp.rhd || '+',
-          expiryDate: new Date(Date.now() + 35 * 24 * 60 * 60 * 1000).toISOString(),
-          status: 'AVAILABLE',
-          location: 'Central HUB'
-        });
-      }
-    } catch (dbErr: any) {
-      if (dbErr.message && dbErr.message.includes('components')) {
-        console.warn('Mocking components.updateStatus because table might be missing');
-      } else {
-        throw dbErr;
-      }
+      body = await request.json();
+    } catch {
+      body = {};
     }
     
-    // Record an audit event (non-critical — don't let audit failure block release)
-    try {
-      await db.auditEvents.create({
-        eventType: 'Release',
-        objectId: compId,
-        details: `Component released from Donor Center to National HUB.`,
-        timestamp: new Date().toISOString()
+    const authz = authorizeApiRole({
+      request,
+      body,
+      allowedRoles: ['LIMS_Simulator', 'Admin'],
+      action: 'LIMS_COMPONENT_RELEASE',
+    });
+    if (!authz.allowed) {
+      return NextResponse.json(rbacErrorBody(authz), { status: 403 });
+    }
+
+    const actorRole = (body.actorRole || body.role || 'LIMS_Simulator') as Role;
+    const allComponents = await db.components.getAll();
+    const comp = allComponents.find((c: any) => c.id === compId);
+
+    if (!comp) {
+      return apiErrorResponse({
+        request,
+        code: 'COMPONENT_NOT_FOUND',
+        message: `Component ${compId} not found`,
+        status: 404,
       });
-    } catch (auditErr) {
-      console.warn('Audit event creation failed (non-critical):', auditErr);
+    }
+
+    const result = await executeBloodUnitTransition(
+      {
+        unitId: compId,
+        currentStatus: comp.status,
+        targetStatus: 'IN_TRANSIT',
+        role: actorRole,
+        context: {
+          isExpired: isBloodUnitExpired(comp.expiryDate),
+        },
+      },
+      authz.actorRole || 'SYSTEM',
+      'SERVER',
+      'LIMS_COMPONENT_RELEASE',
+      getRequestId(request),
+      {
+        location: 'Central HUB',
+        expiryDate: comp.expiryDate || new Date(Date.now() + 35 * 24 * 60 * 60 * 1000).toISOString(),
+      }
+    );
+
+    if (!result.success) {
+      return apiErrorResponse({
+        request,
+        code: result.error?.code || 'RELEASE_FAILED',
+        message: result.error?.message || 'Failed to release component',
+        status: result.httpStatus || 400,
+      });
     }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Release API Error:', error);
-    return NextResponse.json({ error: error?.message || 'Internal Server Error' }, { status: 500 });
+    return internalErrorResponse(request, error, 'LIMS_COMPONENT_RELEASE_FAILED');
   }
 }

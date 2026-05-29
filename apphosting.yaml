@@ -1,0 +1,51 @@
+# Firebase App Hosting configuration (git-connected deploy).
+# Docs: https://firebase.google.com/docs/app-hosting/configure
+#
+# Region is chosen at backend creation, not here:
+#   firebase apphosting:backends:create --location asia-southeast1   (Singapore — closest to VN+TW)
+#
+# Secrets must be created once (values NOT stored in git):
+#   firebase apphosting:secrets:set NEXT_PUBLIC_SUPABASE_URL
+#   firebase apphosting:secrets:set NEXT_PUBLIC_SUPABASE_ANON_KEY
+#   firebase apphosting:secrets:set VN_BECS_SESSION_SECRET   # >= 32 random chars
+
+runConfig:
+  minInstances: 0
+  maxInstances: 10
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 1024
+
+env:
+  # Production hardening: disables demo login + in-memory fallback, forces API RBAC.
+  - variable: NODE_ENV
+    value: production
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: VN_BECS_ENFORCE_API_RBAC
+    value: "true"
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # Supabase (PostgreSQL) — the clinical system of record.
+  # NEXT_PUBLIC_* are inlined into the client bundle, so they must be available at BUILD.
+  - variable: NEXT_PUBLIC_SUPABASE_URL
+    secret: NEXT_PUBLIC_SUPABASE_URL
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_SUPABASE_ANON_KEY
+    secret: NEXT_PUBLIC_SUPABASE_ANON_KEY
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # Server-only secret used to sign session tokens (never exposed to the client).
+  - variable: VN_BECS_SESSION_SECRET
+    secret: VN_BECS_SESSION_SECRET
+    availability:
+      - RUNTIME

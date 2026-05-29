@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import * as db from '@/src/server/db';
+import { internalErrorResponse } from '@/src/server/apiResponses';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const orders = await db.orders.getAll();
     return NextResponse.json(orders);
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return internalErrorResponse(request, error, 'ORDER_LIST_FAILED');
   }
 }
 
@@ -35,6 +36,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, id });
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return internalErrorResponse(request, error, 'ORDER_CREATE_FAILED');
   }
 }

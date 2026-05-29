@@ -492,16 +492,23 @@ export function DonorCenterSimulatorView({
     }
 
     try {
-      await fetch(`/api/v1/lims/process-component/${donationId}`, { method: 'POST' });
-      loadData();
-      // Toast: Component fabricated, guide to RELEASE
-      setLimsToast({
-        title: t('lims_toast_stage3_title'),
-        message: t('lims_toast_stage3_msg'),
-        nextStage: 'RELEASE',
-        nextLabel: t('lims_toast_stage3_btn')
-      });
-    } catch(e) {}
+      const res = await fetch(`/api/v1/lims/process-component/${donationId}`, { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        loadData();
+        // Toast: Component fabricated, guide to RELEASE
+        setLimsToast({
+          title: t('lims_toast_stage3_title'),
+          message: t('lims_toast_stage3_msg'),
+          nextStage: 'RELEASE',
+          nextLabel: t('lims_toast_stage3_btn')
+        });
+      } else {
+        setGatingError(`PROCESSING FAILED: ${data.error || data.message || 'Validation Interlock Triggered'}`);
+      }
+    } catch(e) {
+      setGatingError("Network Error");
+    }
   };
 
   const handleRelease = async (compId: string) => {
@@ -519,7 +526,7 @@ export function DonorCenterSimulatorView({
            message: t('lims_toast_stage4_msg', { compId }),
          });
       } else {
-         setStatus({ type: 'error', msg: `Sync Failed: ${data.error}` });
+         setStatus({ type: 'error', msg: `Release Failed: ${data.error || data.message || 'Access Denied'}` });
       }
     } catch (err) {
        setStatus({ type: 'error', msg: "Network Error" });
@@ -1069,7 +1076,8 @@ export function DonorCenterSimulatorView({
                                ) : (
                                  <button 
                                    onClick={() => processComponent(donation.id)}
-                                   className="px-8 py-4 rounded-[18px] bg-emerald-600 text-white font-black text-[11px] uppercase tracking-[0.3em] shadow-xl shadow-emerald-900/30 hover:scale-105 active:scale-95 transition-all italic"
+                                   disabled={donation.idmStatus !== 'CLEARED'}
+                                   className="px-8 py-4 rounded-[18px] bg-emerald-600 text-white font-black text-[11px] uppercase tracking-[0.3em] shadow-xl shadow-emerald-900/30 hover:scale-105 active:scale-95 transition-all italic disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-none"
                                  >
                                    Fabricate Components
                                  </button>

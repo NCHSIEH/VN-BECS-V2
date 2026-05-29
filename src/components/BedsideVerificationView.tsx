@@ -24,7 +24,10 @@ export function BedsideVerificationView() {
   const [patientAbo, setPatientAbo] = useState("O");
   const [patientRhd, setPatientRhd] = useState("Positive");
   const [unitBarcodeRaw, setUnitBarcodeRaw] = useState("");
+  const [verifier1Id, setVerifier1Id] = useState("");
+  const [verifier1Pin, setVerifier1Pin] = useState("");
   const [verifier2Id, setVerifier2Id] = useState("");
+  const [verifier2Pin, setVerifier2Pin] = useState("");
   const [vitalsChecked, setVitalsChecked] = useState(false);
   const [consentVerified, setConsentVerified] = useState(false);
   const [ehrStatus, setEhrStatus] = useState<'idle' | 'fetching' | 'linked' | 'failed'>('idle');
@@ -80,7 +83,10 @@ export function BedsideVerificationView() {
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    if(!patientId || !unitBarcodeRaw || !verifier2Id) return;
+    if(!patientId || !unitBarcodeRaw || !verifier1Id || !verifier1Pin || !verifier2Id || !verifier2Pin) {
+       setResult({ success: false, message: "Both verifiers must provide username and PIN (SOP 6 dual verification)." });
+       return;
+    }
     
     // Safety Gating
     if(!vitalsChecked || !consentVerified) {
@@ -101,10 +107,11 @@ export function BedsideVerificationView() {
       const res = await fetch('/api/v1/bedside-verify', {
          method: 'POST',
          headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify({ 
-           patientId, patientAbo, patientRhd, unitBarcodeRaw, 
-           verifier1: 'Nurse', verifier2Pin: verifier2Id, 
-           consentVerified, preVitalsChecked: vitalsChecked 
+         body: JSON.stringify({
+           patientId, patientAbo, patientRhd, unitBarcodeRaw,
+           verifier1: verifier1Id, verifier1Pin,
+           verifier2: verifier2Id, verifier2Pin,
+           consentVerified, preVitalsChecked: vitalsChecked
          })
       });
       const data = await res.json();
@@ -233,20 +240,39 @@ export function BedsideVerificationView() {
                   />
                 </div>
 
-                <div className="relative">
-                   <input 
+                <div className="grid grid-cols-2 gap-3">
+                   <input
                      required
-                     list="verifier-list"
-                     value={verifier2Id}
-                     onChange={e => setVerifier2Id(e.target.value)}
-                     type="text" 
-                     placeholder="SECOND AUTHENTICATOR PIN/ID"
+                     value={verifier1Id}
+                     onChange={e => setVerifier1Id(e.target.value)}
+                     type="text"
+                     placeholder="VERIFIER 1 USERNAME"
                      className="w-full bg-clinical-bg border border-clinical-border text-white p-4 rounded-2xl focus:border-emerald-500/50 outline-none transition-all text-xs font-black tracking-widest uppercase shadow-inner placeholder:text-clinical-text"
                    />
-                   <datalist id="verifier-list">
-                     <option value="ID-1011 (Dr. Jenkins)" />
-                     <option value="ID-2022 (Nurse Kelly)" />
-                   </datalist>
+                   <input
+                     required
+                     value={verifier1Pin}
+                     onChange={e => setVerifier1Pin(e.target.value)}
+                     type="password"
+                     placeholder="VERIFIER 1 PIN"
+                     className="w-full bg-clinical-bg border border-clinical-border text-white p-4 rounded-2xl focus:border-emerald-500/50 outline-none transition-all text-xs font-black tracking-widest uppercase shadow-inner placeholder:text-clinical-text"
+                   />
+                   <input
+                     required
+                     value={verifier2Id}
+                     onChange={e => setVerifier2Id(e.target.value)}
+                     type="text"
+                     placeholder="VERIFIER 2 USERNAME"
+                     className="w-full bg-clinical-bg border border-clinical-border text-white p-4 rounded-2xl focus:border-emerald-500/50 outline-none transition-all text-xs font-black tracking-widest uppercase shadow-inner placeholder:text-clinical-text"
+                   />
+                   <input
+                     required
+                     value={verifier2Pin}
+                     onChange={e => setVerifier2Pin(e.target.value)}
+                     type="password"
+                     placeholder="VERIFIER 2 PIN"
+                     className="w-full bg-clinical-bg border border-clinical-border text-white p-4 rounded-2xl focus:border-emerald-500/50 outline-none transition-all text-xs font-black tracking-widest uppercase shadow-inner placeholder:text-clinical-text"
+                   />
                 </div>
              </div>
 

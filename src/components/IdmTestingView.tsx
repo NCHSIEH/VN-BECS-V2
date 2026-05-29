@@ -20,6 +20,7 @@ export function IdmTestingView() {
   const { t } = useI18n();
   const [specimens, setSpecimens] = useState<IdmSpecimen[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
   
   const fetchSpecimens = async () => {
     try {
@@ -53,22 +54,37 @@ export function IdmTestingView() {
   const filtered = specimens.filter(s => s.id.includes(searchTerm) || s.donorId.includes(searchTerm));
 
   const handleAuthorize = async (id: string, action: 'clear' | 'quarantine') => {
+    setStatusMsg(null);
     try {
       const res = await fetch(`/api/v1/lims/lab-tests/${id}/auth`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action })
       });
+      const data = await res.json();
       if (res.ok) {
+        setStatusMsg({ type: 'success', msg: `Authorization ${action === 'clear' ? 'CLEARED' : 'QUARANTINED'} for donation ${id} succeeded.` });
         fetchSpecimens();
+      } else {
+        setStatusMsg({ type: 'error', msg: `AUTHORIZATION FAILED: ${data.error || data.message || 'Access Denied'}` });
       }
     } catch (e) {
-      console.error(e);
+      setStatusMsg({ type: 'error', msg: "Network Error" });
     }
   };
 
   return (
     <div className="flex flex-col h-full space-y-8 animate-in fade-in duration-700 p-2">
+      {statusMsg && (
+        <div className={`p-4 rounded-2xl border flex items-center gap-3 text-xs font-black uppercase tracking-widest ${
+          statusMsg.type === 'success' 
+            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+            : 'bg-rose-500/10 border-rose-500/30 text-rose-500'
+        }`}>
+          <AlertTriangle size={16} />
+          {statusMsg.msg}
+        </div>
+      )}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <div className="flex items-center gap-3 mb-2">

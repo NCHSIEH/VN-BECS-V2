@@ -7,7 +7,14 @@
  * Terminal states (irreversible): DISCARDED, TRANSFUSED, WASTED
  */
 
-import type { BloodUnitStatus, Role } from '../types';
+import type {
+  BloodAssignmentStatus,
+  BloodInventoryStatus,
+  BloodQualityStatus,
+  BloodUnitStateSnapshot,
+  BloodUnitStatus,
+  Role,
+} from '../types';
 
 export interface TransitionResult {
   allowed: boolean;
@@ -26,6 +33,8 @@ export interface TransitionContext {
   visualInspectionPassed?: boolean;
   isExpired?: boolean;
   isBreakGlass?: boolean; // Added for SOP 10 Emergency Release
+  isUnderLookback?: boolean; // Added for Hemovigilance Lookback safeguard
+  baseVersion?: number; // Optimistic-lock client version (used by command service)
 }
 
 interface TransitionRule {
@@ -42,6 +51,167 @@ const TERMINAL_STATES: ReadonlySet<BloodUnitStatus> = new Set([
   'WASTED',
 ]);
 
+const LEGACY_STATUS_TO_STATE: Readonly<Record<string, BloodUnitStateSnapshot>> = {
+  COLLECTED: {
+    qualityStatus: 'PENDING_TEST',
+    inventoryStatus: 'NOT_IN_STOCK',
+    assignmentStatus: 'UNASSIGNED',
+  },
+  QUARANTINE: {
+    qualityStatus: 'PENDING_TEST',
+    inventoryStatus: 'NOT_IN_STOCK',
+    assignmentStatus: 'UNASSIGNED',
+  },
+  QUARANTINED: {
+    qualityStatus: 'HOLD_IDM',
+    inventoryStatus: 'NOT_IN_STOCK',
+    assignmentStatus: 'UNASSIGNED',
+  },
+  AVAILABLE: {
+    qualityStatus: 'RELEASED',
+    inventoryStatus: 'AVAILABLE',
+    assignmentStatus: 'UNASSIGNED',
+  },
+  RELEASED: {
+    qualityStatus: 'RELEASED',
+    inventoryStatus: 'AVAILABLE',
+    assignmentStatus: 'UNASSIGNED',
+  },
+  ALLOCATED: {
+    qualityStatus: 'RELEASED',
+    inventoryStatus: 'ORDER_RESERVED',
+    assignmentStatus: 'ORDER_ALLOCATED',
+  },
+  RESERVED: {
+    qualityStatus: 'RELEASED',
+    inventoryStatus: 'ORDER_RESERVED',
+    assignmentStatus: 'ORDER_ALLOCATED',
+  },
+  PICKED: {
+    qualityStatus: 'RELEASED',
+    inventoryStatus: 'PICKED',
+    assignmentStatus: 'ORDER_ALLOCATED',
+  },
+  'HUB INTRANSIT': {
+    qualityStatus: 'RELEASED',
+    inventoryStatus: 'IN_TRANSIT',
+    assignmentStatus: 'ORDER_ALLOCATED',
+  },
+  IN_TRANSIT: {
+    qualityStatus: 'RELEASED',
+    inventoryStatus: 'IN_TRANSIT',
+    assignmentStatus: 'ORDER_ALLOCATED',
+  },
+  RECEIVED: {
+    qualityStatus: 'RELEASED',
+    inventoryStatus: 'RECEIVED',
+    assignmentStatus: 'ORDER_ALLOCATED',
+  },
+  CROSSMATCHED: {
+    qualityStatus: 'RELEASED',
+    inventoryStatus: 'RECEIVED',
+    assignmentStatus: 'CROSSMATCH_COMPATIBLE',
+  },
+  ISSUED: {
+    qualityStatus: 'RELEASED',
+    inventoryStatus: 'ISSUED',
+    assignmentStatus: 'PATIENT_ASSIGNED',
+  },
+  RETURNED: {
+    qualityStatus: 'RELEASED',
+    inventoryStatus: 'RETURN_PENDING',
+    assignmentStatus: 'PATIENT_ASSIGNED',
+  },
+  TRANSFUSED: {
+    qualityStatus: 'RELEASED',
+    inventoryStatus: 'TRANSFUSED',
+    assignmentStatus: 'PATIENT_ASSIGNED',
+  },
+  WASTED: {
+    qualityStatus: 'NONCONFORMING',
+    inventoryStatus: 'WASTED',
+    assignmentStatus: 'UNASSIGNED',
+  },
+  DISCARDED: {
+    qualityStatus: 'DISCARDED',
+    inventoryStatus: 'WASTED',
+    assignmentStatus: 'UNASSIGNED',
+  },
+  EXPIRED: {
+    qualityStatus: 'NONCONFORMING',
+    inventoryStatus: 'WASTED',
+    assignmentStatus: 'UNASSIGNED',
+  },
+};
+
+const LEGACY_STATUS_TO_CANONICAL_STATUS: Readonly<Record<string, BloodUnitStatus>> = {
+  COLLECTED: 'COLLECTED',
+  QUARANTINE: 'QUARANTINE',
+  QUARANTINED: 'QUARANTINE',
+  AVAILABLE: 'AVAILABLE',
+  RELEASED: 'AVAILABLE',
+  ALLOCATED: 'RESERVED',
+  RESERVED: 'RESERVED',
+  PICKED: 'PICKED',
+  'HUB INTRANSIT': 'IN_TRANSIT',
+  IN_TRANSIT: 'IN_TRANSIT',
+  RECEIVED: 'RECEIVED',
+  CROSSMATCHED: 'CROSSMATCHED',
+  ISSUED: 'ISSUED',
+  RETURNED: 'RETURNED',
+  TRANSFUSED: 'TRANSFUSED',
+  WASTED: 'WASTED',
+  DISCARDED: 'DISCARDED',
+  EXPIRED: 'WASTED',
+};
+
+function normalizeStatusKey(status: string): string {
+  return status.trim().toUpperCase().replace(/\s+/g, ' ');
+}
+
+export function normalizeBloodUnitState(status: string): BloodUnitStateSnapshot | null {
+  return LEGACY_STATUS_TO_STATE[normalizeStatusKey(status)] ?? null;
+}
+
+export function normalizeBloodUnitStatus(status: string): BloodUnitStatus | null {
+  return LEGACY_STATUS_TO_CANONICAL_STATUS[normalizeStatusKey(status)] ?? null;
+}
+
+export function isKnownBloodUnitState(status: string): boolean {
+  return normalizeStatusKey(status) in LEGACY_STATUS_TO_STATE;
+}
+
+export const BLOOD_QUALITY_STATUSES: readonly BloodQualityStatus[] = [
+  'PENDING_TEST',
+  'RELEASED',
+  'HOLD_IDM',
+  'HOLD_COLD_CHAIN',
+  'HOLD_LOOKBACK',
+  'NONCONFORMING',
+  'DISCARDED',
+];
+
+export const BLOOD_INVENTORY_STATUSES: readonly BloodInventoryStatus[] = [
+  'NOT_IN_STOCK',
+  'AVAILABLE',
+  'ORDER_RESERVED',
+  'PICKED',
+  'IN_TRANSIT',
+  'RECEIVED',
+  'ISSUED',
+  'RETURN_PENDING',
+  'WASTED',
+  'TRANSFUSED',
+];
+
+export const BLOOD_ASSIGNMENT_STATUSES: readonly BloodAssignmentStatus[] = [
+  'UNASSIGNED',
+  'ORDER_ALLOCATED',
+  'PATIENT_ASSIGNED',
+  'CROSSMATCH_COMPATIBLE',
+  'EMERGENCY_RELEASED',
+];
+
 const TRANSITION_RULES: readonly TransitionRule[] = [
   {
     from: 'COLLECTED',
@@ -55,7 +225,11 @@ const TRANSITION_RULES: readonly TransitionRule[] = [
     to: 'AVAILABLE',
     sop: 'SOP2',
     allowedRoles: ['LIMS_Simulator', 'Admin'],
-    guard: (ctx) => ctx.idmStatus === 'CLEARED' ? null : '[SOP 2] IDM status must be CLEARED to release to inventory.',
+    guard: (ctx) => {
+      if (ctx.idmStatus !== 'CLEARED') return '[SOP 2] IDM status must be CLEARED to release to inventory.';
+      if (ctx.isUnderLookback) return '[Safety Block] Component is under active Hemovigilance Lookback investigation. Release is strictly prohibited.';
+      return null;
+    },
   },
   {
     from: 'QUARANTINE',
@@ -68,18 +242,49 @@ const TRANSITION_RULES: readonly TransitionRule[] = [
     from: 'AVAILABLE',
     to: 'RESERVED',
     sop: 'SOP4',
-    allowedRoles: ['Dispatcher', 'Admin', 'HospitalOperator'],
+    allowedRoles: ['Dispatcher', 'WarehouseIssuer', 'Admin', 'HospitalOperator'],
     guard: (ctx) => {
       if (ctx.isExpired) return '[Safety Error] Cannot reserve an expired blood unit.';
       return ctx.orderApproved ? null : '[SOP 4] Order must be approved before reservation.';
     },
   },
   {
+    from: 'AVAILABLE',
+    to: 'IN_TRANSIT',
+    sop: 'SOP3',
+    allowedRoles: ['LIMS_Simulator', 'QA_Officer', 'Admin'],
+    guard: (ctx) => ctx.isExpired ? '[Safety Error] Cannot release an expired blood unit to the hub.' : null,
+  },
+  {
+    from: 'AVAILABLE',
+    to: 'QUARANTINE',
+    sop: 'Hemovigilance',
+    allowedRoles: ['QA_Officer', 'MedicalReviewer', 'HospitalOperator', 'Admin'],
+    guard: () => null,
+  },
+  {
+    from: 'RESERVED',
+    to: 'AVAILABLE',
+    sop: 'SOP4',
+    allowedRoles: ['Dispatcher', 'WarehouseIssuer', 'HospitalOperator', 'Admin'],
+    guard: (ctx) => ctx.isExpired ? '[Safety Error] Expired reserved unit must be wasted, not returned to available stock.' : null,
+  },
+  {
+    from: 'RESERVED',
+    to: 'QUARANTINE',
+    sop: 'Hemovigilance',
+    allowedRoles: ['QA_Officer', 'MedicalReviewer', 'HospitalOperator', 'Admin'],
+    guard: () => null,
+  },
+  {
     from: 'RESERVED',
     to: 'PICKED',
     sop: 'Warehouse',
     allowedRoles: ['WarehouseIssuer', 'Admin', 'HospitalOperator'],
-    guard: (ctx) => ctx.barcodeScanMatch ? null : '[SOP 4] Barcode mismatch (ERR_BARCODE_MISMATCH). Scan again.',
+    guard: (ctx) => {
+      if (ctx.isExpired) return '[Safety Error] Cannot pick an expired blood unit.';
+      return ctx.barcodeScanMatch ? null : '[SOP 4] Barcode mismatch (ERR_BARCODE_MISMATCH). Scan again.';
+    },
   },
   {
     from: 'PICKED',
@@ -89,10 +294,38 @@ const TRANSITION_RULES: readonly TransitionRule[] = [
     guard: () => null,
   },
   {
+    from: 'PICKED',
+    to: 'QUARANTINE',
+    sop: 'Hemovigilance',
+    allowedRoles: ['QA_Officer', 'MedicalReviewer', 'HospitalOperator', 'Admin'],
+    guard: () => null,
+  },
+  {
+    from: 'PICKED',
+    to: 'WASTED',
+    sop: 'SOP5',
+    allowedRoles: ['WarehouseIssuer', 'Courier', 'Admin'],
+    guard: () => null,
+  },
+  {
     from: 'IN_TRANSIT',
     to: 'RECEIVED',
     sop: 'SOP5',
     allowedRoles: ['HospitalOperator', 'Admin'],
+    guard: () => null,
+  },
+  {
+    from: 'IN_TRANSIT',
+    to: 'QUARANTINE',
+    sop: 'Hemovigilance',
+    allowedRoles: ['QA_Officer', 'MedicalReviewer', 'HospitalOperator', 'Admin'],
+    guard: () => null,
+  },
+  {
+    from: 'IN_TRANSIT',
+    to: 'WASTED',
+    sop: 'SOP5',
+    allowedRoles: ['Courier', 'HospitalOperator', 'Admin'],
     guard: () => null,
   },
   {
@@ -107,6 +340,27 @@ const TRANSITION_RULES: readonly TransitionRule[] = [
         ? null
         : `[SOP 7] Crossmatch must be Compatible (got: ${ctx.crossmatchResult ?? 'none'}).`;
     },
+  },
+  {
+    from: 'RECEIVED',
+    to: 'QUARANTINE',
+    sop: 'Hemovigilance',
+    allowedRoles: ['QA_Officer', 'MedicalReviewer', 'HospitalOperator', 'Admin'],
+    guard: () => null,
+  },
+  {
+    from: 'RECEIVED',
+    to: 'WASTED',
+    sop: 'SOP5',
+    allowedRoles: ['HospitalOperator', 'Admin'],
+    guard: () => null,
+  },
+  {
+    from: 'CROSSMATCHED',
+    to: 'QUARANTINE',
+    sop: 'Hemovigilance',
+    allowedRoles: ['QA_Officer', 'MedicalReviewer', 'HospitalOperator', 'Admin'],
+    guard: () => null,
   },
   {
     from: 'CROSSMATCHED',
@@ -124,7 +378,10 @@ const TRANSITION_RULES: readonly TransitionRule[] = [
     to: 'TRANSFUSED',
     sop: 'SOP6',
     allowedRoles: ['Nurse', 'Admin'],
-    guard: (ctx) => ctx.dualVerificationPassed ? null : '[SOP 6] Dual bedside verification (2 qualified clinicians) is required.',
+    guard: (ctx) => {
+      if (ctx.isExpired) return '[Safety Error] Cannot transfuse an expired blood unit.';
+      return ctx.dualVerificationPassed ? null : '[SOP 6] Dual bedside verification (2 qualified clinicians) is required.';
+    },
   },
   {
     from: 'ISSUED',
@@ -170,8 +427,9 @@ const TRANSITION_RULES: readonly TransitionRule[] = [
     sop: 'SOP10',
     allowedRoles: ['HospitalOperator', 'Admin', 'Nurse'],
     guard: (ctx) => {
-        if (!ctx.isBreakGlass) return '[SOP 10] Direct issue from AVAILABLE is only allowed in Break-Glass emergency mode.';
-        return null;
+      if (ctx.isExpired) return '[Safety Error] Cannot emergency issue an expired blood unit.';
+      if (!ctx.isBreakGlass) return '[SOP 10] Direct issue from AVAILABLE is only allowed in Break-Glass emergency mode.';
+      return null;
     }
   }
 ];

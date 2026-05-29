@@ -21,6 +21,7 @@ export function MtpEmergencyView() {
   
   // CDSS State
   const [showCdssAlert, setShowCdssAlert] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Break-glass state
   const [bgReason, setBgReason] = useState('Massive Hemorrhage - Unidentified Patient');
@@ -63,47 +64,80 @@ export function MtpEmergencyView() {
       return; // 致命攔截：不允許送出 API
     }
 
-    await fetch('/api/v1/mtp-cases', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        patientIdentifier: selectedPatient.id,
-        authorizedClinician: doctor,
-        clinicalScenario: location,
-        status: 'ACTIVE'
-      })
-    });
-    setShowActivate(false);
-    fetchCases();
+    setErrorMsg(null);
+    try {
+      const res = await fetch('/api/v1/mtp-cases', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patientIdentifier: selectedPatient.id,
+          authorizedClinician: doctor,
+          clinicalScenario: location,
+          status: 'ACTIVE'
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setShowActivate(false);
+        fetchCases();
+      } else {
+        setErrorMsg(`ACTIVATION FAILED: ${data.error || data.message || 'Access Denied'}`);
+      }
+    } catch (e) {
+      setErrorMsg("Network Error");
+    }
   };
 
   const handleBreakGlass = async () => {
-    await fetch('/api/v1/mtp-cases', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        patientIdentifier: 'UNKNOWN_EMERGENCY_' + Math.floor(Math.random()*1000),
-        authorizedClinician: bgDoctor,
-        clinicalScenario: 'EMERGENCY_RELEASE',
-        notes: bgReason,
-        status: 'ACTIVE',
-        isBreakGlass: true
-      })
-    });
-    setShowBreakGlass(false);
-    fetchCases();
+    setErrorMsg(null);
+    try {
+      const res = await fetch('/api/v1/mtp-cases', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patientIdentifier: 'UNKNOWN_EMERGENCY_' + Math.floor(Math.random()*1000),
+          authorizedClinician: bgDoctor,
+          clinicalScenario: 'EMERGENCY_RELEASE',
+          notes: bgReason,
+          status: 'ACTIVE',
+          isBreakGlass: true
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setShowBreakGlass(false);
+        fetchCases();
+      } else {
+        setErrorMsg(`BREAK-GLASS FAILED: ${data.error || data.message || 'Access Denied'}`);
+      }
+    } catch (e) {
+      setErrorMsg("Network Error");
+    }
   };
 
-  const handleIssueUnit = async (id: string) => {
+  const handleIssueUnit = async (caseId: string) => {
+    setErrorMsg(null);
     try {
-      await fetch(`/api/v1/mtp-cases/${id}/issue`, { method: 'POST' });
-      fetchCases();
-    } catch (e) {}
+      const res = await fetch(`/api/v1/mtp-cases/${caseId}/issue`, { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        fetchCases();
+      } else {
+        setErrorMsg(`ISSUE FAILED: ${data.error || data.message || 'Access Denied'}`);
+      }
+    } catch (e) {
+      setErrorMsg("Network Error");
+    }
   };
 
   return (
     <div className="flex-1 overflow-y-auto custom-scrollbar space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12 p-6">
-      
+      {errorMsg && (
+        <div className="bg-rose-950/20 p-4 rounded-[20px] border border-rose-900/30 text-rose-500 text-xs font-black uppercase tracking-widest flex items-center gap-3 animate-pulse shadow-lg">
+          <ShieldAlert size={16} />
+          {errorMsg}
+        </div>
+      )}
       {/* Strategic MTP Command Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-clinical-card p-8 rounded-[24px] border-l-4 border-l-rose-600 border border-clinical-border shadow-sm relative overflow-hidden">
          <div className="absolute -top-10 -right-10 opacity-5">

@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { translations } from '@/src/server/db';
+import { internalErrorResponse } from '@/src/server/apiResponses';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const data = await translations.getAll();
     return NextResponse.json(data || []);
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return internalErrorResponse(request, error, 'TRANSLATION_LIST_FAILED');
   }
 }

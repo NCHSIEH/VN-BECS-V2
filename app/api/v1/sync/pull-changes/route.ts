@@ -1,8 +1,18 @@
 import { NextResponse } from 'next/server';
 import * as db from '@/src/server/db';
+import { authorizeApiRole, rbacErrorBody } from '@/src/server/rbacPolicy';
+import { internalErrorResponse } from '@/src/server/apiResponses';
 
 export async function GET(request: Request) {
   try {
+    const authz = authorizeApiRole({
+      request,
+      allowedRoles: ['Admin', 'Manager', 'Dispatcher', 'Courier', 'Nurse', 'HospitalOperator'],
+      action: 'SYNC_PULL_CHANGES',
+    });
+    if (!authz.allowed) {
+      return NextResponse.json(rbacErrorBody(authz), { status: 403 });
+    }
     const { searchParams } = new URL(request.url);
     const since = searchParams.get('since');
     
@@ -40,7 +50,6 @@ export async function GET(request: Request) {
       hasMore: false
     });
   } catch (error) {
-    console.error('Sync Pull Error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return internalErrorResponse(request, error, 'SYNC_PULL_FAILED');
   }
 }

@@ -50,6 +50,25 @@ export function ReconciliationView() {
     }
   };
 
+  const handleAutoCorrect = async (id: string) => {
+    setStatus(null);
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/v1/reconciliation/${id}/autocorrect`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resolvedBy: 'System Auto-Correction' })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to auto-correct');
+      setStatus({ type: 'success', msg: `Successfully resolved ${data.correctedCount} inconsistencies for report ${id}.` });
+      loadReports();
+    } catch (e: any) {
+      setStatus({ type: 'error', msg: e.message });
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full gap-4 max-w-6xl mx-auto w-full p-4 overflow-y-auto custom-scrollbar">
       <div className="bg-clinical-bg border border-clinical-border rounded-xl p-6">
@@ -103,12 +122,27 @@ export function ReconciliationView() {
                     <div className="text-xs text-clinical-muted">Date: {r.date} | Hospital: {r.hospitalId}</div>
                   </div>
                   {!resolved && (
-                    <button 
-                      onClick={() => handleResolve(r.id)}
-                      className="bg-clinical-bg border border-clinical-border hover:border-slate-500 text-clinical-text px-3 py-1.5 rounded text-xs font-bold transition"
-                    >
-                      Mark Resolved
-                    </button>
+                    <div className="flex gap-2">
+                      {hasConflicts && (
+                        <button 
+                          onClick={() => handleAutoCorrect(r.id)}
+                          disabled={loading}
+                          className="bg-purple-950/40 border border-purple-800 hover:border-purple-600 text-purple-400 hover:text-purple-300 px-3 py-1.5 rounded text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-purple-900/10 disabled:opacity-50"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 21l8.982-11.795H14l1-6-8.982 11.795h5.813z" />
+                          </svg>
+                          Auto-Correct Data
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => handleResolve(r.id)}
+                        disabled={loading}
+                        className="bg-clinical-bg border border-clinical-border hover:border-slate-500 text-clinical-text px-3 py-1.5 rounded text-xs font-bold transition disabled:opacity-50"
+                      >
+                        Mark Resolved
+                      </button>
+                    </div>
                   )}
                 </div>
 

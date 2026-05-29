@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import * as db from '@/src/server/db';
+import { apiErrorResponse, internalErrorResponse } from '@/src/server/apiResponses';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const cases = await db.mtpCases.getAll();
     return NextResponse.json(cases);
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return internalErrorResponse(request, error, 'MTP_CASE_LIST_FAILED');
   }
 }
 
@@ -21,12 +22,22 @@ export async function POST(req: Request) {
       
       if (patient) {
          if (patient.specimenExpired || (patient.specimenHours && patient.specimenHours > 72)) {
-            return NextResponse.json({ error: '🚨 CDSS BLOCK: Patient specimen has expired (>72 hours). A new sample MUST be drawn before standard MTP activation. Use Break-Glass if clinically critical.' }, { status: 400 });
+            return apiErrorResponse({
+              request: req,
+              code: 'MTP_SPECIMEN_EXPIRED',
+              message: 'CDSS BLOCK: Patient specimen has expired (>72 hours). A new sample MUST be drawn before standard MTP activation. Use Break-Glass if clinically critical.',
+              status: 400,
+            });
          }
          
          const hasAntibodies = patient.hasAntibody || (patient.antibodyHistory && patient.antibodyHistory.length > 0);
          if (hasAntibodies) {
-            return NextResponse.json({ error: '🚨 CDSS BLOCK: Patient has a history of clinically significant antibodies. Standard MTP uncrossmatched release is blocked due to high risk of hemolytic reaction. Consult Medical Director or use Break-Glass.' }, { status: 400 });
+            return apiErrorResponse({
+              request: req,
+              code: 'MTP_ANTIBODY_HISTORY_BLOCK',
+              message: 'CDSS BLOCK: Patient has a history of clinically significant antibodies. Standard MTP uncrossmatched release is blocked due to high risk of hemolytic reaction. Consult Medical Director or use Break-Glass.',
+              status: 400,
+            });
          }
       }
     }
@@ -50,6 +61,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json(mtp);
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return internalErrorResponse(req, error, 'MTP_CASE_CREATE_FAILED');
   }
 }

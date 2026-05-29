@@ -1,4 +1,5 @@
 import type { ValidationResult, OrderPriority, DonationType } from '../types';
+import { DONOR_DEFERRAL_POLICY } from './clinicalPolicy';
 
 /**
  * Validates a 12-digit Vietnam Citizen Identity Card (CCCD) number.
@@ -94,52 +95,81 @@ export function validateDonorWeight(weight: number, gender: 'Male' | 'Female'): 
   return { valid: errors.length === 0, errors };
 }
 
-export function validateVietnamDeferralRules(answers: Record<string, boolean | string>): { deferred: boolean; reason?: string; until?: string } {
+export function validateVietnamDeferralRules(answers: Record<string, boolean | string>): { deferred: boolean; reason?: string; until?: string; policyVersion: string } {
   const now = new Date();
+  const policyVersion = DONOR_DEFERRAL_POLICY.version;
   if (answers.hadTattooRecently) {
     const deferralDate = new Date(now);
     deferralDate.setMonth(deferralDate.getMonth() + 6);
-    return { deferred: true, reason: 'Recent tattoo (within 6 months)', until: deferralDate.toISOString() };
+    return { deferred: true, reason: 'Recent tattoo (within 6 months)', until: deferralDate.toISOString(), policyVersion };
   }
   if (answers.traveledToMalariaZone) {
     const deferralDate = new Date(now);
     deferralDate.setMonth(deferralDate.getMonth() + 12);
-    return { deferred: true, reason: 'Traveled to malaria endemic zone (within 12 months)', until: deferralDate.toISOString() };
+    return { deferred: true, reason: 'Traveled to malaria endemic zone (within 12 months)', until: deferralDate.toISOString(), policyVersion };
   }
   if (answers.feelingUnwell) {
     const deferralDate = new Date(now);
     deferralDate.setDate(deferralDate.getDate() + 7);
-    return { deferred: true, reason: 'Currently feeling unwell', until: deferralDate.toISOString() };
+    return { deferred: true, reason: 'Currently feeling unwell', until: deferralDate.toISOString(), policyVersion };
   }
   if (answers.hasHighRiskCondition) {
-    return { deferred: true, reason: 'Permanent deferral due to high-risk condition (e.g. HIV, Hepatitis)' };
+    return { deferred: true, reason: 'Permanent deferral due to high-risk condition (e.g. HIV, Hepatitis)', policyVersion };
   }
   if (answers.recentVaccine) {
     const deferralDate = new Date(now);
     deferralDate.setDate(deferralDate.getDate() + 28);
-    return { deferred: true, reason: 'Recent live vaccine (within 4 weeks)', until: deferralDate.toISOString() };
+    return { deferred: true, reason: 'Recent live vaccine (within 4 weeks)', until: deferralDate.toISOString(), policyVersion };
   }
   if (answers.recentDentalSurgery) {
     const deferralDate = new Date(now);
     deferralDate.setDate(deferralDate.getDate() + 7);
-    return { deferred: true, reason: 'Recent dental or minor surgery (within 7 days)', until: deferralDate.toISOString() };
+    return { deferred: true, reason: 'Recent dental or minor surgery (within 7 days)', until: deferralDate.toISOString(), policyVersion };
   }
   if (answers.pregnancyOrLactation) {
     const deferralDate = new Date(now);
     deferralDate.setMonth(deferralDate.getMonth() + 6);
-    return { deferred: true, reason: 'Recent pregnancy or current lactation (within 6 months)', until: deferralDate.toISOString() };
+    return { deferred: true, reason: 'Recent pregnancy or current lactation (within 6 months)', until: deferralDate.toISOString(), policyVersion };
   }
-  return { deferred: false };
+  return { deferred: false, policyVersion };
 }
 
-export function validateCollectionVolume(volume: number, donationType: DonationType): ValidationResult {
+export function validateCollectionVolume(
+  volume: number,
+  donationType: DonationType,
+  weightKg?: number,
+): ValidationResult {
   const errors: string[] = [];
-  if (volume < 200 || volume > 600) {
-    errors.push('Volume must be between 200ml and 600ml');
+  if (volume < 200) {
+    errors.push('Volume must be at least 200ml');
   }
   if (donationType === 'Apheresis' && volume > 300) {
     errors.push('Apheresis volume must not exceed 300ml');
   }
+
+  // Vietnam Circular 26/2013/TT-BYT whole-blood limits (donor weight linked).
+  if (donationType !== 'Apheresis') {
+    // Hard cap: < 500ml per whole-blood donation.
+    if (volume >= 500) {
+      errors.push('[VN26] Whole blood donation must be less than 500ml');
+    }
+    if (weightKg !== undefined) {
+      if (weightKg < 42) {
+        errors.push(`[VN26] Donor weight ${weightKg}kg is below the 42kg minimum for whole blood`);
+      } else if (weightKg < 45) {
+        // 42kg to <45kg: may donate < 250ml only.
+        if (volume >= 250) {
+          errors.push(`[VN26] Donors 42–45kg may donate less than 250ml (requested ${volume}ml)`);
+        }
+      }
+      // >= 45kg: bounded by the < 500ml hard cap above. The per-kg ceiling
+      // (e.g. ~10.5 ml/kg) is a local clinical policy decision and should be
+      // configured per facility rather than hard-coded here.
+    }
+  } else if (volume > 600) {
+    errors.push('Volume must not exceed 600ml');
+  }
+
   return { valid: errors.length === 0, errors };
 }
 

@@ -1,21 +1,22 @@
 import { NextResponse } from 'next/server';
 import * as db from '@/src/server/db';
+import { internalErrorResponse } from '@/src/server/apiResponses';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const donors = await db.rareDonors.getAll();
     return NextResponse.json(donors);
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return internalErrorResponse(request, error, 'RARE_DONOR_LIST_FAILED');
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   try {
-    const body = await req.json();
+    const body = await request.json();
     const donor = await db.rareDonors.create(body);
     return NextResponse.json(donor);
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return internalErrorResponse(request, error, 'RARE_DONOR_CREATE_FAILED');
   }
 }

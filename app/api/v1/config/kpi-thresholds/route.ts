@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { internalErrorResponse } from '@/src/server/apiResponses';
 
 const defaultThresholds = {
   wastageGreen: 2,
@@ -17,6 +18,6 @@ export async function PUT(request: Request) {
     // In a real app, save to DB. For now, just return success.
     return NextResponse.json({ success: true, thresholds: data });
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return internalErrorResponse(request, error, 'KPI_THRESHOLD_UPDATE_FAILED');
   }
 }

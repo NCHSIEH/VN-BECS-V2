@@ -12,6 +12,7 @@ export function DispatcherView() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeMTP, setActiveMTP] = useState<any | null>(null);
   const [inventory, setInventory] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const { getPriorityLabel } = useClinicalUtils();
 
@@ -46,22 +47,34 @@ export function DispatcherView() {
 
   const handleApprove = async () => {
     if (!selectedOrder) return;
+    setError(null);
     try {
-      await fetch(`/api/v1/orders/${selectedOrder.id}/approve`, { method: 'POST' });
-      fetchOrders();
+      const res = await fetch(`/api/v1/orders/${selectedOrder.id}/approve`, { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        fetchOrders();
+      } else {
+        setError(`APPROVAL FAILED: ${data.error || data.message || 'Access Denied'}`);
+      }
     } catch (err) {
-      console.error(err);
+      setError("Network Error");
     }
   };
 
   const handleRevert = async () => {
     if (!selectedOrder) return;
     if (!confirm("Revert this order to SUBMITTED status? This will return it to the triage queue.")) return;
+    setError(null);
     try {
-      await fetch(`/api/v1/orders/${selectedOrder.id}/revert`, { method: 'POST' });
-      fetchOrders();
+      const res = await fetch(`/api/v1/orders/${selectedOrder.id}/revert`, { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        fetchOrders();
+      } else {
+        setError(`REVERT FAILED: ${data.error || data.message || 'Access Denied'}`);
+      }
     } catch (err) {
-      console.error(err);
+      setError("Network Error");
     }
   };
 
@@ -69,15 +82,21 @@ export function DispatcherView() {
     if (!selectedOrder) return;
     const reason = prompt("Enter clinical reason for overriding AI and escalating to Medical Reviewer:");
     if (!reason) return;
+    setError(null);
     try {
-      await fetch(`/api/v1/orders/${selectedOrder.id}/escalate`, { 
+      const res = await fetch(`/api/v1/orders/${selectedOrder.id}/escalate`, { 
          method: 'POST',
          headers: { 'Content-Type': 'application/json' },
          body: JSON.stringify({ reason })
       });
-      fetchOrders();
+      const data = await res.json();
+      if (res.ok) {
+        fetchOrders();
+      } else {
+        setError(`ESCALATION FAILED: ${data.error || data.message || 'Access Denied'}`);
+      }
     } catch (err) {
-      console.error(err);
+      setError("Network Error");
     }
   };
 
@@ -235,6 +254,12 @@ export function DispatcherView() {
           <h2 className="text-sm font-bold text-clinical-muted uppercase tracking-widest border-b border-clinical-border pb-2 mb-4 flex gap-2">
             <Activity size={16}/> {t('dh_hitl_workspace')}
           </h2>
+          {error && (
+            <div className="bg-rose-950/20 p-3 rounded-lg border border-rose-900/30 text-rose-500 text-xs font-bold uppercase tracking-widest flex items-center gap-2 mb-4 animate-pulse">
+              <ShieldAlert size={14}/>
+              {error}
+            </div>
+          )}
           
           {!selectedOrder ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-8 border border-clinical-border border-dashed rounded-lg bg-clinical-bg/50">

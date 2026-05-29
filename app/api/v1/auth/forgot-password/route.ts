@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import * as db from '@/src/server/db';
 import nodemailer from 'nodemailer';
+import { apiErrorResponse, internalErrorResponse } from '@/src/server/apiResponses';
 
 // Global server-side in-memory store for verification codes (immune to DB downtime)
 const globalResets = (global as any);
@@ -11,19 +12,34 @@ export async function POST(request: Request) {
     const { username, email } = await request.json();
 
     if (!username || !email) {
-      return NextResponse.json({ error: 'Username and Email are required' }, { status: 400 });
+      return apiErrorResponse({
+        request,
+        code: 'PASSWORD_RESET_REQUEST_INVALID',
+        message: 'Username and Email are required',
+        status: 400,
+      });
     }
 
     const user = await db.users.getByUsername(username);
 
     if (!user) {
-      return NextResponse.json({ error: 'User identity not found in VN-BECS registry.' }, { status: 404 });
+      return apiErrorResponse({
+        request,
+        code: 'PASSWORD_RESET_IDENTITY_NOT_FOUND',
+        message: 'User identity not found in VN-BECS registry.',
+        status: 404,
+      });
     }
 
     // Verify email matches the user details
     const userEmail = (user.details?.email || '').trim().toLowerCase();
     if (!userEmail || userEmail !== email.trim().toLowerCase()) {
-      return NextResponse.json({ error: 'Provided email does not match our command records for this account.' }, { status: 400 });
+      return apiErrorResponse({
+        request,
+        code: 'PASSWORD_RESET_EMAIL_MISMATCH',
+        message: 'Provided email does not match our command records for this account.',
+        status: 400,
+      });
     }
 
     // Generate a secure 6-digit OTP code
@@ -94,6 +110,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, simulation: true, otpCode });
   } catch (error: any) {
     console.error('Forgot Password Request error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return internalErrorResponse(request, error, 'PASSWORD_RESET_REQUEST_FAILED');
   }
 }
