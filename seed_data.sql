@@ -81,6 +81,26 @@ INSERT INTO patients (id, mrn, name, abo, rhd, "bloodType", "hasAntibody", "anti
 ('MRN-1017', 'MRN-1017', 'Trauma-Alpha', 'Unknown', 'Unknown', 'Unknown', false, NULL, false, 10)
 ON CONFLICT (id) DO NOTHING;
 
+-- 8b. Donations (parents of components — REQUIRED before components for the FK)
+INSERT INTO donations (id, "donorId", "collectedAt", volume, "donationType") VALUES
+('DON-001', 'D-1001', NOW(), 450, 'WholeBlood'),
+('DON-002', 'D-1002', NOW(), 450, 'WholeBlood'),
+('DON-003', 'D-1003', NOW(), 450, 'WholeBlood'),
+('DON-004', 'D-1001', NOW(), 450, 'WholeBlood'),
+('DON-005', 'D-1002', NOW(), 450, 'WholeBlood'),
+('DON-006', 'D-1003', NOW(), 450, 'WholeBlood')
+ON CONFLICT (id) DO NOTHING;
+
+-- 8c. Lab tests (IDM/ABO-Rh results) for the seeded donations
+INSERT INTO lab_tests (id, "donationId", abo, rhd, "idmStatus", "testedAt") VALUES
+('LAB-DON-001', 'DON-001', 'A', 'Positive', 'CLEARED', NOW()),
+('LAB-DON-002', 'DON-002', 'B', 'Positive', 'CLEARED', NOW()),
+('LAB-DON-003', 'DON-003', 'O', 'Negative', 'PENDING', NOW()),
+('LAB-DON-004', 'DON-004', 'O', 'Positive', 'CLEARED', NOW()),
+('LAB-DON-005', 'DON-005', 'A', 'Positive', 'CLEARED', NOW()),
+('LAB-DON-006', 'DON-006', 'B', 'Negative', 'CLEARED', NOW())
+ON CONFLICT (id) DO NOTHING;
+
 -- 9. Components
 INSERT INTO components (id, "donationId", "productCode", type, status, abo, rhd, "expiryDate", "createdAt") VALUES
 ('COMP-001', 'DON-001', 'E7010', 'RED_CELLS', 'AVAILABLE', 'A', 'Positive', '2026-06-15T00:00:00Z', NOW()),
