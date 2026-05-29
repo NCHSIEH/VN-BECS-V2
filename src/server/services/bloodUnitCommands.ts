@@ -115,8 +115,11 @@ export async function executeBloodUnitTransition(
 
   // 2. Sync inventory status with optimistic lock or default create
   try {
-    const allInv = await db.inventory.getAll();
-    const invItem = allInv.find((i: any) => i.unitId === command.unitId);
+    // Prefer a targeted lookup (avoids loading the whole inventory table on
+    // every transition); fall back to a scan for test mocks that only stub getAll.
+    const invItem = typeof (db.inventory as any).getByUnitId === 'function'
+      ? await (db.inventory as any).getByUnitId(command.unitId)
+      : (await db.inventory.getAll()).find((i: any) => i.unitId === command.unitId);
     const clientVersion = command.context?.baseVersion;
 
     if (invItem) {

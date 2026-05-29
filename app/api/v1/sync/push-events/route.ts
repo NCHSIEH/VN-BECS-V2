@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server';
 import * as db from '@/src/server/db';
-import { inventory } from '@/src/server/repositories/inventoryRepo';
 import {
-  evaluateBloodUnitTransition,
   executeBloodUnitTransition,
   isBloodUnitExpired,
 } from '@/src/server/services/bloodUnitCommands';
 import {
   BloodUnitStateMachine,
   normalizeBloodUnitStatus,
+  type TransitionContext,
 } from '@/src/lib/stateMachine';
+import type { BloodUnitStatus, Role } from '@/src/types';
 import {
   buildOfflineEventReceipt,
   findPriorOfflineSyncResult,
@@ -19,14 +19,185 @@ import {
 import { authorizeApiRole, rbacErrorBody } from '@/src/server/rbacPolicy';
 import { apiErrorResponse, internalErrorResponse } from '@/src/server/apiResponses';
 
-async function syncComponentStatusIfPresent(unitId: string, status: string) {
-  try {
-    if (db.components && typeof db.components.updateStatus === 'function') {
-      await db.components.updateStatus(unitId, status);
-    }
-  } catch (error) {
-    console.warn(`Offline sync inventory status was updated but component ${unitId} could not be synced to ${status}:`, error);
+type SyncOutcome = ReturnType<typeof syncResult>;
+
+interface PrecheckFailure {
+  state: 'Rejected' | 'NeedsReview';
+  error: string;
+  errorCode: string;
+}
+
+interface SyncOperation {
+  targetStatus: BloodUnitStatus;
+  role: Role;
+  actorId: string;
+  /** Validate operation-specific clinical prerequisites before touching inventory. */
+  precheck?: (event: any) => PrecheckFailure | null;
+  buildContext: (event: any, item: any) => TransitionContext;
+  /** Optional side-effect after a successful transition (e.g. transfusion record). */
+  onSuccess?: (event: any, item: any) => Promise<void>;
+}
+
+const QUARANTINE_HOLD_STATUSES = new Set(['QUARANTINE', 'QUARANTINED', 'HOLD_LOOKBACK']);
+
+function patientRefOf(event: any): string | undefined {
+  return event.patientRef || event.payload?.patientRef || event.payload?.patientId;
+}
+
+/**
+ * Declarative map of the offline operations the server will replay. Each entry
+ * owns only what differs between operations; the shared lookup → terminal-guard
+ * → transition → receipt flow lives once in `processOfflineEvent`.
+ */
+const SYNC_OPERATIONS: Record<string, SyncOperation> = {
+  IssueBag: {
+    targetStatus: 'ISSUED',
+    role: 'Nurse',
+    actorId: 'System',
+    precheck: (event) => {
+      if (!patientRefOf(event)) {
+        return { state: 'Rejected', error: 'Missing patient reference for offline issue event', errorCode: 'PATIENT_REF_REQUIRED' };
+      }
+      const p = event.payload;
+      if (p?.isBreakGlass !== true && p?.emergencyOverride !== true) {
+        return { state: 'NeedsReview', error: 'Offline issue requires documented break-glass authorization', errorCode: 'BREAK_GLASS_REQUIRED' };
+      }
+      return null;
+    },
+    buildContext: (event, item) => ({
+      isBreakGlass: event.payload?.isBreakGlass === true || event.payload?.emergencyOverride === true,
+      isExpired: isBloodUnitExpired(item.expiryDate),
+      baseVersion: event.baseVersion || item.version,
+    }),
+  },
+  TransfuseBag: {
+    targetStatus: 'TRANSFUSED',
+    role: 'Nurse',
+    actorId: 'Nurse',
+    precheck: (event) => {
+      if (!patientRefOf(event)) {
+        return { state: 'Rejected', error: 'Missing patient reference for offline transfusion event', errorCode: 'PATIENT_REF_REQUIRED' };
+      }
+      const p = event.payload;
+      if (p?.consentVerified !== true || p?.preVitalsChecked !== true) {
+        return { state: 'Rejected', error: 'Clinical prerequisites (consent, vitals) missing', errorCode: 'BEDSIDE_CLINICAL_PREREQUISITES_MISSING' };
+      }
+      if (!p?.verifier1 || !p?.verifier2Pin) {
+        return { state: 'Rejected', error: 'Dual bedside verification required', errorCode: 'DUAL_VERIFICATION_REQUIRED' };
+      }
+      return null;
+    },
+    buildContext: (event, item) => ({
+      dualVerificationPassed: true,
+      isExpired: isBloodUnitExpired(item.expiryDate),
+      isUnderLookback: QUARANTINE_HOLD_STATUSES.has(item.status),
+      baseVersion: event.baseVersion || item.version,
+    }),
+    onSuccess: async (event, item) => {
+      await db.transfusions.create({
+        componentId: item.unitId,
+        patientId: patientRefOf(event),
+        verifier1: event.payload.verifier1,
+        verifier2Pin: event.payload.verifier2Pin,
+        consentVerified: true,
+        preVitalsChecked: true,
+        status: 'COMPLETED',
+        startedAt: event.clientTimestamp || new Date().toISOString(),
+        completedAt: new Date().toISOString(),
+      });
+    },
+  },
+  WasteBag: {
+    targetStatus: 'WASTED',
+    role: 'HospitalOperator',
+    actorId: 'System',
+    precheck: (event) => {
+      const reasonCode = event.payload?.reasonCode || event.payload?.reason;
+      if (!reasonCode) {
+        return { state: 'Rejected', error: 'Missing reason code for offline waste event', errorCode: 'MISSING_REASON_CODE' };
+      }
+      return null;
+    },
+    buildContext: (event, item) => ({ baseVersion: event.baseVersion || item.version }),
+  },
+  ReceiveBag: {
+    targetStatus: 'RECEIVED',
+    role: 'HospitalOperator',
+    actorId: 'System',
+    buildContext: (event, item) => ({ baseVersion: event.baseVersion || item.version }),
+  },
+};
+
+async function processOfflineEvent(event: any, requestId: string | null): Promise<SyncOutcome> {
+  const op = SYNC_OPERATIONS[event.operationType];
+  if (!op) {
+    return syncResult(event, 'Rejected', { error: 'Unknown operationType', errorCode: 'UNKNOWN_OPERATION_TYPE' });
   }
+
+  const precheckFailure = op.precheck?.(event);
+  if (precheckFailure) {
+    return syncResult(event, precheckFailure.state, {
+      error: precheckFailure.error,
+      errorCode: precheckFailure.errorCode,
+    });
+  }
+
+  const unitId = event.bagUid || event.din;
+  const allInventory = await db.inventory.getAll();
+  const item = allInventory.find((u: any) => u.unitId === unitId);
+
+  if (!item) {
+    return syncResult(event, 'Rejected', { error: 'Bag not found in central DB', errorCode: 'BAG_NOT_FOUND' });
+  }
+
+  const normalizedStatus = normalizeBloodUnitStatus(item.status);
+  if (normalizedStatus && BloodUnitStateMachine.isTerminal(normalizedStatus)) {
+    return syncResult(event, 'NeedsReview', {
+      error: `Offline event cannot overwrite terminal blood unit state ${normalizedStatus}`,
+      errorCode: 'TERMINAL_STATE_CONFLICT',
+      currentStatus: item.status,
+      serverVersion: item.version,
+    });
+  }
+
+  const transitionResult = await executeBloodUnitTransition(
+    {
+      unitId,
+      currentStatus: item.status,
+      targetStatus: op.targetStatus,
+      role: op.role,
+      context: op.buildContext(event, item),
+    },
+    op.actorId,
+    'SERVER',
+    'OFFLINE_SYNC_PUSH',
+    requestId || 'REQ-SYNC',
+  );
+
+  if (!transitionResult.success) {
+    const code = transitionResult.error?.code;
+    if (code === 'VERSION_CONFLICT') {
+      return syncResult(event, 'NeedsReview', {
+        error: 'Version mismatch (Concurrency Conflict)',
+        errorCode: 'VERSION_CONFLICT',
+        currentStatus: item.status,
+        serverVersion: item.version,
+      });
+    }
+    return syncResult(event, 'Rejected', {
+      error: transitionResult.error?.message || 'Transition blocked',
+      errorCode: code || 'TRANSITION_BLOCKED',
+      currentStatus: item.status,
+      serverVersion: item.version,
+    });
+  }
+
+  await op.onSuccess?.(event, item);
+
+  return syncResult(event, 'Accepted', {
+    currentStatus: op.targetStatus,
+    serverVersion: (item.version || event.baseVersion || 1) + 1,
+  });
 }
 
 export async function POST(request: Request) {
@@ -52,431 +223,45 @@ export async function POST(request: Request) {
       });
     }
 
-    const results = [];
+    const results: SyncOutcome[] = [];
     const requestId = request.headers.get('X-Request-ID') || request.headers.get('x-request-id');
     const storedOfflineEvents = await db.offlineEvents.getAll().catch(() => []);
 
     for (const event of events) {
-      try {
-        const key = offlineEventKey(event);
-        if (!key) {
-          results.push(syncResult(event, 'Rejected', {
-            error: 'Missing idempotency key',
-            errorCode: 'MISSING_IDEMPOTENCY_KEY',
-          }));
-          continue;
-        }
-
-        const prior = findPriorOfflineSyncResult(storedOfflineEvents, event);
-        if (prior) {
-          results.push(prior);
-          continue;
-        }
-
-        let result;
-
-        if (event.operationType === 'IssueBag') {
-           // Simulate processing offline issue
-           const payload = event.payload;
-           const unitId = event.bagUid || event.din;
-           const patientRef = event.patientRef || payload?.patientRef;
-
-           if (!patientRef) {
-              result = syncResult(event, 'Rejected', {
-                error: 'Missing patient reference for offline issue event',
-                errorCode: 'PATIENT_REF_REQUIRED',
-              });
-              await db.offlineEvents.create(buildOfflineEventReceipt(event, result, requestId));
-              results.push(result);
-              continue;
-           }
-
-           if (payload?.isBreakGlass !== true && payload?.emergencyOverride !== true) {
-              result = syncResult(event, 'NeedsReview', {
-                error: 'Offline issue requires documented break-glass authorization',
-                errorCode: 'BREAK_GLASS_REQUIRED',
-              });
-              await db.offlineEvents.create(buildOfflineEventReceipt(event, result, requestId));
-              results.push(result);
-              continue;
-           }
-           
-           // Fetch component
-           const allInventory = await db.inventory.getAll();
-           const item = allInventory.find((u: any) => u.unitId === unitId);
-           
-           if (!item) {
-              result = syncResult(event, 'Rejected', {
-                error: 'Bag not found in central DB',
-                errorCode: 'BAG_NOT_FOUND',
-              });
-              await db.offlineEvents.create(buildOfflineEventReceipt(event, result, requestId));
-              results.push(result);
-              continue;
-           }
-
-           const normalizedStatus = normalizeBloodUnitStatus(item.status);
-           if (normalizedStatus && BloodUnitStateMachine.isTerminal(normalizedStatus)) {
-              result = syncResult(event, 'NeedsReview', {
-                error: `Offline event cannot overwrite terminal blood unit state ${normalizedStatus}`,
-                errorCode: 'TERMINAL_STATE_CONFLICT',
-                currentStatus: item.status,
-                serverVersion: item.version,
-              });
-              await db.offlineEvents.create(buildOfflineEventReceipt(event, result, requestId));
-              results.push(result);
-              continue;
-           }
-           
-           // Centralized transition via command
-           const transitionResult = await executeBloodUnitTransition(
-             {
-               unitId,
-               currentStatus: item.status,
-               targetStatus: 'ISSUED',
-               role: 'Nurse',
-               context: {
-                 isBreakGlass: payload?.isBreakGlass === true || payload?.emergencyOverride === true,
-                 isExpired: isBloodUnitExpired(item.expiryDate),
-                 baseVersion: event.baseVersion || item.version,
-               },
-             },
-             'System',
-             'SERVER',
-             'OFFLINE_SYNC_PUSH',
-             requestId || 'REQ-SYNC'
-           );
-
-           if (!transitionResult.success) {
-             const code = transitionResult.error?.code;
-             if (code === 'VERSION_CONFLICT') {
-               result = syncResult(event, 'NeedsReview', {
-                 error: 'Version mismatch (Concurrency Conflict)',
-                 errorCode: 'VERSION_CONFLICT',
-                 currentStatus: item.status,
-                 serverVersion: item.version,
-               });
-             } else {
-               result = syncResult(event, 'Rejected', {
-                 error: transitionResult.error?.message || 'Transition blocked',
-                 errorCode: code || 'TRANSITION_BLOCKED',
-                 currentStatus: item.status,
-                 serverVersion: item.version,
-               });
-             }
-             await db.offlineEvents.create(buildOfflineEventReceipt(event, result, requestId));
-             results.push(result);
-             continue;
-           }
-
-           result = syncResult(event, 'Accepted', {
-              currentStatus: 'ISSUED',
-              serverVersion: (item.version || event.baseVersion || 1) + 1,
-           });
-           await db.offlineEvents.create(buildOfflineEventReceipt(event, result, requestId));
-           results.push(result);
-        } else if (event.operationType === 'TransfuseBag') {
-           const payload = event.payload;
-           const unitId = event.bagUid || event.din;
-           const patientRef = event.patientRef || payload?.patientRef || payload?.patientId;
-
-           if (!patientRef) {
-              result = syncResult(event, 'Rejected', {
-                error: 'Missing patient reference for offline transfusion event',
-                errorCode: 'PATIENT_REF_REQUIRED',
-              });
-              await db.offlineEvents.create(buildOfflineEventReceipt(event, result, requestId));
-              results.push(result);
-              continue;
-           }
-
-           if (payload?.consentVerified !== true || payload?.preVitalsChecked !== true) {
-              result = syncResult(event, 'Rejected', {
-                error: 'Clinical prerequisites (consent, vitals) missing',
-                errorCode: 'BEDSIDE_CLINICAL_PREREQUISITES_MISSING',
-              });
-              await db.offlineEvents.create(buildOfflineEventReceipt(event, result, requestId));
-              results.push(result);
-              continue;
-           }
-
-           if (!payload?.verifier1 || !payload?.verifier2Pin) {
-              result = syncResult(event, 'Rejected', {
-                error: 'Dual bedside verification required',
-                errorCode: 'DUAL_VERIFICATION_REQUIRED',
-              });
-              await db.offlineEvents.create(buildOfflineEventReceipt(event, result, requestId));
-              results.push(result);
-              continue;
-           }
-
-           // Fetch component
-           const allInventory = await db.inventory.getAll();
-           const item = allInventory.find((u: any) => u.unitId === unitId);
-           
-           if (!item) {
-              result = syncResult(event, 'Rejected', {
-                error: 'Bag not found in central DB',
-                errorCode: 'BAG_NOT_FOUND',
-              });
-              await db.offlineEvents.create(buildOfflineEventReceipt(event, result, requestId));
-              results.push(result);
-              continue;
-           }
-
-           const normalizedStatus = normalizeBloodUnitStatus(item.status);
-           if (normalizedStatus && BloodUnitStateMachine.isTerminal(normalizedStatus)) {
-              result = syncResult(event, 'NeedsReview', {
-                error: `Offline event cannot overwrite terminal blood unit state ${normalizedStatus}`,
-                errorCode: 'TERMINAL_STATE_CONFLICT',
-                currentStatus: item.status,
-                serverVersion: item.version,
-              });
-              await db.offlineEvents.create(buildOfflineEventReceipt(event, result, requestId));
-              results.push(result);
-              continue;
-           }
-
-           // Centralized transition via command
-           const transitionResult = await executeBloodUnitTransition(
-             {
-               unitId,
-               currentStatus: item.status,
-               targetStatus: 'TRANSFUSED',
-               role: 'Nurse',
-               context: {
-                 dualVerificationPassed: true,
-                 isExpired: isBloodUnitExpired(item.expiryDate),
-                 isUnderLookback: item.status === 'QUARANTINE' || item.status === 'QUARANTINED' || item.status === 'HOLD_LOOKBACK',
-                 baseVersion: event.baseVersion || item.version,
-               },
-             },
-             'Nurse',
-             'SERVER',
-             'OFFLINE_SYNC_PUSH',
-             requestId || 'REQ-SYNC'
-           );
-
-           if (!transitionResult.success) {
-             const code = transitionResult.error?.code;
-             if (code === 'VERSION_CONFLICT') {
-               result = syncResult(event, 'NeedsReview', {
-                 error: 'Version mismatch (Concurrency Conflict)',
-                 errorCode: 'VERSION_CONFLICT',
-                 currentStatus: item.status,
-                 serverVersion: item.version,
-               });
-             } else {
-               result = syncResult(event, 'Rejected', {
-                 error: transitionResult.error?.message || 'Transition blocked',
-                 errorCode: code || 'TRANSITION_BLOCKED',
-                 currentStatus: item.status,
-                 serverVersion: item.version,
-               });
-             }
-             await db.offlineEvents.create(buildOfflineEventReceipt(event, result, requestId));
-             results.push(result);
-             continue;
-           }
-
-           // Create transfusion record
-           await db.transfusions.create({
-              componentId: unitId,
-              patientId: patientRef,
-              verifier1: payload.verifier1,
-              verifier2Pin: payload.verifier2Pin,
-              consentVerified: true,
-              preVitalsChecked: true,
-              status: 'COMPLETED',
-              startedAt: event.clientTimestamp || new Date().toISOString(),
-              completedAt: new Date().toISOString(),
-           });
-
-           result = syncResult(event, 'Accepted', {
-              currentStatus: 'TRANSFUSED',
-              serverVersion: (item.version || event.baseVersion || 1) + 1,
-           });
-           await db.offlineEvents.create(buildOfflineEventReceipt(event, result, requestId));
-           results.push(result);
-        } else if (event.operationType === 'WasteBag') {
-           const payload = event.payload;
-           const unitId = event.bagUid || event.din;
-           const reasonCode = payload?.reasonCode || payload?.reason;
-
-           if (!reasonCode) {
-              result = syncResult(event, 'Rejected', {
-                error: 'Missing reason code for offline waste event',
-                errorCode: 'MISSING_REASON_CODE',
-              });
-              await db.offlineEvents.create(buildOfflineEventReceipt(event, result, requestId));
-              results.push(result);
-              continue;
-           }
-
-           // Fetch component
-           const allInventory = await db.inventory.getAll();
-           const item = allInventory.find((u: any) => u.unitId === unitId);
-           
-           if (!item) {
-              result = syncResult(event, 'Rejected', {
-                error: 'Bag not found in central DB',
-                errorCode: 'BAG_NOT_FOUND',
-              });
-              await db.offlineEvents.create(buildOfflineEventReceipt(event, result, requestId));
-              results.push(result);
-              continue;
-           }
-
-           const normalizedStatus = normalizeBloodUnitStatus(item.status);
-           if (normalizedStatus && BloodUnitStateMachine.isTerminal(normalizedStatus)) {
-              result = syncResult(event, 'NeedsReview', {
-                error: `Offline event cannot overwrite terminal blood unit state ${normalizedStatus}`,
-                errorCode: 'TERMINAL_STATE_CONFLICT',
-                currentStatus: item.status,
-                serverVersion: item.version,
-              });
-              await db.offlineEvents.create(buildOfflineEventReceipt(event, result, requestId));
-              results.push(result);
-              continue;
-           }
-
-           // Evaluate transition
-           const transitionResult = await executeBloodUnitTransition(
-              {
-                unitId,
-                currentStatus: item.status,
-                targetStatus: 'WASTED',
-                role: 'HospitalOperator',
-                context: {
-                  baseVersion: event.baseVersion || item.version,
-                },
-              },
-              'System',
-              'SERVER',
-              'OFFLINE_SYNC_PUSH',
-              requestId || 'REQ-SYNC'
-            );
-
-            if (!transitionResult.success) {
-              const code = transitionResult.error?.code;
-              if (code === 'VERSION_CONFLICT') {
-                result = syncResult(event, 'NeedsReview', {
-                  error: 'Version mismatch (Concurrency Conflict)',
-                  errorCode: 'VERSION_CONFLICT',
-                  currentStatus: item.status,
-                  serverVersion: item.version,
-                });
-              } else {
-                result = syncResult(event, 'Rejected', {
-                  error: transitionResult.error?.message || 'Transition blocked',
-                  errorCode: code || 'TRANSITION_BLOCKED',
-                  currentStatus: item.status,
-                  serverVersion: item.version,
-                });
-              }
-              await db.offlineEvents.create(buildOfflineEventReceipt(event, result, requestId));
-              results.push(result);
-              continue;
-            }
-
-            result = syncResult(event, 'Accepted', {
-               currentStatus: 'WASTED',
-               serverVersion: (item.version || event.baseVersion || 1) + 1,
-            });
-            await db.offlineEvents.create(buildOfflineEventReceipt(event, result, requestId));
-            results.push(result);
-        } else if (event.operationType === 'ReceiveBag') {
-           const unitId = event.bagUid || event.din;
-
-           // Fetch component
-           const allInventory = await db.inventory.getAll();
-           const item = allInventory.find((u: any) => u.unitId === unitId);
-           
-           if (!item) {
-              result = syncResult(event, 'Rejected', {
-                error: 'Bag not found in central DB',
-                errorCode: 'BAG_NOT_FOUND',
-              });
-              await db.offlineEvents.create(buildOfflineEventReceipt(event, result, requestId));
-              results.push(result);
-              continue;
-           }
-
-           const normalizedStatus = normalizeBloodUnitStatus(item.status);
-           if (normalizedStatus && BloodUnitStateMachine.isTerminal(normalizedStatus)) {
-              result = syncResult(event, 'NeedsReview', {
-                error: `Offline event cannot overwrite terminal blood unit state ${normalizedStatus}`,
-                errorCode: 'TERMINAL_STATE_CONFLICT',
-                currentStatus: item.status,
-                serverVersion: item.version,
-              });
-              await db.offlineEvents.create(buildOfflineEventReceipt(event, result, requestId));
-              results.push(result);
-              continue;
-           }
-
-           // Centralized transition via command
-           const transitionResult = await executeBloodUnitTransition(
-             {
-               unitId,
-               currentStatus: item.status,
-               targetStatus: 'RECEIVED',
-               role: 'HospitalOperator',
-               context: {
-                 baseVersion: event.baseVersion || item.version,
-               },
-             },
-             'System',
-             'SERVER',
-             'OFFLINE_SYNC_PUSH',
-             requestId || 'REQ-SYNC'
-           );
-
-           if (!transitionResult.success) {
-             const code = transitionResult.error?.code;
-             if (code === 'VERSION_CONFLICT') {
-               result = syncResult(event, 'NeedsReview', {
-                 error: 'Version mismatch (Concurrency Conflict)',
-                 errorCode: 'VERSION_CONFLICT',
-                 currentStatus: item.status,
-                 serverVersion: item.version,
-               });
-             } else {
-               result = syncResult(event, 'Rejected', {
-                 error: transitionResult.error?.message || 'Transition blocked',
-                 errorCode: code || 'TRANSITION_BLOCKED',
-                 currentStatus: item.status,
-                 serverVersion: item.version,
-               });
-             }
-             await db.offlineEvents.create(buildOfflineEventReceipt(event, result, requestId));
-             results.push(result);
-             continue;
-           }
-
-           result = syncResult(event, 'Accepted', {
-              currentStatus: 'RECEIVED',
-              serverVersion: (item.version || event.baseVersion || 1) + 1,
-           });
-           await db.offlineEvents.create(buildOfflineEventReceipt(event, result, requestId));
-           results.push(result);
-        } else {
-           result = syncResult(event, 'Rejected', {
-              error: 'Unknown operationType',
-              errorCode: 'UNKNOWN_OPERATION_TYPE',
-           });
-           await db.offlineEvents.create(buildOfflineEventReceipt(event, result, requestId));
-           results.push(result);
-        }
-      } catch (err: any) {
-         console.error('Offline event sync processing error:', err);
-         const result = syncResult(event, 'Rejected', {
-            error: err.message || 'Internal logic error',
-            errorCode: 'SYNC_PROCESSING_ERROR',
-         });
-         await db.offlineEvents.create(buildOfflineEventReceipt(event, result, requestId)).catch(() => undefined);
-         results.push(result);
+      // Idempotency: events without a key cannot be deduplicated and are rejected
+      // without a receipt (nothing to correlate a retry against).
+      const key = offlineEventKey(event);
+      if (!key) {
+        results.push(syncResult(event, 'Rejected', {
+          error: 'Missing idempotency key',
+          errorCode: 'MISSING_IDEMPOTENCY_KEY',
+        }));
+        continue;
       }
+
+      // Replay: return the previously stored receipt verbatim.
+      const prior = findPriorOfflineSyncResult(storedOfflineEvents, event);
+      if (prior) {
+        results.push(prior);
+        continue;
+      }
+
+      let result: SyncOutcome;
+      try {
+        result = await processOfflineEvent(event, requestId);
+      } catch (err: any) {
+        console.error('Offline event sync processing error:', err);
+        result = syncResult(event, 'Rejected', {
+          error: err.message || 'Internal logic error',
+          errorCode: 'SYNC_PROCESSING_ERROR',
+        });
+        await db.offlineEvents.create(buildOfflineEventReceipt(event, result, requestId)).catch(() => undefined);
+        results.push(result);
+        continue;
+      }
+
+      await db.offlineEvents.create(buildOfflineEventReceipt(event, result, requestId));
+      results.push(result);
     }
 
     return NextResponse.json({ results });

@@ -26,10 +26,11 @@ if (!supabase) {
 }
 
 export function isFallbackAllowed(): boolean {
-  // Fallbacks are strictly forbidden in production mode
+  // Fallbacks are strictly forbidden in production mode.
   if (process.env.NODE_ENV === 'production') return false;
-  if (process.env.VN_BECS_ALLOW_FALLBACK === 'true') return true;
-  return true;
+  // Non-production: in-memory fallback stores are allowed for demo/test
+  // resilience, but can be explicitly opted out via VN_BECS_ALLOW_FALLBACK=false.
+  return process.env.VN_BECS_ALLOW_FALLBACK !== 'false';
 }
 
 // Helper to detect if a table is missing in the database schema cache
@@ -61,6 +62,52 @@ function isAuditSchemaMismatchError(error: any): boolean {
     errMsg.includes('schema cache') ||
     errMsg.includes('Could not find')
   );
+}
+
+/**
+ * Run a Supabase read; on a "table missing" error (or thrown equivalent),
+ * fall back to an in-memory producer. Collapses the doubled try/catch +
+ * isTableMissingError pattern that was repeated across every store method.
+ */
+async function readWithFallback<T>(
+  run: () => Promise<{ data: any; error: any }>,
+  fallback: () => T,
+  onSuccess: (data: any) => T = (data) => data as T,
+): Promise<T> {
+  try {
+    const { data, error } = await run();
+    if (error) {
+      if (isTableMissingError(error)) return fallback();
+      throw error;
+    }
+    return onSuccess(data);
+  } catch (e: any) {
+    if (isTableMissingError(e)) return fallback();
+    throw e;
+  }
+}
+
+/**
+ * Run a Supabase write (insert/update/delete); on a "table missing" error,
+ * apply the in-memory fallback mutation instead. Returns the optional value
+ * produced by the success/fallback paths.
+ */
+async function writeWithFallback<T = void>(
+  run: () => Promise<{ error: any }>,
+  fallback: () => T,
+  onSuccess: () => T = (() => undefined as T),
+): Promise<T> {
+  try {
+    const { error } = await run();
+    if (error) {
+      if (isTableMissingError(error)) return fallback();
+      throw error;
+    }
+    return onSuccess();
+  } catch (e: any) {
+    if (isTableMissingError(e)) return fallback();
+    throw e;
+  }
 }
 
 // Fallback in-memory stores to ensure 100% system resilience
@@ -148,160 +195,69 @@ export const fallbackStores = {
 // Exported API (Matches the interface used by the application)
 export const organizations = {
   async getAll() {
-    try {
-      const { data, error } = await supabase.from('organizations').select('*');
-      if (error) {
-        if (isTableMissingError(error)) return fallbackStores.organizations;
-        throw error;
-      }
-      if (!data || data.length === 0) return fallbackStores.organizations;
-      return data;
-    } catch (e: any) {
-      if (isTableMissingError(e)) return fallbackStores.organizations;
-      throw e;
-    }
+    return readWithFallback(
+      () => supabase.from('organizations').select('*'),
+      () => fallbackStores.organizations,
+      (data) => (!data || data.length === 0 ? fallbackStores.organizations : data),
+    );
   },
   async create(data: any) {
-    try {
-      const { error } = await supabase.from('organizations').insert(data);
-      if (error) {
-        if (isTableMissingError(error)) {
-          fallbackStores.organizations.push(data);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        fallbackStores.organizations.push(data);
-        return;
-      }
-      throw e;
-    }
+    return writeWithFallback(
+      () => supabase.from('organizations').insert(data),
+      () => { fallbackStores.organizations.push(data); },
+    );
   },
   async update(id: string, data: any) {
-    try {
-      const { error } = await supabase.from('organizations').update(data).eq('id', id);
-      if (error) {
-        if (isTableMissingError(error)) {
-          const org = fallbackStores.organizations.find(o => o.id === id);
-          if (org) Object.assign(org, data);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
+    return writeWithFallback(
+      () => supabase.from('organizations').update(data).eq('id', id),
+      () => {
         const org = fallbackStores.organizations.find(o => o.id === id);
         if (org) Object.assign(org, data);
-        return;
-      }
-      throw e;
-    }
+      },
+    );
   },
   async remove(id: string) {
-    try {
-      const { error } = await supabase.from('organizations').delete().eq('id', id);
-      if (error) {
-        if (isTableMissingError(error)) {
-          fallbackStores.organizations = fallbackStores.organizations.filter(o => o.id !== id);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        fallbackStores.organizations = fallbackStores.organizations.filter(o => o.id !== id);
-        return;
-      }
-      throw e;
-    }
+    return writeWithFallback(
+      () => supabase.from('organizations').delete().eq('id', id),
+      () => { fallbackStores.organizations = fallbackStores.organizations.filter(o => o.id !== id); },
+    );
   }
 };
 
 export const limsQueues = {
   async getAll() {
-    try {
-      const { data, error } = await supabase.from('lims_queues').select('*');
-      if (error) {
-        if (isTableMissingError(error)) return fallbackStores.lims_queues;
-        throw error;
-      }
-      return data;
-    } catch (e: any) {
-      if (isTableMissingError(e)) return fallbackStores.lims_queues;
-      throw e;
-    }
+    return readWithFallback(
+      () => supabase.from('lims_queues').select('*'),
+      () => fallbackStores.lims_queues,
+    );
   },
   async getByOrg(orgId: string) {
-    try {
-      const { data, error } = await supabase.from('lims_queues').select('*').eq('orgId', orgId);
-      if (error) {
-        if (isTableMissingError(error)) return fallbackStores.lims_queues.filter(q => q.orgId === orgId);
-        throw error;
-      }
-      return data;
-    } catch (e: any) {
-      if (isTableMissingError(e)) return fallbackStores.lims_queues.filter(q => q.orgId === orgId);
-      throw e;
-    }
+    return readWithFallback(
+      () => supabase.from('lims_queues').select('*').eq('orgId', orgId),
+      () => fallbackStores.lims_queues.filter(q => q.orgId === orgId),
+    );
   },
   async create(entry: any) {
-    try {
-      const { error } = await supabase.from('lims_queues').insert(entry);
-      if (error) {
-        if (isTableMissingError(error)) {
-          fallbackStores.lims_queues.push(entry);
-          return entry;
-        }
-        throw error;
-      }
-      return entry;
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        fallbackStores.lims_queues.push(entry);
-        return entry;
-      }
-      throw e;
-    }
+    return writeWithFallback(
+      () => supabase.from('lims_queues').insert(entry),
+      () => { fallbackStores.lims_queues.push(entry); return entry; },
+      () => entry,
+    );
   },
   async update(id: string, updates: any) {
-    try {
-      const { error } = await supabase.from('lims_queues').update(updates).eq('id', id);
-      if (error) {
-        if (isTableMissingError(error)) {
-          const entry = fallbackStores.lims_queues.find(q => q.id === id);
-          if (entry) Object.assign(entry, updates);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
+    return writeWithFallback(
+      () => supabase.from('lims_queues').update(updates).eq('id', id),
+      () => {
         const entry = fallbackStores.lims_queues.find(q => q.id === id);
         if (entry) Object.assign(entry, updates);
-        return;
-      }
-      throw e;
-    }
+      },
+    );
   },
   async remove(id: string) {
-    try {
-      const { error } = await supabase.from('lims_queues').delete().eq('id', id);
-      if (error) {
-        if (isTableMissingError(error)) {
-          fallbackStores.lims_queues = fallbackStores.lims_queues.filter(q => q.id !== id);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        fallbackStores.lims_queues = fallbackStores.lims_queues.filter(q => q.id !== id);
-        return;
-      }
-      throw e;
-    }
+    return writeWithFallback(
+      () => supabase.from('lims_queues').delete().eq('id', id),
+      () => { fallbackStores.lims_queues = fallbackStores.lims_queues.filter(q => q.id !== id); },
+    );
   }
 };
 
@@ -502,22 +458,11 @@ export const users = {
 
 export const donors = {
   async getAll() {
-    try {
-      const { data, error } = await supabase.from('donors').select('*').order('registeredAt', { ascending: false });
-      if (error) {
-        if (isTableMissingError(error)) {
-          return fallbackStores.donors;
-        }
-        throw error;
-      }
-      if (!data || data.length === 0) return fallbackStores.donors;
-      return data;
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        return fallbackStores.donors;
-      }
-      throw e;
-    }
+    return readWithFallback(
+      () => supabase.from('donors').select('*').order('registeredAt', { ascending: false }),
+      () => fallbackStores.donors,
+      (data) => (!data || data.length === 0 ? fallbackStores.donors : data),
+    );
   },
   async create(data: any) {
     const safePayload = {
@@ -528,130 +473,53 @@ export const donors = {
       rhd: data.rhd,
       registeredAt: data.registeredAt || new Date().toISOString(),
     };
-    try {
-      const { error } = await supabase.from('donors').insert(safePayload);
-      if (error) {
-        if (isTableMissingError(error)) {
-          fallbackStores.donors.unshift(safePayload);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        fallbackStores.donors.unshift(safePayload);
-        return;
-      }
-      throw e;
-    }
+    return writeWithFallback(
+      () => supabase.from('donors').insert(safePayload),
+      () => { fallbackStores.donors.unshift(safePayload); },
+    );
   },
   async getByNationalId(nid: string) {
-    try {
-      const { data, error } = await supabase.from('donors').select('*').eq('nationalId', nid).maybeSingle();
-      if (error) {
-        if (isTableMissingError(error)) {
-          return fallbackStores.donors.find(d => d.nationalId === nid) || null;
-        }
-        throw error;
-      }
-      return data;
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        return fallbackStores.donors.find(d => d.nationalId === nid) || null;
-      }
-      throw e;
-    }
+    return readWithFallback(
+      () => supabase.from('donors').select('*').eq('nationalId', nid).maybeSingle(),
+      () => fallbackStores.donors.find(d => d.nationalId === nid) || null,
+    );
   },
   async remove(id: string) {
-    try {
-      const { error } = await supabase.from('donors').delete().eq('id', id);
-      if (error) {
-        if (isTableMissingError(error)) {
-          fallbackStores.donors = fallbackStores.donors.filter(d => d.id !== id);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        fallbackStores.donors = fallbackStores.donors.filter(d => d.id !== id);
-        return;
-      }
-      throw e;
-    }
+    return writeWithFallback(
+      () => supabase.from('donors').delete().eq('id', id),
+      () => { fallbackStores.donors = fallbackStores.donors.filter(d => d.id !== id); },
+    );
   },
   async update(id: string, updates: any) {
-    try {
-      const { error } = await supabase.from('donors').update(updates).eq('id', id);
-      if (error) {
-        if (isTableMissingError(error)) {
-          const donor = fallbackStores.donors.find(d => d.id === id);
-          if (donor) Object.assign(donor, updates);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
+    return writeWithFallback(
+      () => supabase.from('donors').update(updates).eq('id', id),
+      () => {
         const donor = fallbackStores.donors.find(d => d.id === id);
         if (donor) Object.assign(donor, updates);
-        return;
-      }
-      throw e;
-    }
+      },
+    );
   }
 };
 
 export const questionnaires = {
   async getAll() {
-    try {
-      const { data, error } = await supabase.from('questionnaires').select('*');
-      if (error) {
-        if (isTableMissingError(error)) return fallbackStores.questionnaires;
-        throw error;
-      }
-      if (!data || data.length === 0) return fallbackStores.questionnaires;
-      return data;
-    } catch (e: any) {
-      if (isTableMissingError(e)) return fallbackStores.questionnaires;
-      throw e;
-    }
+    return readWithFallback(
+      () => supabase.from('questionnaires').select('*'),
+      () => fallbackStores.questionnaires,
+      (data) => (!data || data.length === 0 ? fallbackStores.questionnaires : data),
+    );
   },
   async create(data: any) {
-    try {
-      const { error } = await supabase.from('questionnaires').insert(data);
-      if (error) {
-        if (isTableMissingError(error)) {
-          fallbackStores.questionnaires.push(data);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        fallbackStores.questionnaires.push(data);
-        return;
-      }
-      throw e;
-    }
+    return writeWithFallback(
+      () => supabase.from('questionnaires').insert(data),
+      () => { fallbackStores.questionnaires.push(data); },
+    );
   },
   async remove(id: string) {
-    try {
-      const { error } = await supabase.from('questionnaires').delete().eq('id', id);
-      if (error) {
-        if (isTableMissingError(error)) {
-          fallbackStores.questionnaires = fallbackStores.questionnaires.filter(q => q.id !== id);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        fallbackStores.questionnaires = fallbackStores.questionnaires.filter(q => q.id !== id);
-        return;
-      }
-      throw e;
-    }
+    return writeWithFallback(
+      () => supabase.from('questionnaires').delete().eq('id', id),
+      () => { fallbackStores.questionnaires = fallbackStores.questionnaires.filter(q => q.id !== id); },
+    );
   }
 };
 
@@ -743,18 +611,11 @@ export const donations = {
 
 export const labTests = {
   async getAll() {
-    try {
-      const { data, error } = await supabase.from('lab_tests').select('*');
-      if (error) {
-        if (isTableMissingError(error)) return fallbackStores.lab_tests;
-        throw error;
-      }
-      if (!data || data.length === 0) return fallbackStores.lab_tests;
-      return data;
-    } catch (e: any) {
-      if (isTableMissingError(e)) return fallbackStores.lab_tests;
-      throw e;
-    }
+    return readWithFallback(
+      () => supabase.from('lab_tests').select('*'),
+      () => fallbackStores.lab_tests,
+      (data) => (!data || data.length === 0 ? fallbackStores.lab_tests : data),
+    );
   },
   async updateByDonationId(donationId: string, data: any) {
     try {
@@ -794,40 +655,16 @@ export const labTests = {
     }
   },
   async create(data: any) {
-    try {
-      const { error } = await supabase.from('lab_tests').insert(data);
-      if (error) {
-        if (isTableMissingError(error)) {
-          fallbackStores.lab_tests.unshift(data);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        fallbackStores.lab_tests.unshift(data);
-        return;
-      }
-      throw e;
-    }
+    return writeWithFallback(
+      () => supabase.from('lab_tests').insert(data),
+      () => { fallbackStores.lab_tests.unshift(data); },
+    );
   },
   async remove(id: string) {
-    try {
-      const { error } = await supabase.from('lab_tests').delete().eq('id', id);
-      if (error) {
-        if (isTableMissingError(error)) {
-          fallbackStores.lab_tests = fallbackStores.lab_tests.filter(t => t.id !== id);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        fallbackStores.lab_tests = fallbackStores.lab_tests.filter(t => t.id !== id);
-        return;
-      }
-      throw e;
-    }
+    return writeWithFallback(
+      () => supabase.from('lab_tests').delete().eq('id', id),
+      () => { fallbackStores.lab_tests = fallbackStores.lab_tests.filter(t => t.id !== id); },
+    );
   }
 };
 export const lab_tests = labTests;
@@ -874,97 +711,40 @@ export const components = {
     }
   },
   async getById(id: string) {
-    try {
-      const { data, error } = await supabase.from('components').select('*').eq('id', id).maybeSingle();
-      if (error) {
-        if (isTableMissingError(error)) {
-          return fallbackStores.components.find(c => c.id === id) || null;
-        }
-        throw error;
-      }
-      return data;
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        return fallbackStores.components.find(c => c.id === id) || null;
-      }
-      throw e;
-    }
+    return readWithFallback(
+      () => supabase.from('components').select('*').eq('id', id).maybeSingle(),
+      () => fallbackStores.components.find(c => c.id === id) || null,
+    );
   },
   async updateStatus(id: string, status: string) {
-    try {
-      const { error } = await supabase.from('components').update({ status }).eq('id', id);
-      if (error) {
-        if (isTableMissingError(error)) {
-          const comp = fallbackStores.components.find(c => c.id === id);
-          if (comp) comp.status = status;
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
+    return writeWithFallback(
+      () => supabase.from('components').update({ status }).eq('id', id),
+      () => {
         const comp = fallbackStores.components.find(c => c.id === id);
         if (comp) comp.status = status;
-        return;
-      }
-      throw e;
-    }
+      },
+    );
   },
   async update(id: string, data: any) {
-    try {
-      const { error } = await supabase.from('components').update(data).eq('id', id);
-      if (error) {
-        if (isTableMissingError(error)) {
-          const comp = fallbackStores.components.find(c => c.id === id);
-          if (comp) Object.assign(comp, data);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
+    return writeWithFallback(
+      () => supabase.from('components').update(data).eq('id', id),
+      () => {
         const comp = fallbackStores.components.find(c => c.id === id);
         if (comp) Object.assign(comp, data);
-        return;
-      }
-      throw e;
-    }
+      },
+    );
   },
   async create(data: any) {
-    try {
-      const { error } = await supabase.from('components').insert(data);
-      if (error) {
-        if (isTableMissingError(error)) {
-          fallbackStores.components.unshift(data);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        fallbackStores.components.unshift(data);
-        return;
-      }
-      throw e;
-    }
+    return writeWithFallback(
+      () => supabase.from('components').insert(data),
+      () => { fallbackStores.components.unshift(data); },
+    );
   },
   async remove(id: string) {
-    try {
-      const { error } = await supabase.from('components').delete().eq('id', id);
-      if (error) {
-        if (isTableMissingError(error)) {
-          fallbackStores.components = fallbackStores.components.filter(c => c.id !== id);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        fallbackStores.components = fallbackStores.components.filter(c => c.id !== id);
-        return;
-      }
-      throw e;
-    }
+    return writeWithFallback(
+      () => supabase.from('components').delete().eq('id', id),
+      () => { fallbackStores.components = fallbackStores.components.filter(c => c.id !== id); },
+    );
   }
 };
 
@@ -1049,30 +829,16 @@ export const audit_events = auditEvents;
 
 export const mtpCases = {
   async getAll() {
-    try {
-      const { data, error } = await supabase.from('mtp_cases').select('*').order('activatedAt', { ascending: false });
-      if (error) {
-        if (isTableMissingError(error)) return fallbackStores.mtp_cases;
-        throw error;
-      }
-      return data;
-    } catch (e: any) {
-      if (isTableMissingError(e)) return fallbackStores.mtp_cases;
-      throw e;
-    }
+    return readWithFallback(
+      () => supabase.from('mtp_cases').select('*').order('activatedAt', { ascending: false }),
+      () => fallbackStores.mtp_cases,
+    );
   },
   async getById(id: string) {
-    try {
-      const { data, error } = await supabase.from('mtp_cases').select('*').eq('id', id).maybeSingle();
-      if (error) {
-        if (isTableMissingError(error)) return fallbackStores.mtp_cases.find(c => c.id === id) || null;
-        throw error;
-      }
-      return data;
-    } catch (e: any) {
-      if (isTableMissingError(e)) return fallbackStores.mtp_cases.find(c => c.id === id) || null;
-      throw e;
-    }
+    return readWithFallback(
+      () => supabase.from('mtp_cases').select('*').eq('id', id).maybeSingle(),
+      () => fallbackStores.mtp_cases.find(c => c.id === id) || null,
+    );
   },
   async create(data: any) {
     const payload = {
@@ -1102,41 +868,23 @@ export const mtpCases = {
     }
   },
   async update(id: string, data: any) {
-    try {
-      const { error } = await supabase.from('mtp_cases').update(data).eq('id', id);
-      if (error) {
-        if (isTableMissingError(error)) {
-          const mtp = fallbackStores.mtp_cases.find(c => c.id === id);
-          if (mtp) Object.assign(mtp, data);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
+    return writeWithFallback(
+      () => supabase.from('mtp_cases').update(data).eq('id', id),
+      () => {
         const mtp = fallbackStores.mtp_cases.find(c => c.id === id);
         if (mtp) Object.assign(mtp, data);
-        return;
-      }
-      throw e;
-    }
+      },
+    );
   }
 };
 
 export const productCatalog = {
   async getAll() {
-    try {
-      const { data, error } = await supabase.from('product_catalog').select('*');
-      if (error) {
-        if (isTableMissingError(error)) return fallbackStores.product_catalog;
-        throw error;
-      }
-      if (!data || data.length === 0) return fallbackStores.product_catalog;
-      return data;
-    } catch (e: any) {
-      if (isTableMissingError(e)) return fallbackStores.product_catalog;
-      throw e;
-    }
+    return readWithFallback(
+      () => supabase.from('product_catalog').select('*'),
+      () => fallbackStores.product_catalog,
+      (data) => (!data || data.length === 0 ? fallbackStores.product_catalog : data),
+    );
   },
   async create(data: any) {
     const payload = {
@@ -1144,42 +892,19 @@ export const productCatalog = {
       aboRequired: data.aboRequired ? 1 : 0,
       rhdRequired: data.rhdRequired ? 1 : 0
     };
-    try {
-      const { error } = await supabase.from('product_catalog').insert(payload);
-      if (error) {
-        if (isTableMissingError(error)) {
-          fallbackStores.product_catalog.push(payload);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        fallbackStores.product_catalog.push(payload);
-        return;
-      }
-      throw e;
-    }
+    return writeWithFallback(
+      () => supabase.from('product_catalog').insert(payload),
+      () => { fallbackStores.product_catalog.push(payload); },
+    );
   },
   async update(productCode: string, data: any) {
-    try {
-      const { error } = await supabase.from('product_catalog').update(data).eq('productCode', productCode);
-      if (error) {
-        if (isTableMissingError(error)) {
-          const item = fallbackStores.product_catalog.find(p => p.productCode === productCode);
-          if (item) Object.assign(item, data);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
+    return writeWithFallback(
+      () => supabase.from('product_catalog').update(data).eq('productCode', productCode),
+      () => {
         const item = fallbackStores.product_catalog.find(p => p.productCode === productCode);
         if (item) Object.assign(item, data);
-        return;
-      }
-      throw e;
-    }
+      },
+    );
   }
 };
 export const product_catalog = productCatalog;
@@ -1296,107 +1021,52 @@ export const transport_jobs = transportJobs;
 
 export const resources = {
   async getAll() {
-    try {
-      const { data, error } = await supabase.from('resources').select('*');
-      if (error) {
-        if (isTableMissingError(error)) return fallbackStores.resources;
-        throw error;
-      }
-      if (!data || data.length === 0) return fallbackStores.resources;
-      return data || [];
-    } catch (e: any) {
-      if (isTableMissingError(e)) return fallbackStores.resources;
-      throw e;
-    }
+    return readWithFallback(
+      () => supabase.from('resources').select('*'),
+      () => fallbackStores.resources,
+      (data) => (!data || data.length === 0 ? fallbackStores.resources : data),
+    );
   },
   async getByType(type: string) {
-    try {
-      const { data, error } = await supabase.from('resources').select('*').eq('type', type);
-      if (error) {
-        if (isTableMissingError(error)) return fallbackStores.resources.filter(r => r.type === type);
-        throw error;
-      }
-      return data;
-    } catch (e: any) {
-      if (isTableMissingError(e)) return fallbackStores.resources.filter(r => r.type === type);
-      throw e;
-    }
+    return readWithFallback(
+      () => supabase.from('resources').select('*').eq('type', type),
+      () => fallbackStores.resources.filter(r => r.type === type),
+    );
   },
   async updateStatus(id: string, status: string) {
-    try {
-      const { error } = await supabase.from('resources').update({ status }).eq('id', id);
-      if (error) {
-        if (isTableMissingError(error)) {
-          const res = fallbackStores.resources.find(r => r.id === id);
-          if (res) res.status = status;
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
+    return writeWithFallback(
+      () => supabase.from('resources').update({ status }).eq('id', id),
+      () => {
         const res = fallbackStores.resources.find(r => r.id === id);
         if (res) res.status = status;
-        return;
-      }
-      throw e;
-    }
+      },
+    );
   },
   async updateStock(id: string, level: number) {
-    try {
-      const { error } = await supabase.from('resources').update({ stockLevel: level }).eq('id', id);
-      if (error) {
-        if (isTableMissingError(error)) {
-          const res = fallbackStores.resources.find(r => r.id === id);
-          if (res) res.stockLevel = level;
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
+    return writeWithFallback(
+      () => supabase.from('resources').update({ stockLevel: level }).eq('id', id),
+      () => {
         const res = fallbackStores.resources.find(r => r.id === id);
         if (res) res.stockLevel = level;
-        return;
-      }
-      throw e;
-    }
+      },
+    );
   },
   async create(data: any) {
-    try {
-      const { error } = await supabase.from('resources').insert(data);
-      if (error) {
-        if (isTableMissingError(error)) {
-          fallbackStores.resources.push(data);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        fallbackStores.resources.push(data);
-        return;
-      }
-      throw e;
-    }
+    return writeWithFallback(
+      () => supabase.from('resources').insert(data),
+      () => { fallbackStores.resources.push(data); },
+    );
   }
 };
 
 
 export const transfusions = {
   async getAll() {
-    try {
-      const { data, error } = await supabase.from('transfusions').select('*');
-      if (error) {
-        if (isTableMissingError(error)) return fallbackStores.transfusions;
-        throw error;
-      }
-      if (!data || data.length === 0) return fallbackStores.transfusions;
-      return data;
-    } catch (e: any) {
-      if (isTableMissingError(e)) return fallbackStores.transfusions;
-      throw e;
-    }
+    return readWithFallback(
+      () => supabase.from('transfusions').select('*'),
+      () => fallbackStores.transfusions,
+      (data) => (!data || data.length === 0 ? fallbackStores.transfusions : data),
+    );
   },
   async create(data: any) {
     const payload = {
@@ -1405,22 +1075,10 @@ export const transfusions = {
       preVitalsChecked: data.preVitalsChecked ? 1 : 0,
       startedAt: data.startedAt || new Date().toISOString()
     };
-    try {
-      const { error } = await supabase.from('transfusions').insert(payload);
-      if (error) {
-        if (isTableMissingError(error)) {
-          fallbackStores.transfusions.push(payload);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        fallbackStores.transfusions.push(payload);
-        return;
-      }
-      throw e;
-    }
+    return writeWithFallback(
+      () => supabase.from('transfusions').insert(payload),
+      () => { fallbackStores.transfusions.push(payload); },
+    );
   },
 };
 
@@ -1597,103 +1255,47 @@ export const reconciliation_reports = reconciliationReports;
 
 export const crossmatch = {
   async getAll() {
-    try {
-      const { data, error } = await supabase.from('crossmatch').select('*');
-      if (error) {
-        if (isTableMissingError(error)) return fallbackStores.crossmatch;
-        throw error;
-      }
-      if (!data || data.length === 0) return fallbackStores.crossmatch;
-      return data;
-    } catch (e: any) {
-      if (isTableMissingError(e)) return fallbackStores.crossmatch;
-      throw e;
-    }
+    return readWithFallback(
+      () => supabase.from('crossmatch').select('*'),
+      () => fallbackStores.crossmatch,
+      (data) => (!data || data.length === 0 ? fallbackStores.crossmatch : data),
+    );
   },
   async create(data: any) {
-    try {
-      const { error } = await supabase.from('crossmatch').insert(data);
-      if (error) {
-        if (isTableMissingError(error)) {
-          fallbackStores.crossmatch.push(data);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        fallbackStores.crossmatch.push(data);
-        return;
-      }
-      throw e;
-    }
+    return writeWithFallback(
+      () => supabase.from('crossmatch').insert(data),
+      () => { fallbackStores.crossmatch.push(data); },
+    );
   },
 };
 
 export const issueRecords = {
   async getAll() {
-    try {
-      const { data, error } = await supabase.from('issue_records').select('*');
-      if (error) {
-        if (isTableMissingError(error)) return fallbackStores.issue_records;
-        throw error;
-      }
-      return data;
-    } catch (e: any) {
-      if (isTableMissingError(e)) return fallbackStores.issue_records;
-      throw e;
-    }
+    return readWithFallback(
+      () => supabase.from('issue_records').select('*'),
+      () => fallbackStores.issue_records,
+    );
   },
   async getById(id: string) {
-    try {
-      const { data, error } = await supabase.from('issue_records').select('*').eq('id', id).maybeSingle();
-      if (error) {
-        if (isTableMissingError(error)) return fallbackStores.issue_records.find(r => r.id === id) || null;
-        throw error;
-      }
-      return data;
-    } catch (e: any) {
-      if (isTableMissingError(e)) return fallbackStores.issue_records.find(r => r.id === id) || null;
-      throw e;
-    }
+    return readWithFallback(
+      () => supabase.from('issue_records').select('*').eq('id', id).maybeSingle(),
+      () => fallbackStores.issue_records.find(r => r.id === id) || null,
+    );
   },
   async create(data: any) {
-    try {
-      const { error } = await supabase.from('issue_records').insert(data);
-      if (error) {
-        if (isTableMissingError(error)) {
-          fallbackStores.issue_records.push(data);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        fallbackStores.issue_records.push(data);
-        return;
-      }
-      throw e;
-    }
+    return writeWithFallback(
+      () => supabase.from('issue_records').insert(data),
+      () => { fallbackStores.issue_records.push(data); },
+    );
   },
   async update(id: string, data: any) {
-    try {
-      const { error } = await supabase.from('issue_records').update(data).eq('id', id);
-      if (error) {
-        if (isTableMissingError(error)) {
-          const rec = fallbackStores.issue_records.find(r => r.id === id);
-          if (rec) Object.assign(rec, data);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
+    return writeWithFallback(
+      () => supabase.from('issue_records').update(data).eq('id', id),
+      () => {
         const rec = fallbackStores.issue_records.find(r => r.id === id);
         if (rec) Object.assign(rec, data);
-        return;
-      }
-      throw e;
-    }
+      },
+    );
   }
 };
 export const issue_records = issueRecords;
@@ -1708,68 +1310,35 @@ export function normalizeAdverseReactionPayload(data: any) {
 
 export const adverseReactions = {
   async getAll() {
-    try {
-      const { data, error } = await supabase.from('adverse_reactions').select('*');
-      if (error) {
-        if (isTableMissingError(error)) return fallbackStores.adverse_reactions;
-        throw error;
-      }
-      if (!data || data.length === 0) return fallbackStores.adverse_reactions;
-      return data;
-    } catch (e: any) {
-      if (isTableMissingError(e)) return fallbackStores.adverse_reactions;
-      throw e;
-    }
+    return readWithFallback(
+      () => supabase.from('adverse_reactions').select('*'),
+      () => fallbackStores.adverse_reactions,
+      (data) => (!data || data.length === 0 ? fallbackStores.adverse_reactions : data),
+    );
   },
   async create(data: any) {
     const payload = normalizeAdverseReactionPayload(data);
-    try {
-      const { error } = await supabase.from('adverse_reactions').insert(payload);
-      if (error) {
-        if (isTableMissingError(error)) {
-          fallbackStores.adverse_reactions.push(payload);
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
-        fallbackStores.adverse_reactions.push(payload);
-        return;
-      }
-      throw e;
-    }
+    return writeWithFallback(
+      () => supabase.from('adverse_reactions').insert(payload),
+      () => { fallbackStores.adverse_reactions.push(payload); },
+    );
   },
 };
 export const adverse_reactions = adverseReactions;
 
 export const rareDonors = {
   async getAll() {
-    try {
-      const { data, error } = await supabase.from('rare_donors').select('*');
-      if (error) {
-        if (isTableMissingError(error)) return fallbackStores.rare_donors;
-        throw error;
-      }
-      if (!data || data.length === 0) return fallbackStores.rare_donors;
-      return data;
-    } catch (e: any) {
-      if (isTableMissingError(e)) return fallbackStores.rare_donors;
-      throw e;
-    }
+    return readWithFallback(
+      () => supabase.from('rare_donors').select('*'),
+      () => fallbackStores.rare_donors,
+      (data) => (!data || data.length === 0 ? fallbackStores.rare_donors : data),
+    );
   },
   async getById(id: string) {
-    try {
-      const { data, error } = await supabase.from('rare_donors').select('*').eq('id', id).maybeSingle();
-      if (error) {
-        if (isTableMissingError(error)) return fallbackStores.rare_donors.find(r => r.id === id) || null;
-        throw error;
-      }
-      return data;
-    } catch (e: any) {
-      if (isTableMissingError(e)) return fallbackStores.rare_donors.find(r => r.id === id) || null;
-      throw e;
-    }
+    return readWithFallback(
+      () => supabase.from('rare_donors').select('*').eq('id', id).maybeSingle(),
+      () => fallbackStores.rare_donors.find(r => r.id === id) || null,
+    );
   },
   async create(data: any) {
     try {
@@ -1791,30 +1360,16 @@ export const rareDonors = {
     }
   },
   async mobilize(id: string, reason: string) {
-    try {
-      const { error } = await supabase.from('rare_donors').update({ status: 'MOBILIZED', mobilizationReason: reason }).eq('id', id);
-      if (error) {
-        if (isTableMissingError(error)) {
-          const donor = fallbackStores.rare_donors.find(r => r.id === id);
-          if (donor) {
-            donor.status = 'MOBILIZED';
-            donor.mobilizationReason = reason;
-          }
-          return;
-        }
-        throw error;
-      }
-    } catch (e: any) {
-      if (isTableMissingError(e)) {
+    return writeWithFallback(
+      () => supabase.from('rare_donors').update({ status: 'MOBILIZED', mobilizationReason: reason }).eq('id', id),
+      () => {
         const donor = fallbackStores.rare_donors.find(r => r.id === id);
         if (donor) {
           donor.status = 'MOBILIZED';
           donor.mobilizationReason = reason;
         }
-        return;
-      }
-      throw e;
-    }
+      },
+    );
   },
   async update(id: string, data: any) {
     try {
@@ -1841,17 +1396,11 @@ export const rareDonors = {
 
 export const translations = {
   async getAll() {
-    try {
-      const { data, error } = await supabase.from('translations').select('*');
-      if (error) {
-        if (isTableMissingError(error)) return [];
-        throw error;
-      }
-      return data || [];
-    } catch (e: any) {
-      if (isTableMissingError(e)) return [];
-      throw e;
-    }
+    return readWithFallback(
+      () => supabase.from('translations').select('*'),
+      () => [],
+      (data) => data || [],
+    );
   }
 };
 

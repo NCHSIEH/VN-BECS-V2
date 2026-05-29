@@ -16,6 +16,27 @@ export const inventory = {
       throw e;
     }
   },
+  async getByUnitId(unitId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('inventory')
+        .select('*')
+        .eq('unitId', unitId)
+        .maybeSingle();
+      if (error) {
+        if (isTableMissingError(error)) {
+          return fallbackStores.inventory.find(i => i.unitId === unitId) || null;
+        }
+        throw error;
+      }
+      return data || fallbackStores.inventory.find(i => i.unitId === unitId) || null;
+    } catch (e: any) {
+      if (isTableMissingError(e)) {
+        return fallbackStores.inventory.find(i => i.unitId === unitId) || null;
+      }
+      throw e;
+    }
+  },
   async create(data: any) {
     try {
       const payload = { ...data, version: data.version || 1 };
