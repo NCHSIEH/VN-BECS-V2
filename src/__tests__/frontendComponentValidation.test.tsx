@@ -93,7 +93,8 @@ describe('DonorCenterSimulatorView - Frontend Button Calibration', () => {
 
     // Check that we have buttons or the quarantine badge
     const buttons = screen.getAllByRole('button');
-    const fabricateButtons = buttons.filter(b => b.textContent?.trim() === 'Fabricate Components');
+    // i18n: the mocked t() returns the key, so assert against the translation key.
+    const fabricateButtons = buttons.filter(b => b.textContent?.trim() === 'lims_proc_fabricate');
 
     expect(fabricateButtons.length).toBe(2);
 
@@ -109,7 +110,7 @@ describe('DonorCenterSimulatorView - Frontend Button Calibration', () => {
     expect(pendingButton).toBeDefined();
     expect(clearedButton).toBeDefined();
 
-    // Check that REACTIVE shows QUARANTINE RESTRICTED
-    expect(screen.getByText('QUARANTINE RESTRICTED')).toBeDefined();
+    // Check that REACTIVE shows the quarantine-restricted badge (i18n key via mocked t()).
+    expect(screen.getByText('lims_proc_quarantine_restricted')).toBeDefined();
   });
 });

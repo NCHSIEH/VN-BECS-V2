@@ -480,14 +480,14 @@ export function DonorCenterSimulatorView({
     const reagents = resources.filter(r => r.type === 'Reagent');
     const expiredReagent = reagents.find(r => r.status === 'Expired');
     if (expiredReagent) {
-       setGatingError(`SAFETY INTERLOCK ACTIVE: Reagent ${expiredReagent.name} is EXPIRED. Laboratory testing blocked.`);
+       setGatingError(t('lims_gate_reagent_expired', { name: expiredReagent.name }));
        return;
     }
-    
+
     const analyzers = resources.filter(r => r.name.includes('Analyzer'));
     const maintenanceRequired = analyzers.find(r => r.status === 'MaintenanceRequired');
     if (maintenanceRequired) {
-       setGatingError(`SAFETY INTERLOCK ACTIVE: Equipment ${maintenanceRequired.name} requires maintenance. Testing restricted.`);
+       setGatingError(t('lims_gate_equip_maint', { name: maintenanceRequired.name }));
        return;
     }
 
@@ -497,10 +497,10 @@ export function DonorCenterSimulatorView({
       // IRL must clear it via the IDM Testing module.
       
       setLimsToast({
-        title: "Specimen Dispatched",
-        message: "Specimen sent to IRL for Infectious Disease Testing. Awaiting clearance.",
+        title: t('lims_toast_specimen_title'),
+        message: t('lims_toast_specimen_msg'),
         nextStage: 'PROCESS',
-        nextLabel: "Awaiting IRL"
+        nextLabel: t('lims_status_cleared')
       });
     } catch(e) {}
   };
@@ -512,13 +512,13 @@ export function DonorCenterSimulatorView({
     const centrifuges = resources.filter(r => r.name.includes('Centrifuge'));
     const maintenanceRequired = centrifuges.find(r => r.status === 'MaintenanceRequired');
     if (maintenanceRequired) {
-       setGatingError(`SAFETY INTERLOCK ACTIVE: Equipment ${maintenanceRequired.name} requires maintenance. Processing restricted.`);
+       setGatingError(t('lims_gate_centrifuge_maint', { name: maintenanceRequired.name }));
        return;
     }
 
     const donation = donations.find(d => d.id === donationId);
     if (!donation || donation.idmStatus !== 'CLEARED') {
-       setGatingError(`SAFETY INTERLOCK ACTIVE: IDM Status is ${donation?.idmStatus || 'PENDING'}. Cannot process components until CLEARED by IRL.`);
+       setGatingError(t('lims_gate_idm_not_cleared', { status: donation?.idmStatus || 'PENDING' }));
        return;
     }
 
@@ -535,10 +535,10 @@ export function DonorCenterSimulatorView({
           nextLabel: t('lims_toast_stage3_btn')
         });
       } else {
-        setGatingError(`PROCESSING FAILED: ${data.error || data.message || 'Validation Interlock Triggered'}`);
+        setGatingError(t('lims_err_processing_failed', { detail: data.error || data.message || 'Validation Interlock Triggered' }));
       }
     } catch(e) {
-      setGatingError("Network Error");
+      setGatingError(t('lims_err_network'));
     }
   };
 
@@ -557,10 +557,10 @@ export function DonorCenterSimulatorView({
            message: t('lims_toast_stage4_msg', { compId }),
          });
       } else {
-         setStatus({ type: 'error', msg: `Release Failed: ${data.error || data.message || 'Access Denied'}` });
+         setStatus({ type: 'error', msg: t('lims_err_release_failed', { detail: data.error || data.message || 'Access Denied' }) });
       }
     } catch (err) {
-       setStatus({ type: 'error', msg: "Network Error" });
+       setStatus({ type: 'error', msg: t('lims_err_network') });
     } finally {
        setIsSyncing(false);
     }
@@ -572,8 +572,10 @@ export function DonorCenterSimulatorView({
     // KPI 2: Donations per Hour & Queue Length (Lab and processing backlog)
     const pendingLab = donations.filter(d => !d.labStatus || d.labStatus === 'PENDING').length;
     const pendingComponents = components.filter(c => c.status !== 'HUB INTRANSIT' && c.status !== 'READY').length;
-    // KPI 3: Hardware & Consumables Health (broken machines)
-    const activeAlarms = resources.filter(r => r.maintenanceStatus === 'MaintenanceRequired').length;
+    // KPI 3: Hardware & Consumables Health (broken machines). Use `status`
+    // (the field resources actually carry) — `maintenanceStatus` never existed,
+    // so equipment alarms were silently excluded from the readiness score.
+    const activeAlarms = resources.filter(r => r.status === 'MaintenanceRequired' || r.status === 'Expired').length;
 
     // Base score is 100%, subtract points for bottlenecks
     let readiness = 100;
@@ -643,13 +645,13 @@ export function DonorCenterSimulatorView({
          <div className="flex items-center gap-6">
             <div className="w-3 h-3 rounded-full bg-rose-500 animate-pulse shadow-[0_0_15px_rgba(225,29,72,0.8)]" />
             <div className="flex flex-col">
-               <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.4em] italic">Active Mission</span>
+               <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.4em] italic">{t('lims_active_mission')}</span>
                <span className="text-sm font-black text-clinical-text uppercase italic tracking-tighter">Site A Registration Overflow</span>
             </div>
          </div>
          <div className="flex items-center gap-6">
             <div className="flex flex-col items-end">
-               <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">Throughput Readiness</span>
+               <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">{t('lims_throughput_readiness')}</span>
                <div className="flex items-center gap-3 mt-1">
                   <div className="h-1.5 w-48 bg-clinical-card rounded-full overflow-hidden p-0.5 border border-clinical-border shadow-inner">
                      <div className="h-full bg-rose-500 shadow-[0_0_10px_rgba(225,29,72,0.6)] rounded-full transition-all duration-1000" style={{ width: `${throughputReadiness}%` }} />
@@ -673,10 +675,10 @@ export function DonorCenterSimulatorView({
                      <p className="text-clinical-muted text-[11px] font-black uppercase tracking-[0.5em]">VN-DONOR-NODE-01</p>
                   </div>
                   <h1 className="premium-heading">
-                    {activeTab === 'DONOR' && 'Registry Control'}
-                    {activeTab === 'LAB' && 'Clinical Diagnostics'}
-                    {activeTab === 'PROCESS' && 'Phlebotomy Ops'}
-                    {activeTab === 'RELEASE' && 'Chain of Custody'}
+                    {activeTab === 'DONOR' && t('lims_hdr_registry_control')}
+                    {activeTab === 'LAB' && t('lims_hdr_clinical_diag')}
+                    {activeTab === 'PROCESS' && t('lims_hdr_phlebotomy_ops')}
+                    {activeTab === 'RELEASE' && t('lims_hdr_chain_custody')}
                   </h1>
                </div>
                {activeTab === 'DONOR' && (
@@ -816,8 +818,8 @@ export function DonorCenterSimulatorView({
                             <Activity size={32} />
                          </div>
                          <div>
-                            <p className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] mb-1">Queue Load</p>
-                            <p className="text-3xl font-black text-clinical-text italic">{donations.filter(d => d.idmStatus === 'PENDING').length} Units</p>
+                            <p className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] mb-1">{t('lims_lab_queue_load')}</p>
+                            <p className="text-3xl font-black text-clinical-text italic">{donations.filter(d => d.idmStatus === 'PENDING').length} {t('lims_unit_suffix')}</p>
                          </div>
                       </div>
                       <div className="glass-station p-8 flex items-center gap-8 group">
@@ -825,8 +827,8 @@ export function DonorCenterSimulatorView({
                             <CheckCircle size={32} />
                          </div>
                          <div>
-                            <p className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] mb-1">Diagnostics Pass</p>
-                            <p className="text-3xl font-black text-clinical-text italic">{donations.filter(d => d.idmStatus === 'CLEARED').length} Units</p>
+                            <p className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] mb-1">{t('lims_lab_diag_pass')}</p>
+                            <p className="text-3xl font-black text-clinical-text italic">{donations.filter(d => d.idmStatus === 'CLEARED').length} {t('lims_unit_suffix')}</p>
                          </div>
                       </div>
                       <div className="glass-station p-8 flex items-center gap-8 group">
@@ -834,8 +836,8 @@ export function DonorCenterSimulatorView({
                             <ShieldAlert size={32} />
                          </div>
                          <div>
-                            <p className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] mb-1">Biological Risk</p>
-                            <p className="text-3xl font-black text-clinical-text italic">{reactiveRate}% Rate</p>
+                            <p className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] mb-1">{t('lims_lab_bio_risk')}</p>
+                            <p className="text-3xl font-black text-clinical-text italic">{reactiveRate}% {t('lims_rate_suffix')}</p>
                          </div>
                       </div>
                    </div>
@@ -877,19 +879,19 @@ export function DonorCenterSimulatorView({
                                {donation.idmStatus === 'PENDING' && (
                                  <div className="flex items-center gap-3 text-sky-400 font-black text-[10px] uppercase tracking-[0.3em] bg-sky-500/10 px-5 py-2 rounded-full w-fit border border-sky-500/20 shadow-[0_0_15px_rgba(14,165,233,0.2)]">
                                     <div className="w-2 h-2 rounded-full bg-sky-500 animate-pulse" />
-                                    Diagnostic Run
+                                    {t('lims_lab_diag_run')}
                                  </div>
                                )}
                                {donation.idmStatus === 'CLEARED' && (
                                  <div className="flex items-center gap-3 text-emerald-600 font-black text-[10px] uppercase tracking-[0.3em] bg-emerald-500/10 px-5 py-2 rounded-full w-fit border border-emerald-500/20">
                                     <CheckCircle size={14} />
-                                    CLEARED
+                                    {t('lims_status_cleared')}
                                  </div>
                                )}
                                {donation.idmStatus === 'REACTIVE' && (
                                  <div className="flex items-center gap-3 text-rose-500 font-black text-[10px] uppercase tracking-[0.3em] bg-rose-500/10 px-5 py-2 rounded-full w-fit border border-rose-500/20">
                                     <ShieldAlert size={14} />
-                                    REACTIVE
+                                    {t('lims_status_reactive')}
                                  </div>
                                )}
                             </td>
@@ -899,7 +901,7 @@ export function DonorCenterSimulatorView({
                                   onClick={() => runIDMTests(donation.id)}
                                   className="px-8 py-4 rounded-[18px] bg-sky-600 text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-sky-900/30 hover:scale-105 active:scale-95 transition-all italic"
                                 >
-                                  Process Diagnostics
+                                  {t('lims_lab_process_diag')}
                                 </button>
                               )}
                             </td>
@@ -960,7 +962,7 @@ export function DonorCenterSimulatorView({
                                            <span className="text-[8px] font-mono text-clinical-muted mt-1 uppercase">ID: {q.donorId}</span>
                                         </div>
                                         <span className="text-[8px] font-mono bg-clinical-card px-2 py-1 rounded-md text-clinical-muted border border-clinical-border uppercase shrink-0">
-                                           Wait #{idx + 1}
+                                           {t('lims_proc_wait')} #{idx + 1}
                                         </span>
                                      </div>
                                   ))
@@ -981,7 +983,7 @@ export function DonorCenterSimulatorView({
                                      {/* Header */}
                                      <div className="flex justify-between items-start">
                                         <div>
-                                           <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-clinical-muted">Phlebotomy Desk</span>
+                                           <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-clinical-muted">{t('lims_proc_desk')}</span>
                                            <h4 className="text-xl font-black text-clinical-text italic uppercase">CHAIR {chairNumber}</h4>
                                         </div>
                                         {assignedDonor ? (
@@ -1070,12 +1072,12 @@ export function DonorCenterSimulatorView({
                     <table className="w-full text-left text-sm">
                       <thead className="bg-clinical-bg text-clinical-muted text-sm font-black uppercase tracking-wider border-b border-clinical-border">
                         <tr>
-                          <th className="p-8">Unit ID</th>
-                          <th className="p-8">Serology</th>
+                          <th className="p-8">{t('lims_col_unit_id')}</th>
+                          <th className="p-8">{t('lims_col_serology')}</th>
                           <th className="p-8 text-center">Abo/Rh</th>
                           <th className="p-8">{t('lims_col_collected_at')}</th>
-                          <th className="p-8">Volume</th>
-                          <th className="p-8 text-right">Ops</th>
+                          <th className="p-8">{t('lims_col_volume')}</th>
+                          <th className="p-8 text-right">{t('lims_col_ops')}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-clinical-border">
@@ -1084,9 +1086,9 @@ export function DonorCenterSimulatorView({
                             <td className="p-8 font-mono font-black text-clinical-text tracking-tighter text-lg italic">{donation.id}</td>
                             <td className="p-8">
                                {donation.idmStatus === 'CLEARED' ? (
-                                 <span className="text-emerald-500 font-black text-[11px] uppercase tracking-[0.2em] bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20">SAFE</span>
+                                 <span className="text-emerald-500 font-black text-[11px] uppercase tracking-[0.2em] bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20">{t('lims_proc_safe')}</span>
                                ) : (
-                                 <span className="text-rose-500 font-black text-[11px] uppercase tracking-[0.2em] bg-rose-500/10 px-4 py-2 rounded-full border border-rose-500/20">BIO-RISK</span>
+                                 <span className="text-rose-500 font-black text-[11px] uppercase tracking-[0.2em] bg-rose-500/10 px-4 py-2 rounded-full border border-rose-500/20">{t('lims_proc_biorisk')}</span>
                                )}
                             </td>
                             <td className="p-8 text-center">
@@ -1103,14 +1105,14 @@ export function DonorCenterSimulatorView({
                             <td className="p-8 text-clinical-muted font-mono text-[13px]">{donation.volume} ml</td>
                             <td className="p-8 text-right">
                                {donation.idmStatus === 'REACTIVE' ? (
-                                 <div className="bg-rose-950/30 border border-rose-900/30 text-rose-500 px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] italic">QUARANTINE RESTRICTED</div>
+                                 <div className="bg-rose-950/30 border border-rose-900/30 text-rose-500 px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] italic">{t('lims_proc_quarantine_restricted')}</div>
                                ) : (
                                  <button 
                                    onClick={() => processComponent(donation.id)}
                                    disabled={donation.idmStatus !== 'CLEARED'}
                                    className="px-8 py-4 rounded-[18px] bg-emerald-600 text-white font-black text-[11px] uppercase tracking-[0.3em] shadow-xl shadow-emerald-900/30 hover:scale-105 active:scale-95 transition-all italic disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-none"
                                  >
-                                   Fabricate Components
+                                   {t('lims_proc_fabricate')}
                                  </button>
                                )}
                             </td>
@@ -1128,12 +1130,12 @@ export function DonorCenterSimulatorView({
                     <table className="w-full text-left text-sm">
                       <thead className="bg-clinical-bg text-clinical-muted text-sm font-black uppercase tracking-wider border-b border-clinical-border">
                         <tr>
-                          <th className="p-8">Global ID</th>
-                          <th className="p-8">Product Class</th>
+                          <th className="p-8">{t('lims_col_global_id')}</th>
+                          <th className="p-8">{t('lims_col_product_class')}</th>
                           <th className="p-8 text-center">Abo/Rh</th>
                           <th className="p-8">{t('lims_col_fabricated_at')}</th>
-                          <th className="p-8">Custody Status</th>
-                          <th className="p-8 text-right">Dispatch</th>
+                          <th className="p-8">{t('lims_col_custody')}</th>
+                          <th className="p-8 text-right">{t('lims_col_dispatch')}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-clinical-border">
@@ -1156,12 +1158,12 @@ export function DonorCenterSimulatorView({
                                {comp.status === 'AVAILABLE' ? (
                                  <span className="flex items-center gap-3 text-amber-500 font-black text-[10px] uppercase tracking-[0.4em] bg-amber-500/10 px-5 py-2 rounded-full w-fit border border-amber-500/20">
                                     <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                                    READY
+                                    {t('lims_status_ready')}
                                  </span>
                                ) : (
                                  <span className="flex items-center gap-3 text-emerald-500 font-black text-[10px] uppercase tracking-[0.4em] bg-emerald-500/10 px-5 py-2 rounded-full w-fit border border-emerald-500/20">
                                     <Globe size={14} />
-                                    HUB INTRANSIT
+                                    {t('lims_status_hub_intransit')}
                                  </span>
                                )}
                             </td>
@@ -1172,7 +1174,7 @@ export function DonorCenterSimulatorView({
                                    disabled={isSyncing}
                                    className="px-8 py-4 rounded-[18px] bg-clinical-bg text-clinical-text font-black text-[11px] uppercase tracking-[0.3em] shadow-sm hover:scale-105 active:scale-95 transition-all italic disabled:opacity-30 border border-clinical-border"
                                  >
-                                   {isSyncing ? 'SYNCING...' : 'RELEASE TO HUB'}
+                                   {isSyncing ? t('lims_btn_syncing') : t('lims_btn_release_hub')}
                                  </button>
                                )}
                             </td>
