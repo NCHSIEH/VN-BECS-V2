@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { ProductCatalog } from "../types";
 import { useI18n } from "../lib/i18n";
 import { LimsFlowIndicator } from './FlowIndicator';
-import { VietnamIdValidator, validateDonorAge, validateCollectionVolume, validateDonorName, validateDonorWeight, validateVietnamDeferralRules } from '../lib/validators';
+import { VietnamIdValidator, validateDonorAge, validateCollectionVolume, validateDonorName, validateDonorWeight, validateVietnamDeferralRules, validateDonationInterval, generateValidCCCD } from '../lib/validators';
 import type { DonationType } from '../types';
 
 interface DonorCenterSimulatorViewProps {
@@ -141,8 +141,12 @@ export function DonorCenterSimulatorView({
   }, [donorForm.dob]);
   
   const volumeValidation = useMemo(
-    () => validateCollectionVolume(collectForm.volume, collectForm.type as DonationType),
-    [collectForm.volume, collectForm.type]
+    () => {
+      const donor = donors.find(d => d.id === collectForm.donorId);
+      const weightKg = donor?.weight ? Number(donor.weight) : undefined;
+      return validateCollectionVolume(collectForm.volume, collectForm.type as DonationType, weightKg);
+    },
+    [collectForm.volume, collectForm.type, collectForm.donorId, donors]
   );
 
   // Dashboard stats
@@ -169,10 +173,13 @@ export function DonorCenterSimulatorView({
         // Find last donation to check 12-week gap
         const donorDonations = donations.filter(d => d.donorId === existingDonor.id).sort((a, b) => new Date(b.collectedAt).getTime() - new Date(a.collectedAt).getTime());
         if (donorDonations.length > 0) {
-          const lastDonationDate = new Date(donorDonations[0].collectedAt);
-          const weeksSinceLast = (new Date().getTime() - lastDonationDate.getTime()) / (1000 * 60 * 60 * 24 * 7);
-          if (weeksSinceLast < 12) {
-            setDonorFormError(`捐血間隔不足：上次捐血為 ${lastDonationDate.toLocaleDateString()} (距離不到 12 週)`);
+          const interval = validateDonationInterval(donorDonations[0].collectedAt);
+          if (!interval.eligible) {
+            setDonorFormError(t('lims_err_donation_interval', {
+              date: new Date(donorDonations[0].collectedAt).toLocaleDateString(),
+              weeks: String(interval.weeksSinceLast ?? 0),
+              required: String(interval.weeksRequired),
+            }));
             return;
           }
         }
@@ -187,7 +194,7 @@ export function DonorCenterSimulatorView({
           bloodType: existingDonor.bloodType,
           rhd: existingDonor.rhd
         }));
-        setDonorLookupMessage("✓ 已自動載入歷史捐血者資料");
+        setDonorLookupMessage(t('lims_msg_donor_loaded'));
         setDonorFormError(""); // Clear any previous errors if valid now
       }
     }
@@ -239,27 +246,48 @@ export function DonorCenterSimulatorView({
     // 2. Validate CCCD
     const cccdVal = VietnamIdValidator.validate(donorForm.nationalId);
     if (!cccdVal.valid) {
-      setDonorFormError(`越南身分證格式錯誤: ${cccdVal.errors.join(", ")}`);
+      setDonorFormError(t('lims_err_cccd_format', { detail: cccdVal.errors.join(', ') }));
       return;
     }
 
     // 3. Validate Date of Birth
     if (!donorForm.dob || donorForm.dob.length !== 10) {
-      setDonorFormError("請輸入完整的出生日期格式 (YYYY/MM/DD)");
+      setDonorFormError(t('lims_err_dob_incomplete'));
       return;
     }
     const normalizedDob = donorForm.dob.replace(/\//g, '-');
     const ageVal = validateDonorAge(normalizedDob);
     if (!ageVal.valid) {
-      setDonorFormError(`出生日期驗證失敗: ${ageVal.errors.join(", ")}`);
+      setDonorFormError(t('lims_err_dob_invalid', { detail: ageVal.errors.join(', ') }));
       return;
     }
 
     // 4. Validate Weight
     const weightVal = validateDonorWeight(Number(donorForm.weight), donorForm.gender);
     if (!weightVal.valid) {
-      setDonorFormError(`體重驗證失敗: ${weightVal.errors.join(", ")}`);
+      setDonorFormError(t('lims_err_weight_invalid', { detail: weightVal.errors.join(', ') }));
       return;
+    }
+
+    // 4b. Enforce the inter-donation interval (VN26/AABB 12 weeks) at submit —
+    // not just on CCCD entry — so a repeat donor cannot be enrolled for
+    // collection too soon. Resolve last donation by national ID.
+    const existingDonor = donors.find(d => d.nationalId === donorForm.nationalId);
+    if (existingDonor) {
+      const prior = donations
+        .filter(d => d.donorId === existingDonor.id)
+        .sort((a, b) => new Date(b.collectedAt).getTime() - new Date(a.collectedAt).getTime());
+      if (prior.length > 0) {
+        const interval = validateDonationInterval(prior[0].collectedAt);
+        if (!interval.eligible) {
+          setDonorFormError(t('lims_err_donation_interval', {
+            date: new Date(prior[0].collectedAt).toLocaleDateString(),
+            weeks: String(interval.weeksSinceLast ?? 0),
+            required: String(interval.weeksRequired),
+          }));
+          return;
+        }
+      }
     }
 
     // 5. Check Deferrals
@@ -279,7 +307,10 @@ export function DonorCenterSimulatorView({
 
     if (deferralCheck.deferred) {
       // Show error but we still submit the donor record to the database so it's tracked
-      setDonorFormError(`捐血者已被暫緩: ${deferralCheck.reason} (暫緩至: ${deferralCheck.until ? new Date(deferralCheck.until).toLocaleDateString() : '永久'})`);
+      setDonorFormError(t('lims_err_deferred', {
+        reason: deferralCheck.reason || '',
+        until: deferralCheck.until ? new Date(deferralCheck.until).toLocaleDateString() : t('lims_deferral_permanent'),
+      }));
       // We will allow registration, but block collection in UI. However, if you want hard stop on register:
       // return;
     }
@@ -1168,8 +1199,8 @@ export function DonorCenterSimulatorView({
           >
              <div className="p-12 border-b border-clinical-border flex justify-between items-center bg-clinical-card">
                 <div>
-                   <h3 className="text-3xl font-black text-clinical-text uppercase italic tracking-tighter">{donorForm.id ? 'Modify Registry' : 'Donor Enrollment'}</h3>
-                   <p className="text-rose-500 text-[10px] font-black uppercase tracking-[0.4em] mt-2 italic">National Identity Integration</p>
+                   <h3 className="text-3xl font-black text-clinical-text uppercase italic tracking-tighter">{donorForm.id ? t('lims_form_modify_title') : t('lims_form_enroll_title')}</h3>
+                   <p className="text-rose-500 text-[10px] font-black uppercase tracking-[0.4em] mt-2 italic">{t('lims_form_subtitle')}</p>
                 </div>
                 <button type="button" onClick={() => setIsDonorModalOpen(false)} className="w-12 h-12 rounded-full bg-clinical-card border border-clinical-border flex items-center justify-center text-clinical-muted hover:text-clinical-text transition-all">
                    <X size={24} />
@@ -1193,12 +1224,13 @@ export function DonorCenterSimulatorView({
                       <button 
                         type="button" 
                         onClick={() => {
-                          const validId = (100000000000 + Math.floor(Math.random() * 899999999999)).toString();
-                          setDonorForm({...donorForm, nationalId: validId});
+                          // Generate a CCCD that passes province/format validation
+                          // (the previous random number could yield an invalid province code).
+                          setDonorForm({...donorForm, nationalId: generateValidCCCD()});
                         }}
                         className="text-[9px] bg-sky-500/10 text-sky-400 px-4 py-2 rounded-xl border border-sky-500/20 hover:bg-sky-500 hover:text-clinical-text transition-all font-black uppercase tracking-widest flex items-center gap-2"
                       >
-                         <Database size={12} /> Scan Chip Card
+                         <Database size={12} /> {t('lims_form_scan_chip')}
                       </button>
                    </div>
                    <input 
@@ -1216,7 +1248,7 @@ export function DonorCenterSimulatorView({
                    )}
                    {donorForm.nationalId && cccdValidation && cccdValidation.valid && (
                      <p className="text-emerald-500 text-[10px] font-black uppercase mt-2 px-1">
-                        ✓ Valid Vietnam National CCCD
+                        {t('lims_cccd_valid')}
                      </p>
                    )}
                 </div>
@@ -1252,12 +1284,12 @@ export function DonorCenterSimulatorView({
                       )}
                       {donorForm.dob && donorForm.dob.length === 10 && ageValidation && ageValidation.valid && (
                         <p className="text-emerald-500 text-[10px] font-black uppercase mt-2 px-1">
-                           ✓ Valid Donor Age (Age: {donorAge})
+                           {t('lims_age_valid', { age: String(donorAge) })}
                         </p>
                       )}
                    </div>
                    <div className="space-y-4">
-                      <label className="clinical-label">Gender & Weight</label>
+                      <label className="clinical-label">{t('lims_form_gender_weight')}</label>
                       <div className="grid grid-cols-2 gap-4">
                          <select value={donorForm.gender} onChange={e => setDonorForm({...donorForm, gender: e.target.value as 'Male' | 'Female'})} className="clinical-input py-8 appearance-none text-center">
                            <option value="Male">MALE</option><option value="Female">FEMALE</option>
@@ -1269,7 +1301,7 @@ export function DonorCenterSimulatorView({
 
                 <div className="grid grid-cols-1 gap-10">
                    <div className="space-y-4">
-                      <label className="clinical-label">Blood Type</label>
+                      <label className="clinical-label">{t('lims_form_blood_type')}</label>
                       <div className="grid grid-cols-2 gap-4">
                          <select value={donorForm.bloodType} onChange={e => setDonorForm({...donorForm, bloodType: e.target.value})} className="clinical-input py-8 appearance-none text-center">
                            <option value="O">O</option><option value="A">A</option><option value="B">B</option><option value="AB">AB</option>
@@ -1345,8 +1377,8 @@ export function DonorCenterSimulatorView({
                  </div>
              </div>
              <div className="p-12 bg-clinical-bg/60 border-t border-clinical-border flex justify-end gap-6">
-                <button type="button" onClick={() => setIsDonorModalOpen(false)} className="px-10 py-6 rounded-[20px] text-clinical-muted font-black text-[11px] uppercase tracking-[0.3em] hover:text-clinical-text transition-colors">Abort</button>
-                <button type="submit" className="clinical-btn-primary min-w-[240px]">{donorForm.id ? 'Save Changes' : 'Initialize Record'}</button>
+                <button type="button" onClick={() => setIsDonorModalOpen(false)} className="px-10 py-6 rounded-[20px] text-clinical-muted font-black text-[11px] uppercase tracking-[0.3em] hover:text-clinical-text transition-colors">{t('lims_btn_abort')}</button>
+                <button type="submit" className="clinical-btn-primary min-w-[240px]">{donorForm.id ? t('lims_btn_save_changes') : t('lims_btn_init_record')}</button>
              </div>
           </motion.form>
         </div>
@@ -1386,7 +1418,17 @@ export function DonorCenterSimulatorView({
                 <div className="grid grid-cols-2 gap-10">
                    <div className="space-y-4">
                       <label className="clinical-label">{t('lims_modal_target_vol')}</label>
-                      <input required type="number" value={collectForm.volume} onChange={e => setCollectForm({...collectForm, volume: parseInt(e.target.value)})} className="clinical-input py-8 text-2xl text-center" />
+                      <input required type="number" value={collectForm.volume} onChange={e => setCollectForm({...collectForm, volume: parseInt(e.target.value)})} className={`clinical-input py-8 text-2xl text-center ${!volumeValidation.valid ? 'border-rose-500/60 text-rose-500' : ''}`} />
+                      {collectForm.volume > 0 && !volumeValidation.valid && (
+                        <p className="text-rose-500 text-[10px] font-black uppercase mt-2 px-1 leading-relaxed">
+                           ⚠️ {volumeValidation.errors.join(', ')}
+                        </p>
+                      )}
+                      {collectForm.volume > 0 && volumeValidation.valid && (
+                        <p className="text-emerald-500 text-[10px] font-black uppercase mt-2 px-1">
+                           {t('lims_vol_ok')}
+                        </p>
+                      )}
                    </div>
                    <div className="space-y-4">
                       <label className="clinical-label">{t('lims_modal_coll_method')}</label>
@@ -1399,7 +1441,7 @@ export function DonorCenterSimulatorView({
              </div>
              <div className="p-12 bg-clinical-bg/60 border-t border-clinical-border flex justify-end gap-6">
                 <button type="button" onClick={() => setIsCollectModalOpen(false)} className="px-10 py-6 rounded-[20px] text-clinical-muted font-black text-[11px] uppercase tracking-[0.3em] hover:text-clinical-text transition-colors">{t('lims_modal_abort')}</button>
-                <button type="submit" className="clinical-btn-primary min-w-[300px]">{t('lims_modal_start_run')}</button>
+                <button type="submit" disabled={!volumeValidation.valid} className={`clinical-btn-primary min-w-[300px] ${!volumeValidation.valid ? 'opacity-40 cursor-not-allowed' : ''}`}>{t('lims_modal_start_run')}</button>
              </div>
           </motion.form>
         </div>

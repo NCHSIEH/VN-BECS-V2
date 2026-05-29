@@ -134,6 +134,31 @@ export function validateVietnamDeferralRules(answers: Record<string, boolean | s
   return { deferred: false, policyVersion };
 }
 
+/**
+ * Minimum interval between whole-blood donations (VN26 / AABB: typically 12
+ * weeks / 84 days). Returns the number of full weeks since the last donation
+ * and whether the donor is eligible again.
+ */
+export function validateDonationInterval(
+  lastDonationISO: string | null | undefined,
+  now: Date = new Date(),
+  minWeeks = 12,
+): { eligible: boolean; weeksSinceLast: number | null; weeksRequired: number } {
+  if (!lastDonationISO) {
+    return { eligible: true, weeksSinceLast: null, weeksRequired: minWeeks };
+  }
+  const last = new Date(lastDonationISO);
+  if (Number.isNaN(last.getTime())) {
+    return { eligible: true, weeksSinceLast: null, weeksRequired: minWeeks };
+  }
+  const weeks = (now.getTime() - last.getTime()) / (1000 * 60 * 60 * 24 * 7);
+  return {
+    eligible: weeks >= minWeeks,
+    weeksSinceLast: Math.floor(weeks),
+    weeksRequired: minWeeks,
+  };
+}
+
 export function validateCollectionVolume(
   volume: number,
   donationType: DonationType,
