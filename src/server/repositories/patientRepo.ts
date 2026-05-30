@@ -26,6 +26,13 @@ export const patients = {
   },
 
   async getById(idOrMrn: string) {
+    // Security: `idOrMrn` is interpolated into a PostgREST `.or()` filter below,
+    // so constrain it to the structured id/MRN charset. Anything containing
+    // PostgREST metacharacters (',', '(', ')', '.') cannot be a real key and is
+    // rejected here to prevent filter-expression injection.
+    if (typeof idOrMrn !== 'string' || !/^[A-Za-z0-9_-]+$/.test(idOrMrn)) {
+      return this.getFallbackPatients().find(p => p.id === idOrMrn || p.mrn === idOrMrn) || null;
+    }
     try {
       const { data, error } = await supabase
         .from('patients')
