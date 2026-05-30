@@ -104,21 +104,21 @@ export function HemovigilanceView() {
         })
       });
       if (res.ok) {
-        setStatus({ type: 'success', msg: `Adverse reaction reported. Lookback initiated for ${correlatedBatch}.` });
+        setStatus({ type: 'success', msg: t('hv_msg_reported', { batch: correlatedBatch || '' }) });
         setTransfusionId(""); setPatientId(""); setUnitId(""); setDescription(""); setActionsTaken(""); setReportedBy("");
         setPauseAll(false); setTriggerLookback(false);
         loadData();
       }
     } catch (e: any) {
-      setStatus({ type: 'error', msg: 'Network Error' });
+      setStatus({ type: 'error', msg: t('hv_err_network') });
     }
   };
 
   const handleGlobalQuarantine = async () => {
     if (!correlatedBatch) return;
-    if (confirm(`ACTION REQUIRED: Place all ${affectedUnits.length} units in batch ${correlatedBatch} under preventive quarantine?`)) {
+    if (confirm(t('hv_confirm_quarantine', { n: String(affectedUnits.length), batch: correlatedBatch }))) {
        // Mock API call
-       setStatus({ type: 'success', msg: `PREVENTIVE ISOLATION SUCCESS: ${affectedUnits.length} units quarantined.` });
+       setStatus({ type: 'success', msg: t('hv_isolation_success', { n: String(affectedUnits.length) }) });
     }
   };
 
@@ -128,17 +128,17 @@ export function HemovigilanceView() {
          <div className="space-y-4">
             <div className="premium-subtitle">
                <ShieldAlert size={18} className="text-rose-500" />
-               Global Hemovigilance Surveillance
+               {t('hv_surveillance_sub')}
             </div>
-            <h1 className="premium-heading">Safety Surveillance</h1>
-            <p className="text-clinical-muted text-[11px] font-black uppercase tracking-[0.3em] mt-4 opacity-80">Real-time Adverse Reaction Monitoring & Preventive Isolation</p>
+            <h1 className="premium-heading">{t('hv_title')}</h1>
+            <p className="text-clinical-muted text-[11px] font-black uppercase tracking-[0.3em] mt-4 opacity-80">{t('hv_subtitle')}</p>
          </div>
       </div>
 
       <div className="grid grid-cols-12 gap-6 flex-1 min-h-0">
         {/* Report Form */}
         <div className="col-span-12 xl:col-span-4 bg-clinical-bg border border-clinical-border rounded-3xl p-8 flex flex-col shadow-2xl overflow-y-auto custom-scrollbar">
-          <h2 className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] mb-8 border-b border-clinical-border pb-4">Incident Reporting</h2>
+          <h2 className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] mb-8 border-b border-clinical-border pb-4">{t('hv_incident_reporting')}</h2>
 
           {status && (
             <div className={`p-4 rounded-2xl border mb-6 flex gap-3 items-start text-xs font-bold animate-in slide-in-from-top-4 ${status.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600' : 'bg-rose-500/10 border-rose-500/30 text-rose-500'}`}>
@@ -150,19 +150,19 @@ export function HemovigilanceView() {
           <form onSubmit={handleSubmit} className="space-y-8 flex-1">
             <div className="grid grid-cols-2 gap-6">
                <div>
-                  <label className="clinical-label">Patient ID (MRN)</label>
+                  <label className="clinical-label">{t('hv_patient_mrn')}</label>
                   <input required value={patientId} onChange={e => setPatientId(e.target.value)}
                     placeholder="MRN-XXXX" className="clinical-input" />
                </div>
                <div>
-                  <label className="clinical-label">Unit ID (ISBT)</label>
+                  <label className="clinical-label">{t('hv_unit_isbt')}</label>
                   <input required value={unitId} onChange={e => setUnitId(e.target.value)}
                     placeholder="=W0000..." className="clinical-input font-mono" />
                </div>
             </div>
 
             <div>
-              <label className="clinical-label">Reaction Classification</label>
+              <label className="clinical-label">{t('hv_reaction_class')}</label>
               <div className="grid grid-cols-4 gap-3">
                 {(Object.keys(REACTION_LABELS) as AdverseReactionType[]).map(rt => (
                   <button key={rt} type="button" onClick={() => setReactionType(rt)}
@@ -177,7 +177,7 @@ export function HemovigilanceView() {
             </div>
 
             <div>
-              <label className="clinical-label">Incident Severity</label>
+              <label className="clinical-label">{t('hv_severity')}</label>
               <div className="flex gap-3">
                 {(['Low', 'Medium', 'High', 'Critical'] as AlertSeverity[]).map(s => (
                   <button key={s} type="button" onClick={() => setSeverity(s)}
@@ -185,16 +185,16 @@ export function HemovigilanceView() {
                       severity === s ? SEVERITY_COLORS[s] + ' shadow-xl scale-105' : 'bg-clinical-bg text-clinical-muted border-clinical-border'
                     }`}
                   >
-                    {s}
+                    {t('hv_sev_' + s.toLowerCase())}
                   </button>
                 ))}
               </div>
             </div>
 
             <div>
-              <label className="clinical-label">Clinical Narrative</label>
+              <label className="clinical-label">{t('hv_clinical_narrative')}</label>
               <textarea required value={description} onChange={e => setDescription(e.target.value)}
-                placeholder="Describe observations..." className="clinical-input h-32 resize-none" />
+                placeholder={t('hv_narrative_placeholder')} className="clinical-input h-32 resize-none" />
             </div>
 
             <div className="p-8 bg-clinical-bg border border-clinical-border rounded-[32px] space-y-6 shadow-inner">
@@ -203,19 +203,19 @@ export function HemovigilanceView() {
                    {pauseAll && <Pause size={12} className="text-clinical-text" />}
                 </div>
                 <input type="checkbox" className="hidden" checked={pauseAll} onChange={e => setPauseAll(e.target.checked)} />
-                Lock all transfusions for this MRN
+                {t('hv_lock_all')}
               </label>
               <label className="flex items-center gap-4 text-clinical-muted text-[11px] font-black uppercase tracking-[0.2em] cursor-pointer hover:text-clinical-text transition-colors">
                 <div className={`w-6 h-6 rounded-xl border-2 flex items-center justify-center transition-all ${triggerLookback ? 'bg-amber-500 border-amber-400 shadow-lg' : 'border-clinical-border'}`}>
                    {triggerLookback && <Eye size={12} className="text-clinical-text" />}
                 </div>
                 <input type="checkbox" className="hidden" checked={triggerLookback} onChange={e => setTriggerLookback(e.target.checked)} />
-                Trigger Batch Lookback Analysis
+                {t('hv_trigger_lookback')}
               </label>
             </div>
 
             <button type="submit" className="w-full bg-rose-600 hover:bg-rose-500 text-white font-black py-5 rounded-[32px] transition-all shadow-xl shadow-rose-900/40 uppercase text-xs tracking-[0.3em] italic">
-              Transmit Adverse Event Report
+              {t('hv_transmit')}
             </button>
           </form>
         </div>
@@ -231,15 +231,15 @@ export function HemovigilanceView() {
                           <Layers size={28} />
                        </div>
                        <div>
-                          <h3 className="text-xl font-black text-clinical-text uppercase italic tracking-tighter leading-none">Lookback Correlation Engine</h3>
-                          <p className="text-amber-500/60 text-[10px] font-black uppercase tracking-widest mt-2">Active Batch: <span className="text-amber-400">{correlatedBatch}</span></p>
+                          <h3 className="text-xl font-black text-clinical-text uppercase italic tracking-tighter leading-none">{t('hv_lookback_engine')}</h3>
+                          <p className="text-amber-500/60 text-[10px] font-black uppercase tracking-widest mt-2">{t('hv_active_batch')}: <span className="text-amber-400">{correlatedBatch}</span></p>
                        </div>
                     </div>
                     <button 
                       onClick={handleGlobalQuarantine}
                       className="px-6 py-3 bg-rose-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 transition-all shadow-xl shadow-rose-900/40 flex items-center gap-2"
                     >
-                       <ShieldBan size={14} /> Execute Preventive Isolation
+                       <ShieldBan size={14} /> {t('hv_execute_isolation')}
                     </button>
                  </div>
                  <div className="flex gap-4 overflow-x-auto pb-2 custom-scrollbar">
@@ -247,12 +247,12 @@ export function HemovigilanceView() {
                        <div key={i} className="min-w-[140px] bg-clinical-bg border border-clinical-border p-4 rounded-2xl">
                           <div className="text-[10px] font-mono text-clinical-muted mb-2">{u.unitId}</div>
                           <div className="text-sm font-black text-clinical-text">{u.abo} {u.rhd === 'Positive' ? '+' : '-'}</div>
-                          <div className="text-[9px] text-amber-500 font-black mt-2">LINKED VIA LOT</div>
+                          <div className="text-[9px] text-amber-500 font-black mt-2">{t('hv_linked_lot')}</div>
                        </div>
                     ))}
                     {affectedUnits.length > 5 && (
                        <div className="min-w-[100px] flex items-center justify-center text-clinical-muted font-black text-[10px] uppercase tracking-widest">
-                          +{affectedUnits.length - 5} MORE
+                          +{affectedUnits.length - 5} {t('hv_more')}
                        </div>
                     )}
                  </div>
@@ -262,12 +262,12 @@ export function HemovigilanceView() {
            <div className="flex-1 bg-clinical-bg border border-clinical-border rounded-3xl p-8 flex flex-col shadow-2xl min-h-0">
              <div className="flex justify-between items-center mb-8 border-b border-clinical-border pb-4">
                 <h2 className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] flex items-center gap-3">
-                   <Clock size={16} className="text-sky-500" /> Surveillance Log
+                   <Clock size={16} className="text-sky-500" /> {t('hv_surveillance_log')}
                 </h2>
                 <div className="flex items-center gap-4">
                    <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></div>
-                      <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">Live Monitoring Active</span>
+                      <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">{t('hv_live_monitoring')}</span>
                    </div>
                 </div>
              </div>
@@ -282,11 +282,11 @@ export function HemovigilanceView() {
                         </div>
                        <div className="flex flex-col">
                           <span className="text-sm font-black text-clinical-text uppercase italic tracking-tight">{REACTION_LABELS[r.reactionType]?.label || r.reactionType}</span>
-                          <span className="text-[9px] font-black uppercase tracking-widest opacity-60">TXN Ref: {r.transfusionId}</span>
+                          <span className="text-[9px] font-black uppercase tracking-widest opacity-60">{t('hv_txn_ref')}: {r.transfusionId}</span>
                        </div>
                        <div className="flex gap-2 ml-4">
-                          {r.allTransfusionsPaused && <span className="text-[8px] bg-rose-950/50 text-rose-600 px-2 py-1 rounded-lg border border-rose-800/50 flex items-center gap-1 font-black uppercase tracking-widest"><Pause size={8} /> Paused</span>}
-                          {r.lookbackTriggered && <span className="text-[8px] bg-amber-950/50 text-amber-400 px-2 py-1 rounded-lg border border-amber-800/50 flex items-center gap-1 font-black uppercase tracking-widest"><Eye size={8} /> Lookback</span>}
+                          {r.allTransfusionsPaused && <span className="text-[8px] bg-rose-950/50 text-rose-600 px-2 py-1 rounded-lg border border-rose-800/50 flex items-center gap-1 font-black uppercase tracking-widest"><Pause size={8} /> {t('hv_paused')}</span>}
+                          {r.lookbackTriggered && <span className="text-[8px] bg-amber-950/50 text-amber-400 px-2 py-1 rounded-lg border border-amber-800/50 flex items-center gap-1 font-black uppercase tracking-widest"><Eye size={8} /> {t('hv_lookback')}</span>}
                        </div>
                      </div>
                      <div className="text-[10px] font-black text-clinical-muted opacity-60 font-mono tracking-widest">{r.id}</div>
@@ -296,11 +296,11 @@ export function HemovigilanceView() {
                       <div className="flex items-center gap-6">
                          <div className="flex items-center gap-2">
                             <User size={12} className="opacity-40" />
-                            <span className="text-[9px] font-black uppercase tracking-widest opacity-60">Reporter: {r.reportedBy}</span>
+                            <span className="text-[9px] font-black uppercase tracking-widest opacity-60">{t('hv_reporter')}: {r.reportedBy}</span>
                          </div>
                          <div className="flex items-center gap-2">
                             <ArrowRight size={12} className="opacity-40" />
-                            <span className="text-[9px] font-black uppercase tracking-widest opacity-60">Batch: {r.batchId || 'N/A'}</span>
+                            <span className="text-[9px] font-black uppercase tracking-widest opacity-60">{t('hv_batch')}: {r.batchId || 'N/A'}</span>
                          </div>
                       </div>
                       <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">{new Date(r.reportedAt).toLocaleTimeString()}</span>
@@ -310,7 +310,7 @@ export function HemovigilanceView() {
                {records.length === 0 && (
                  <div className="h-full flex flex-col items-center justify-center text-clinical-muted italic">
                    <Activity size={48} className="opacity-10 mb-4" />
-                   <p className="text-[10px] font-black uppercase tracking-widest">No safety events logged in the last 24h</p>
+                   <p className="text-[10px] font-black uppercase tracking-widest">{t('hv_no_events')}</p>
                  </div>
                )}
              </div>
