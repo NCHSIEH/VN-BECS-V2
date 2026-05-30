@@ -18,6 +18,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import { useI18n } from "../lib/i18n";
+import { TraceabilityPanel } from "./TraceabilityPanel";
 import type { AdverseReactionType, AlertSeverity, InventoryUnit } from "../types";
 
 interface ReactionRecord {
@@ -222,6 +223,9 @@ export function HemovigilanceView() {
 
         {/* Analytics & Records */}
         <div className="col-span-12 xl:col-span-8 flex flex-col gap-6 min-h-0">
+           {/* RTM-TRACE-01: donor<->recipient bidirectional lookback */}
+           <TraceabilityPanel />
+
            {/* Lookback Intelligence Panel */}
            {triggerLookback && correlatedBatch && (
               <div className="bg-amber-500/10 border border-amber-500/30 rounded-3xl p-8 animate-in slide-in-from-right-8 duration-500 shadow-2xl">
