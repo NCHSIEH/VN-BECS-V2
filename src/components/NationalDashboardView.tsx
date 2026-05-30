@@ -7,24 +7,40 @@ export function NationalDashboardView({ onBack }: { onBack?: () => void } = {}) 
   const { t } = useI18n();
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [activeScenario, setActiveScenario] = useState<string | null>(null);
   const [activeNode, setActiveNode] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/v1/stats')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then(data => {
         setStats(data);
         setLoading(false);
       })
-      .catch(console.error);
+      .catch(err => {
+        setFetchError(err.message || 'Failed to load national stats');
+        setLoading(false);
+      });
   }, []);
 
-  if (loading || !stats) {
+  if (loading) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4 text-clinical-muted animate-pulse">
         <Globe className="animate-[spin_4s_linear_infinite]" size={40} />
         <span className="font-black uppercase tracking-[0.3em] text-[10px]">{t('national_all_live')}...</span>
+      </div>
+    );
+  }
+
+  if (fetchError || !stats) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center gap-4 text-rose-400">
+        <AlertTriangle size={40} />
+        <span className="font-black uppercase tracking-[0.3em] text-[10px]">{fetchError || t('national_load_error')}</span>
       </div>
     );
   }

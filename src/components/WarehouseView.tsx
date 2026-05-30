@@ -71,7 +71,7 @@ export function WarehouseView({ activeTab: propActiveTab, setActiveTab: propSetA
         const handoverToken = Math.floor(1000 + Math.random() * 9000).toString();
         setScanResult({ 
           status: 'success', 
-          message: `✅ Verification Complete. ISBT ${barcodeToScan} assigned. Handover Token: ${handoverToken}` 
+          message: t('wh_msg_verify_complete', { id: barcodeToScan, token: handoverToken }) 
         });
         setSelectedOrder(data);
         fetchData();

@@ -1,47 +1,52 @@
 import { useState, useEffect, useMemo } from "react";
-import { 
-  ShieldCheck, 
-  Activity, 
-  Search, 
-  History, 
-  Droplets, 
-  Beaker, 
-  Truck, 
-  CheckCircle2, 
-  UserCheck, 
+import {
+  ShieldCheck,
+  Activity,
+  Search,
+  History,
+  Droplets,
+  Beaker,
+  Truck,
+  CheckCircle2,
+  UserCheck,
   ArrowRight,
   Clock,
   ExternalLink,
   ShieldAlert,
-  Zap
+  Zap,
+  AlertTriangle,
+  Loader2
 } from "lucide-react";
 import { AuditEvent } from "../types";
+import { useI18n } from "../lib/i18n";
 
 export function AuditLogViewer() {
+  const { t } = useI18n();
   const [events, setEvents] = useState<AuditEvent[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<'table' | 'timeline'>('table');
 
   const fetchEvents = () => {
-    fetch('/api/v1/audit-events')
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          setEvents(data);
-        } else {
-          setEvents([
-            { id: 'AUD-001', timestamp: new Date().toISOString(), actorId: 'U-772', actorRole: 'Dispatcher', eventType: 'DispatchConfirmed', objectId: 'VNB-2024-8812', details: 'Automated FEFO pick-list approved for Transport Route Central-1' },
-            { id: 'AUD-002', timestamp: new Date(Date.now() - 3600000).toISOString(), actorId: 'U-775', actorRole: 'Nurse', eventType: 'VerifySuccess', objectId: 'VNB-2024-9014', details: 'Bedside verification successful for Patient MRN-4421' },
-            { id: 'AUD-003', timestamp: new Date(Date.now() - 7200000).toISOString(), actorId: 'U-780', actorRole: 'Admin', eventType: 'MDMUpdate', objectId: 'ORG-HOSP-04', details: 'Emergency priority escalation updated for Vietnam-Germany Hospital' },
-            { id: 'AUD-004', timestamp: new Date(Date.now() - 86400000).toISOString(), actorId: 'U-782', actorRole: 'LabTech', eventType: 'MTPActivated', objectId: 'VNB-MTP-09', details: 'Massive Transfusion Protocol initiated by ER-Command' }
-          ]);
-        }
+    setLoading(true);
+    setError(null);
+    fetch('/api/v1/audit-events?limit=500')
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
       })
-      .catch(() => {
-        setEvents([
-          { id: 'AUD-001', timestamp: new Date().toISOString(), actorId: 'U-772', actorRole: 'Dispatcher', eventType: 'DispatchConfirmed', objectId: 'VNB-2024-8812', details: 'Automated FEFO pick-list approved for Transport Route Central-1' }
-        ]);
-      });
+      .then(payload => {
+        const data = Array.isArray(payload) ? payload : (payload.data ?? []);
+        setEvents(data);
+        setTotal(typeof payload.total === 'number' ? payload.total : data.length);
+      })
+      .catch(err => {
+        setError(t('audit_error'));
+        setEvents([]);
+      })
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => {
@@ -52,7 +57,7 @@ export function AuditLogViewer() {
 
   const filteredEvents = useMemo(() => {
     if (!searchQuery) return events;
-    return events.filter(e => 
+    return events.filter(e =>
       e.objectId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       e.details?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       e.eventType?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -82,25 +87,28 @@ export function AuditLogViewer() {
          <div className="space-y-4">
             <div className="premium-subtitle">
                <ShieldCheck size={18} className="text-rose-500" />
-               Compliance & Sovereignty Hub
+               {t('audit_compliance_hub')}
             </div>
-            <h1 className="premium-heading">Audit Ledger</h1>
-            <p className="text-clinical-muted text-[11px] font-black uppercase tracking-[0.3em] mt-4 opacity-80">Immutable Blockchain-Verified Traceability Records</p>
+            <h1 className="premium-heading">{t('audit_title')}</h1>
+            <p className="text-clinical-muted text-[11px] font-black uppercase tracking-[0.3em] mt-4 opacity-80">
+              {t('audit_subtitle')}
+              {total > 0 && <span className="ml-4 text-rose-500">({total.toLocaleString()} {t('audit_total_records')})</span>}
+            </p>
          </div>
 
          <div className="flex gap-4">
             <div className="flex bg-clinical-bg p-2 rounded-2xl border border-clinical-border shadow-2xl backdrop-blur-xl">
-               <button 
+               <button
                  onClick={() => setViewMode('table')}
                  className={`px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${viewMode === 'table' ? 'bg-clinical-bg text-white shadow-2xl border border-clinical-border' : 'text-clinical-muted hover:text-clinical-text'}`}
                >
-                 Raw Registry
+                 {t('audit_mode_table')}
                </button>
-               <button 
+               <button
                  onClick={() => setViewMode('timeline')}
                  className={`px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${viewMode === 'timeline' ? 'bg-clinical-bg text-white shadow-2xl border border-clinical-border' : 'text-clinical-muted hover:text-clinical-text'}`}
                >
-                 Vein-to-Vein
+                 {t('audit_mode_timeline')}
                </button>
             </div>
          </div>
@@ -109,9 +117,9 @@ export function AuditLogViewer() {
       <div className="flex flex-col md:flex-row gap-6 bg-clinical-card/20 p-6 rounded-[40px] border border-clinical-border">
          <div className="flex-1 flex items-center gap-4 bg-clinical-bg/50 p-3 rounded-2xl border border-clinical-border px-6 focus-within:border-rose-500/50 transition-all shadow-inner group">
             <Search size={22} className="text-clinical-muted group-focus-within:text-rose-500 transition-colors" />
-            <input 
-              type="text" 
-              placeholder="Search by ISBT Unit ID or Authority Hash..." 
+            <input
+              type="text"
+              placeholder={t('audit_search_placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-transparent border-none focus:ring-0 text-base font-black uppercase tracking-widest text-clinical-text w-full placeholder:text-clinical-text"
@@ -119,17 +127,29 @@ export function AuditLogViewer() {
          </div>
       </div>
 
+      {error && (
+        <div className="flex items-center gap-3 px-6 py-4 bg-rose-500/10 border border-rose-500/30 rounded-2xl text-rose-400 text-sm font-black uppercase tracking-widest">
+          <AlertTriangle size={16} /> {error}
+        </div>
+      )}
+
+      {loading && events.length === 0 && (
+        <div className="flex items-center justify-center py-16 gap-3 text-clinical-muted text-sm font-black uppercase tracking-widest">
+          <Loader2 size={18} className="animate-spin" /> {t('audit_loading')}
+        </div>
+      )}
+
       <div className="flex-1 bg-clinical-bg border border-clinical-border rounded-3xl overflow-hidden shadow-2xl flex flex-col min-h-0">
          {viewMode === 'table' ? (
             <div className="flex-1 overflow-auto custom-scrollbar">
                <table className="w-full text-left text-sm border-collapse">
                  <thead className="bg-clinical-card/80 text-[11px] uppercase text-clinical-muted sticky top-0 border-b border-clinical-border backdrop-blur-xl z-20">
                    <tr>
-                     <th className="px-10 py-6 font-black tracking-[0.2em]">Digital Timestamp</th>
-                     <th className="px-10 py-6 font-black tracking-[0.2em]">Authority Role</th>
-                     <th className="px-10 py-6 font-black tracking-[0.2em]">Operation</th>
-                     <th className="px-10 py-6 font-black tracking-[0.2em]">Target ID</th>
-                     <th className="px-10 py-6 font-black tracking-[0.2em]">Cryptographic Details</th>
+                     <th className="px-10 py-6 font-black tracking-[0.2em]">{t('audit_col_timestamp')}</th>
+                     <th className="px-10 py-6 font-black tracking-[0.2em]">{t('audit_col_role')}</th>
+                     <th className="px-10 py-6 font-black tracking-[0.2em]">{t('audit_col_operation')}</th>
+                     <th className="px-10 py-6 font-black tracking-[0.2em]">{t('audit_col_target')}</th>
+                     <th className="px-10 py-6 font-black tracking-[0.2em]">{t('audit_col_details')}</th>
                    </tr>
                  </thead>
                  <tbody className="divide-y divide-clinical-border font-mono text-[13px]">
@@ -156,10 +176,10 @@ export function AuditLogViewer() {
                        <td className="px-10 py-6 text-clinical-muted font-medium italic group-hover:text-clinical-text transition-colors">{event.details}</td>
                      </tr>
                    ))}
-                   {filteredEvents.length === 0 && (
+                   {!loading && filteredEvents.length === 0 && (
                      <tr>
                        <td colSpan={5} className="text-center py-24 text-clinical-muted italic font-sans text-[11px] uppercase tracking-[0.2em]">
-                         No cryptographic records matched the query.
+                         {t('audit_no_results')}
                        </td>
                      </tr>
                    )}
@@ -173,29 +193,27 @@ export function AuditLogViewer() {
                      <div className="w-20 h-20 bg-clinical-card rounded-[32px] flex items-center justify-center text-clinical-text mb-6 border border-clinical-border">
                         <History size={40} />
                      </div>
-                     <h3 className="text-xl font-black text-clinical-muted uppercase italic tracking-tighter leading-none">Timeline Visualizer</h3>
-                     <p className="text-clinical-muted text-[10px] font-black uppercase tracking-[0.2em] mt-4 max-w-xs">Enter a specific Unit ID above to reconstruct the end-to-end "Vein-to-Vein" lifecycle.</p>
+                     <h3 className="text-xl font-black text-clinical-muted uppercase italic tracking-tighter leading-none">{t('audit_timeline_hint_title')}</h3>
+                     <p className="text-clinical-muted text-[10px] font-black uppercase tracking-[0.2em] mt-4 max-w-xs">{t('audit_timeline_hint_desc')}</p>
                   </div>
                ) : (
                   <div className="max-w-3xl mx-auto">
                      <div className="mb-12 flex items-center justify-between">
                         <div>
-                           <h2 className="text-2xl font-black text-clinical-text tracking-tighter uppercase italic">Unit Lifecycle: {searchQuery}</h2>
-                           <p className="text-clinical-muted text-[10px] font-black uppercase tracking-widest mt-1">Full Traceability Path Discovered</p>
+                           <h2 className="text-2xl font-black text-clinical-text tracking-tighter uppercase italic">{t('audit_timeline_lifecycle', { id: searchQuery })}</h2>
+                           <p className="text-clinical-muted text-[10px] font-black uppercase tracking-widest mt-1">{t('audit_timeline_trace')}</p>
                         </div>
-                        <button 
-                          onClick={() => {
-                             alert("GENERATING DIGITAL AFFIDAVIT OF TRACEABILITY...\n\nBlockchain Hash: 0x7f3b...e4a2\nSovereignty Verification: SUCCESS\n\nFile: Affidavit_" + searchQuery + ".pdf is being compiled.");
-                          }}
+                        <button
+                          onClick={() => alert(t('audit_export_alert', { id: searchQuery }))}
                           className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-sky-500 transition-all shadow-lg shadow-sky-900/40 italic"
                         >
-                           <ExternalLink size={14} /> Export Affidavit
+                           <ExternalLink size={14} /> {t('audit_export_btn')}
                         </button>
                      </div>
 
                      <div className="space-y-0 relative">
                         <div className="absolute left-[27px] top-4 bottom-4 w-px bg-clinical-bg"></div>
-                        
+
                         {timelineEvents.map((event, i) => (
                            <div key={i} className="relative pl-16 pb-12 last:pb-0 animate-in slide-in-from-left-4 duration-500" style={{ animationDelay: `${i * 100}ms` }}>
                               <div className={`absolute left-0 w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl border-2 z-10 ${
@@ -203,7 +221,7 @@ export function AuditLogViewer() {
                               }`}>
                                  {getEventIcon(event.eventType)}
                               </div>
-                              
+
                               <div className="clinical-card p-6 bg-clinical-card/20 hover:border-clinical-border transition-all group">
                                  <div className="flex justify-between items-start mb-2">
                                     <h4 className="font-black text-clinical-text uppercase italic tracking-tight">{event.eventType}</h4>
@@ -212,11 +230,11 @@ export function AuditLogViewer() {
                                  <p className="text-xs text-clinical-muted leading-relaxed mb-4">{event.details}</p>
                                  <div className="flex items-center gap-3">
                                     <div className="px-3 py-1 rounded-lg bg-clinical-bg border border-clinical-border text-[9px] font-black text-clinical-muted uppercase tracking-widest">
-                                       Actor: {event.actorRole}
+                                       {t('audit_actor', { role: event.actorRole })}
                                     </div>
                                     {event.eventType === 'BarcodeMismatch' && (
                                        <div className="px-3 py-1 rounded-lg bg-rose-500/10 border border-rose-500/30 text-[9px] font-black text-rose-500 uppercase tracking-widest flex items-center gap-1.5">
-                                          <ShieldAlert size={10} /> Violation Logged
+                                          <ShieldAlert size={10} /> {t('audit_violation')}
                                        </div>
                                     )}
                                  </div>
@@ -226,7 +244,7 @@ export function AuditLogViewer() {
 
                         {timelineEvents.length === 0 && (
                            <div className="py-20 text-center text-clinical-muted">
-                              <p className="text-[10px] font-black uppercase tracking-widest italic">No events found for this Unit ID.</p>
+                              <p className="text-[10px] font-black uppercase tracking-widest italic">{t('audit_no_events')}</p>
                            </div>
                         )}
                      </div>

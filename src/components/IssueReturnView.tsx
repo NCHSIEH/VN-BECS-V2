@@ -72,11 +72,11 @@ export function IssueReturnView() {
       });
       const data = await res.json();
       if (!res.ok) { setStatus({ type: 'error', msg: data.message || data.error }); return; }
-      setStatus({ type: 'success', msg: `Blood unit ${componentId} issued successfully.` });
+      setStatus({ type: 'success', msg: t('issue_msg_issued', { id: componentId }) });
       setComponentId(""); setPatientId(""); setIssuedTo(""); setIssuedBy("");
       loadData();
     } catch (e: any) {
-      setStatus({ type: 'error', msg: e.message || 'Network Error' });
+      setStatus({ type: 'error', msg: e.message || t('issue_msg_network_error') });
     }
   };
 
@@ -89,11 +89,11 @@ export function IssueReturnView() {
         body: JSON.stringify({ coldChainOk, visualOk })
       });
       const data = await res.json();
-      setStatus({ type: data.returnStatus === 'ColdChainOK' ? 'success' : 'error', msg: `Return status: ${data.returnStatus}` });
+      setStatus({ type: data.returnStatus === 'ColdChainOK' ? 'success' : 'error', msg: t('issue_msg_return_status', { status: data.returnStatus }) });
       setReturnId(null);
       loadData();
     } catch (e: any) {
-      setStatus({ type: 'error', msg: e.message || 'Network Error' });
+      setStatus({ type: 'error', msg: e.message || t('issue_msg_network_error') });
     }
   };
 

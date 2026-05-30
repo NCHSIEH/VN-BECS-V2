@@ -14,8 +14,23 @@ export async function GET(request: Request) {
       return NextResponse.json(rbacErrorBody(authz), { status: 403 });
     }
 
-    const data = await db.audit_events.getAll();
-    return NextResponse.json(data);
+    const { searchParams } = new URL(request.url);
+    const limit = Math.min(parseInt(searchParams.get('limit') ?? '200', 10), 1000);
+    const offset = parseInt(searchParams.get('offset') ?? '0', 10);
+    const since = searchParams.get('since'); // ISO timestamp filter
+
+    const all = await db.audit_events.getAll();
+    const filtered = since
+      ? all.filter((e: any) => e.timestamp && e.timestamp >= since)
+      : all;
+    const page = filtered.slice(offset, offset + limit);
+
+    return NextResponse.json({
+      data: page,
+      total: filtered.length,
+      limit,
+      offset,
+    });
   } catch (error) {
     return internalErrorResponse(request, error, 'AUDIT_LIST_FAILED');
   }
