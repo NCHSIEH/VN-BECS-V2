@@ -371,7 +371,17 @@ export const supplementDict: Record<string, Record<string, string>> = {
     "issue_msg_return_status": "Return status: {status}",
     "issue_msg_network_error": "Network Error",
     "wh_msg_verify_complete": "✅ Verification Complete. ISBT {id} assigned. Handover Token: {token}",
-    "national_load_error": "Failed to load national statistics."
+    "national_load_error": "Failed to load national statistics.",
+    "lims_btn_register_donor": "Register Donor",
+    "lims_btn_close": "Close",
+    "lims_btn_acknowledge": "Acknowledge",
+    "lims_safety_gate_title": "Safety Gate Violation",
+    "lims_toast_deferred_title": "Donor Registered (Deferred)",
+    "lims_toast_deferred_msg": "Donor successfully logged with an active safety deferral status.",
+    "lims_msg_dispatch_success": "Donor dispatched successfully via {mode} mode!",
+    "lims_triage_mode_auto_sub": "Auto Load-Balance",
+    "lims_triage_mode_shared_sub": "Shared Waiting Pool",
+    "lims_triage_mode_direct_sub": "Direct Chair Assignment"
   },
   "zh-TW": {
     "lims_err_donation_interval": "捐血間隔不足：上次捐血 {date}（距今 {weeks} 週，需滿 {required} 週）",
@@ -740,7 +750,17 @@ export const supplementDict: Record<string, Record<string, string>> = {
     "issue_msg_return_status": "退回狀態：{status}",
     "issue_msg_network_error": "網路錯誤",
     "wh_msg_verify_complete": "✅ 驗證完成。ISBT {id} 已指派。移交令牌：{token}",
-    "national_load_error": "無法載入全國統計資料。"
+    "national_load_error": "無法載入全國統計資料。",
+    "lims_btn_register_donor": "登記捐血者",
+    "lims_btn_close": "關閉",
+    "lims_btn_acknowledge": "確認知悉",
+    "lims_safety_gate_title": "安全閘門違規",
+    "lims_toast_deferred_title": "捐血者已登記（暫緩）",
+    "lims_toast_deferred_msg": "捐血者資料已成功建立，並標記為主動安全暫緩狀態。",
+    "lims_msg_dispatch_success": "捐血者已透過 {mode} 模式成功派送！",
+    "lims_triage_mode_auto_sub": "自動負載均衡",
+    "lims_triage_mode_shared_sub": "共用等候池",
+    "lims_triage_mode_direct_sub": "直接指定座椅"
   },
   "vi": {
     "lims_err_donation_interval": "Khoảng cách hiến máu chưa đủ: lần trước {date} ({weeks} tuần trước; cần {required} tuần)",
@@ -1109,6 +1129,16 @@ export const supplementDict: Record<string, Record<string, string>> = {
     "issue_msg_return_status": "Trạng thái hoàn trả: {status}",
     "issue_msg_network_error": "Lỗi mạng",
     "wh_msg_verify_complete": "✅ Xác minh hoàn tất. ISBT {id} đã gán. Mã bàn giao: {token}",
-    "national_load_error": "Không thể tải thống kê quốc gia."
+    "national_load_error": "Không thể tải thống kê quốc gia.",
+    "lims_btn_register_donor": "Đăng ký Người hiến",
+    "lims_btn_close": "Đóng",
+    "lims_btn_acknowledge": "Xác nhận",
+    "lims_safety_gate_title": "Vi phạm Cổng An toàn",
+    "lims_toast_deferred_title": "Người hiến đã đăng ký (Tạm hoãn)",
+    "lims_toast_deferred_msg": "Hồ sơ người hiến đã được lưu thành công với trạng thái tạm hoãn an toàn.",
+    "lims_msg_dispatch_success": "Người hiến đã được điều phối thành công qua chế độ {mode}!",
+    "lims_triage_mode_auto_sub": "Cân bằng tải tự động",
+    "lims_triage_mode_shared_sub": "Hàng đợi chung",
+    "lims_triage_mode_direct_sub": "Phân công ghế trực tiếp"
   }
 };

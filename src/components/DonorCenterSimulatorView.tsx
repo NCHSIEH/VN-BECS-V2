@@ -348,10 +348,10 @@ export function DonorCenterSimulatorView({
         setIsDispatchModalOpen(true);
       } else {
         setLimsToast({
-          title: 'Donor Registered (Deferred)',
-          message: 'Donor successfully logged with an active safety deferral status.',
+          title: t('lims_toast_deferred_title'),
+          message: t('lims_toast_deferred_msg'),
           nextStage: 'DONOR',
-          nextLabel: 'Close'
+          nextLabel: t('lims_btn_close')
         });
       }
     } catch(e: any) {
@@ -399,7 +399,7 @@ export function DonorCenterSimulatorView({
       });
       
       if (res.ok) {
-        setStatus({ type: 'success', msg: `Donor dispatched successfully via ${dispatchMode} mode!` });
+        setStatus({ type: 'success', msg: t('lims_msg_dispatch_success', { mode: dispatchMode }) });
         loadData();
       }
     } catch (err) {
@@ -683,7 +683,7 @@ export function DonorCenterSimulatorView({
                </div>
                {activeTab === 'DONOR' && (
                  <button onClick={() => openDonorModal()} className="clinical-btn-primary">
-                   <Plus size={24} /> Register Donor
+                   <Plus size={24} /> {t('lims_btn_register_donor')}
                  </button>
                )}
             </div>
@@ -692,10 +692,10 @@ export function DonorCenterSimulatorView({
               <div className="p-8 rounded-[32px] bg-rose-500 border border-rose-400 text-clinical-text mb-8 flex gap-6 items-center animate-in shake duration-500 shadow-2xl shadow-rose-900/40">
                 <ShieldAlert size={40} className="shrink-0" />
                 <div className="flex-1">
-                   <p className="font-black text-xs uppercase tracking-[0.2em] italic mb-1">Safety Gate Violation</p>
+                   <p className="font-black text-xs uppercase tracking-[0.2em] italic mb-1">{t('lims_safety_gate_title')}</p>
                    <p className="font-bold text-lg opacity-90 leading-tight">{gatingError}</p>
                 </div>
-                <button onClick={() => setGatingError(null)} className="px-6 py-3 bg-clinical-card hover:bg-clinical-card/30 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all">Acknowledge</button>
+                <button onClick={() => setGatingError(null)} className="px-6 py-3 bg-clinical-card hover:bg-clinical-card/30 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all">{t('lims_btn_acknowledge')}</button>
               </div>
             )}
 
@@ -1484,7 +1484,7 @@ export function DonorCenterSimulatorView({
                         className={`p-6 rounded-2xl border text-left transition-all ${dispatchMode === 'Auto' ? 'bg-rose-500/10 border-rose-500 text-rose-500' : 'bg-clinical-bg border-clinical-border text-clinical-muted hover:border-slate-500'}`}
                       >
                          <div className="font-black text-sm uppercase mb-1">{t('lims_triage_mode_auto')}</div>
-                         <div className="text-[9px] uppercase tracking-wider opacity-80">Auto Load-Balance</div>
+                         <div className="text-[9px] uppercase tracking-wider opacity-80">{t('lims_triage_mode_auto_sub')}</div>
                       </button>
 
                       {/* Shared Card */}
@@ -1494,7 +1494,7 @@ export function DonorCenterSimulatorView({
                         className={`p-6 rounded-2xl border text-left transition-all ${dispatchMode === 'Shared' ? 'bg-rose-500/10 border-rose-500 text-rose-500' : 'bg-clinical-bg border-clinical-border text-clinical-muted hover:border-slate-500'}`}
                       >
                          <div className="font-black text-sm uppercase mb-1">{t('lims_triage_mode_shared')}</div>
-                         <div className="text-[9px] uppercase tracking-wider opacity-80">Shared Waiting Pool</div>
+                         <div className="text-[9px] uppercase tracking-wider opacity-80">{t('lims_triage_mode_shared_sub')}</div>
                       </button>
 
                       {/* Direct Card */}
@@ -1504,7 +1504,7 @@ export function DonorCenterSimulatorView({
                         className={`p-6 rounded-2xl border text-left transition-all ${dispatchMode === 'Direct' ? 'bg-rose-500/10 border-rose-500 text-rose-500' : 'bg-clinical-bg border-clinical-border text-clinical-muted hover:border-slate-500'}`}
                       >
                          <div className="font-black text-sm uppercase mb-1">{t('lims_triage_mode_direct')}</div>
-                         <div className="text-[9px] uppercase tracking-wider opacity-80">Direct Chair</div>
+                         <div className="text-[9px] uppercase tracking-wider opacity-80">{t('lims_triage_mode_direct_sub')}</div>
                       </button>
                    </div>
                 </div>
