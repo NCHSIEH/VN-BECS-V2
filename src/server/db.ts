@@ -484,6 +484,12 @@ export const donors = {
       () => fallbackStores.donors.find(d => d.nationalId === nid) || null,
     );
   },
+  async getById(id: string) {
+    return readWithFallback(
+      () => supabase.from('donors').select('*').eq('id', id).maybeSingle(),
+      () => fallbackStores.donors.find(d => d.id === id) || null,
+    );
+  },
   async remove(id: string) {
     return writeWithFallback(
       () => supabase.from('donors').delete().eq('id', id),
@@ -569,6 +575,12 @@ export const donations = {
       }
       throw e;
     }
+  },
+  async getById(id: string) {
+    return readWithFallback(
+      () => supabase.from('donations').select('*').eq('id', id).maybeSingle(),
+      () => fallbackStores.donations.find(d => d.id === id) || null,
+    );
   },
   async create(data: any) {
     let payload = { ...data };

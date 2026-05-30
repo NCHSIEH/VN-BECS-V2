@@ -8,6 +8,7 @@ import {
 } from '@/src/server/services/bloodUnitCommands';
 import type { Role } from '@/src/types';
 import { authorizeApiRole, rbacErrorBody } from '@/src/server/rbacPolicy';
+import { resolveOne, byIdIfAvailable } from '@/src/server/repositories/queryHelpers';
 import { verifyPassword } from '@/src/server/crypto';
 import { evaluateComponentCompatibility } from '@/src/lib/bloodSafety';
 
@@ -124,8 +125,11 @@ export async function POST(request: Request) {
     }
 
     // 3. Verify facility/custody scope matches patient hospitalId
-    const patientsList = await db.patients.getAll();
-    const patient = patientsList.find((p: any) => p.id === data.patientId || p.mrn === data.patientId);
+    const patient = await resolveOne(
+      byIdIfAvailable(db.patients, 'getById', data.patientId),
+      () => db.patients.getAll(),
+      (p: any) => p.id === data.patientId || p.mrn === data.patientId,
+    );
     if (!patient) {
       return apiErrorResponse({
         request,
@@ -159,15 +163,15 @@ export async function POST(request: Request) {
       }
     }
 
-    const [components, allInventory] = await Promise.all([
-      db.components.getAll(),
-      db.inventory.getAll(),
-    ]);
-    const component = components.find((c: any) => (
-      c.id === scannedComponentId ||
-      c.unitId === scannedComponentId ||
-      c.din === scannedComponentId
-    ));
+    const component = await resolveOne(
+      byIdIfAvailable(db.components, 'getById', scannedComponentId),
+      () => db.components.getAll(),
+      (c: any) => (
+        c.id === scannedComponentId ||
+        c.unitId === scannedComponentId ||
+        c.din === scannedComponentId
+      ),
+    );
 
     if (!component) {
       return apiErrorResponse({
@@ -206,7 +210,11 @@ export async function POST(request: Request) {
     }
 
     const actorRole = (data.actorRole || data.role || 'Nurse') as Role;
-    const inventoryItem = allInventory.find((item: any) => item.unitId === (component.id || scannedComponentId));
+    const inventoryItem = await resolveOne(
+      byIdIfAvailable(db.inventory, 'getByUnitId', component.id || scannedComponentId),
+      () => db.inventory.getAll(),
+      (item: any) => item.unitId === (component.id || scannedComponentId),
+    );
     const currentStatus = inventoryItem ? inventoryItem.status : component.status;
 
     const componentId = component.id || scannedComponentId;

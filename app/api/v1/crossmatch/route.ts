@@ -10,6 +10,7 @@ import {
 import type { Role } from '@/src/types';
 import { apiErrorResponse, getRequestId, internalErrorResponse } from '@/src/server/apiResponses';
 import { authorizeApiRole, authorizeFacilityScope, facilityIdOf, facilityScopeErrorBody, rbacErrorBody } from '@/src/server/rbacPolicy';
+import { resolveOne, byIdIfAvailable } from '@/src/server/repositories/queryHelpers';
 
 export async function GET(request: Request) {
   try {
@@ -45,32 +46,39 @@ export async function POST(request: Request) {
       return apiErrorResponse({ request, code: 'SPECIMEN_DATE_INVALID', message: specimenVal.errors.join(", "), status: 400 });
     }
 
-    // Load Blood Component
-    const [components, allInventory] = await Promise.all([
-      db.components.getAll(),
-      db.inventory.getAll(),
-    ]);
-    const component = components.find(c => c.id === componentId || c.donationId === componentId);
+    // Load Blood Component (targeted lookup; falls back to a scan for test mocks)
+    const component = await resolveOne(
+      byIdIfAvailable(db.components, 'getById', componentId),
+      () => db.components.getAll(),
+      (c: any) => c.id === componentId || c.donationId === componentId,
+    );
 
     if (!component) {
       return apiErrorResponse({ request, code: 'COMPONENT_NOT_FOUND', message: 'Blood component not found in system', status: 404 });
     }
 
-    // In a real system, component ABO/Rh is either on the component or joined from donations/lab_tests
-    // For this simulation, let's assume it's available or we mock it.
-    // Let's retrieve the donation to get the blood type.
-    const donations = await db.donations.getAll();
-    const donation = donations.find(d => d.id === component.donationId);
-    const donors = await db.donors.getAll();
-    const donor = donors.find(d => d.id === donation?.donorId);
+    // Resolve the source donation -> donor to read the unit's blood type.
+    const donation = await resolveOne(
+      byIdIfAvailable(db.donations, 'getById', component.donationId),
+      () => db.donations.getAll(),
+      (d: any) => d.id === component.donationId,
+    );
+    const donor = await resolveOne(
+      donation ? byIdIfAvailable(db.donors, 'getById', donation.donorId) : null,
+      () => db.donors.getAll(),
+      (d: any) => d.id === donation?.donorId,
+    );
 
     if (!donor) {
       return apiErrorResponse({ request, code: 'SOURCE_DONOR_NOT_FOUND', message: 'Source donor data not found for component', status: 404 });
     }
 
-    // Load Patient
-    const patients = await db.patients.getAll();
-    const patient = patients.find(p => p.id === patientId || p.mrn === patientId);
+    // Load Patient (by id or MRN)
+    const patient = await resolveOne(
+      byIdIfAvailable(db.patients, 'getById', patientId),
+      () => db.patients.getAll(),
+      (p: any) => p.id === patientId || p.mrn === patientId,
+    );
 
     if (!patient) {
       return apiErrorResponse({ request, code: 'PATIENT_NOT_FOUND', message: 'Patient not found', status: 404 });
@@ -125,7 +133,11 @@ export async function POST(request: Request) {
     await db.crossmatch.create(record);
 
     if (result === 'Compatible') {
-      const inventoryItem = allInventory.find((item: any) => item.unitId === component.id);
+      const inventoryItem = await resolveOne(
+        byIdIfAvailable(db.inventory, 'getByUnitId', component.id),
+        () => db.inventory.getAll(),
+        (item: any) => item.unitId === component.id,
+      );
       const currentStatus = inventoryItem ? inventoryItem.status : component.status;
 
       const transitionResult = await executeBloodUnitTransition(

@@ -8,6 +8,7 @@ import {
 import type { Role } from '@/src/types';
 import { apiErrorResponse, getRequestId, internalErrorResponse } from '@/src/server/apiResponses';
 import { authorizeApiRole, authorizeFacilityScope, facilityIdOf, facilityScopeErrorBody, rbacErrorBody } from '@/src/server/rbacPolicy';
+import { resolveOne, byIdIfAvailable } from '@/src/server/repositories/queryHelpers';
 
 export async function GET(request: Request) {
   try {
@@ -45,12 +46,13 @@ export async function POST(request: Request) {
       });
     }
 
-    const [allComponents, allInventory] = await Promise.all([
-      db.components.getAll(),
-      db.inventory.getAll(),
-    ]);
-
-    const component = allComponents.find((c: any) => c.id === componentId);
+    // Targeted lookups (fall back to a full scan for repositories/test mocks
+    // that only implement getAll()).
+    const component = await resolveOne(
+      byIdIfAvailable(db.components, 'getById', componentId),
+      () => db.components.getAll(),
+      (c: any) => c.id === componentId,
+    );
     if (!component) {
       return apiErrorResponse({
         request,
@@ -60,7 +62,11 @@ export async function POST(request: Request) {
       });
     }
 
-    const inventoryItem = allInventory.find((i: any) => i.unitId === componentId);
+    const inventoryItem = await resolveOne(
+      byIdIfAvailable(db.inventory, 'getByUnitId', componentId),
+      () => db.inventory.getAll(),
+      (i: any) => i.unitId === componentId,
+    );
 
     // ABAC: confine the action to the actor's own facility (defence-in-depth
     // layer; DB RLS is the second layer once facility_id is populated).

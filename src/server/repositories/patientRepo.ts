@@ -25,6 +25,29 @@ export const patients = {
     }
   },
 
+  async getById(idOrMrn: string) {
+    try {
+      const { data, error } = await supabase
+        .from('patients')
+        .select('*, patient_antibodies(*)')
+        .or(`id.eq.${idOrMrn},mrn.eq.${idOrMrn}`)
+        .maybeSingle();
+      if (error) {
+        if (isTableMissingError(error)) {
+          return this.getFallbackPatients().find(p => p.id === idOrMrn || p.mrn === idOrMrn) || null;
+        }
+        throw error;
+      }
+      if (!data) return null;
+      return { ...data, antibodyHistory: (data.patient_antibodies || []).map((a: any) => a.antibody) };
+    } catch (e: any) {
+      if (isTableMissingError(e)) {
+        return this.getFallbackPatients().find(p => p.id === idOrMrn || p.mrn === idOrMrn) || null;
+      }
+      throw e;
+    }
+  },
+
   getFallbackPatients() {
     return fallbackStores.patients.map(p => {
       const antibodies = (fallbackStores as any).patient_antibodies?.filter((a: any) => a.patientId === p.id) || [];
