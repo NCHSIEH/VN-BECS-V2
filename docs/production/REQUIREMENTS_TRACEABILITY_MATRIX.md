@@ -58,7 +58,7 @@
 | RTM-DON-02 | VN26 | 採血量上限 <500ml、體重連動（42–45kg<250ml、<42kg 不合格） | SOP1 | `validators.validateCollectionVolume`（伺服器端 `lims/collect/route.ts` 強制） | `collectionVolume.test.ts` | <500ml/<42kg/42–45kg<250ml 已強制；≥45kg 每公斤上限屬本地政策 | ✅ |
 | RTM-DON-03 | VN26, AABB | 問卷暫緩(deferral)規則並記錄決策時政策版本 | SOP1 | `clinicalPolicy.ts`, `validators.validateVietnamDeferralRules`, `lims/donors/route.ts` | `emergencyPolicy.test.ts` | 版本化政策登錄；deferral 回傳並於問卷記錄 policyVersion | ✅ |
 | RTM-LBL-01 | ISBT128 | DIN/標籤完整解析（結構、機構碼、產品碼、ISO 7064 檢查碼） | SOP1/3 | `src/lib/isbt128.ts`（`parseDin`/`parseProductCode`/MOD37,2）, `lims/collect/route.ts` | `isbt128.test.ts` | 結構+FIN+檢查碼解析並於採血路由強制；ICCBBA 官方測試向量待 UAT | ✅ |
-| RTM-TRACE-01 | FDA606, ISBT128 | 捐血者↔受血者雙向完整追溯報表 | SOP9 | `reportingService.ts`, `reconciliation.ts` | _需新增端到端追溯測試_ | 🟠 lookback 連動存在；報表未完整 | 🟠 |
+| RTM-TRACE-01 | FDA606, ISBT128 | 捐血者↔受血者雙向完整追溯報表 | SOP9 | **`services/traceability.ts`（forward 捐血者→受血者 / backward 血袋→捐血者）, `app/api/v1/trace/route.ts`（RBAC 限品質/HV 角色）** | `traceability.test.ts`(5) | 雙向追溯報表已建（含 IDM 狀態、配發/輸血/配血受血者去重、不良反應連動）並有單元測試；待 UAT 實資料端到端 + reviewer 簽核（前端面板為選配） | 🟠 |
 | RTM-AUD-01 | FDA211 | 稽核紀錄 append-only、不可竄改（DB 層強制） | — | `supabase_schema.sql:142-160,402-427` | `db-migrations/001_tests.sql` (TEST 2) | trigger+RLS 已有；竄改測試已撰；待連線測試庫執行附證據 | 🟠 |
 | RTM-AUD-02 | FDA211 | 稽核 hash chain 完整性可驗證（驗證端點 + 排程檢查） | — | `auditChain.verifyAuditChain`, `app/api/v1/audit-events/verify/route.ts` | `auditChainVerify.test.ts` | 驗證端點 + 竄改/斷鏈偵測測試已建；排程化待補 | ✅ |
 | RTM-COLD-01 | VN26, EU-GMP | 冷鏈：經驗證裝置、excursion 閾值、自動隔離、CAPA | SOP5 | `transport_jobs`, route-local | _需冷鏈 excursion 端到端測試_ | 🔴 目前為模擬值 | 🔴 |
