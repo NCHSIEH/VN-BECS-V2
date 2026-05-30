@@ -5,6 +5,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { FlaskConical, ShieldCheck, ShieldAlert, AlertCircle, CheckCircle2, Clock, Search } from "lucide-react";
 import type { CrossmatchMethod, CrossmatchResult, Patient } from "../types";
+import { useI18n } from "../lib/i18n";
 
 interface CrossmatchRecord {
   id: string;
@@ -18,6 +19,7 @@ interface CrossmatchRecord {
 }
 
 export function CrossmatchView({ user }: { user?: any }) {
+  const { t } = useI18n();
   const [records, setRecords] = useState<CrossmatchRecord[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [localInventory, setLocalInventory] = useState<any[]>([]);
@@ -33,7 +35,7 @@ export function CrossmatchView({ user }: { user?: any }) {
 
   const loadData = () => {
     fetch('/api/v1/crossmatch').then(res => res.json()).then(setRecords).catch(console.error);
-    fetch('/api/v1/mdm/patients').then(res => res.json()).then(setPatients).catch(console.error);
+    fetch('/api/v1/patients').then(res => res.json()).then(setPatients).catch(console.error);
     fetch('/api/v1/inventory').then(res => res.json()).then(data => {
       // Filter by location (hospital) and status
       const localUnits = data.filter((item: any) => 
@@ -79,17 +81,17 @@ export function CrossmatchView({ user }: { user?: any }) {
     setStatus(null);
 
     if (!specimenValid) {
-      setStatus({ type: 'error', msg: 'Specimen expired (>3 days). Please collect a new sample.' });
+      setStatus({ type: 'error', msg: t('xm_err_specimen_expired') });
       return;
     }
     if (!exmAllowed) {
-      setStatus({ type: 'error', msg: 'EXM not allowed: patient has clinically significant antibodies. Use AHG instead.' });
+      setStatus({ type: 'error', msg: t('xm_err_exm_blocked') });
       return;
     }
 
     const inventoryItem = localInventory.find(i => i.unitId === componentId);
     if (!inventoryItem) {
-      setStatus({ type: 'error', msg: `Component ${componentId} is not available in local inventory at this hospital.` });
+      setStatus({ type: 'error', msg: t('xm_err_not_local', { id: componentId }) });
       return;
     }
 
@@ -104,10 +106,10 @@ export function CrossmatchView({ user }: { user?: any }) {
         setStatus({ type: 'error', msg: data.message || data.error });
         return;
       }
-      setStatus({ type: data.result === 'Incompatible' ? 'error' : 'success', msg: `Crossmatch result: ${data.result}` });
+      setStatus({ type: data.result === 'Incompatible' ? 'error' : 'success', msg: t('xm_result', { result: data.result }) });
       loadData();
     } catch (e: any) {
-      setStatus({ type: 'error', msg: e.message || 'Network Error' });
+      setStatus({ type: 'error', msg: e.message || t('xm_err_network') });
     }
   };
 
@@ -118,14 +120,14 @@ export function CrossmatchView({ user }: { user?: any }) {
       <div className="flex items-center justify-between border-b border-clinical-border pb-8">
          <div>
             <div className="flex items-center gap-3 mb-2">
-               <span className="text-[10px] font-black text-purple-500 uppercase tracking-[0.4em] bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20 italic">Clinical Protocol</span>
+               <span className="text-[10px] font-black text-purple-500 uppercase tracking-[0.4em] bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20 italic">{t('xm_clinical_protocol')}</span>
                <div className="h-px w-12 bg-clinical-bg"></div>
             </div>
-            <h1 className="text-4xl font-black text-clinical-text tracking-tighter uppercase italic leading-none">Compatibility Intelligence</h1>
+            <h1 className="text-4xl font-black text-clinical-text tracking-tighter uppercase italic leading-none">{t('xm_title')}</h1>
          </div>
          <div className="flex items-center gap-4">
             <div className="flex flex-col items-end">
-               <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">System Confidence</span>
+               <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">{t('xm_sys_confidence')}</span>
                <div className="flex items-center gap-3 mt-1">
                   <div className="h-1.5 w-40 bg-clinical-card rounded-full overflow-hidden p-0.5 border border-clinical-border shadow-inner">
                      <div className="h-full bg-purple-500 w-[98%] shadow-[0_0_10px_rgba(168,85,247,0.6)] rounded-full" />
@@ -142,20 +144,20 @@ export function CrossmatchView({ user }: { user?: any }) {
            {/* Patient Discovery Card */}
            <div className={`clinical-card p-8 transition-all duration-500 ${selectedPatient ? 'border-purple-500/30 bg-purple-500/5 shadow-2xl shadow-purple-900/10' : 'bg-clinical-card/10'}`}>
               <div className="flex justify-between items-start mb-8">
-                 <h3 className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] italic">Patient Interoperability (HIS)</h3>
+                 <h3 className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] italic">{t('xm_patient_interop')}</h3>
                  {selectedPatient && <ShieldCheck className="text-emerald-500" size={20} />}
               </div>
               
               <div className="space-y-6">
                  <div>
-                    <label className="block text-[9px] font-black text-clinical-muted uppercase tracking-widest mb-2">Master Patient Index (MRN)</label>
+                    <label className="block text-[9px] font-black text-clinical-muted uppercase tracking-widest mb-2">{t('xm_mpi')}</label>
                     <div className="relative group">
                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-clinical-muted group-focus-within:text-purple-500 transition-colors" size={18} />
                        <input 
                          required 
                          value={patientId} 
                          onChange={e => setPatientId(e.target.value)}
-                         placeholder="Enter MRN (e.g. MRN-1001)"
+                         placeholder={t('xm_mrn_placeholder')}
                          className="clinical-input pl-12 h-14 w-full" 
                        />
                     </div>
@@ -169,13 +171,13 @@ export function CrossmatchView({ user }: { user?: any }) {
                        </div>
                        <div className="space-y-3">
                           <div className="flex justify-between items-center text-[10px] border-b border-clinical-border pb-2">
-                             <span className="text-clinical-muted font-bold uppercase tracking-widest">Antibody History</span>
+                             <span className="text-clinical-muted font-bold uppercase tracking-widest">{t('xm_antibody_history')}</span>
                              <span className={`font-black ${selectedPatient.antibodyHistory?.length ? 'text-rose-500' : 'text-emerald-500'}`}>
-                                {selectedPatient.antibodyHistory?.length ? selectedPatient.antibodyHistory.join(', ') : 'NEGATIVE'}
+                                {selectedPatient.antibodyHistory?.length ? selectedPatient.antibodyHistory.join(', ') : t('xm_negative')}
                              </span>
                           </div>
                           <div className="flex justify-between items-center text-[10px]">
-                             <span className="text-clinical-muted font-bold uppercase tracking-widest">Match Score</span>
+                             <span className="text-clinical-muted font-bold uppercase tracking-widest">{t('xm_match_score')}</span>
                              <div className="flex items-center gap-2">
                                 <span className="font-black text-clinical-text">{matchScore}%</span>
                                 <div className="w-12 h-1 bg-clinical-card rounded-full overflow-hidden">
@@ -187,7 +189,7 @@ export function CrossmatchView({ user }: { user?: any }) {
                     </div>
                  ) : patientId.length >= 4 && (
                     <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-center gap-3 text-rose-500 text-[10px] font-bold italic">
-                       <AlertCircle size={16} /> Patient Not Found in HIS Cache
+                       <AlertCircle size={16} /> {t('xm_patient_not_found')}
                     </div>
                  )}
               </div>
@@ -195,17 +197,17 @@ export function CrossmatchView({ user }: { user?: any }) {
 
            {/* Test Configuration */}
            <div className="clinical-card p-8 bg-clinical-card/10">
-              <h3 className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] mb-8 italic">Test Configuration</h3>
+              <h3 className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] mb-8 italic">{t('xm_test_config')}</h3>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                   <label className="block text-[9px] font-black text-clinical-muted uppercase tracking-widest mb-2">Component Identifier (ISBT)</label>
+                   <label className="block text-[9px] font-black text-clinical-muted uppercase tracking-widest mb-2">{t('xm_component_id')}</label>
                    <input required value={componentId} onChange={e => setComponentId(e.target.value)}
-                     placeholder="DIN/Product (e.g. C-12345)"
+                     placeholder={t('xm_component_placeholder')}
                      className="clinical-input h-14 w-full font-mono" />
                 </div>
 
                 <div>
-                   <label className="block text-[9px] font-black text-clinical-muted uppercase tracking-widest mb-2">Methodological Protocol</label>
+                   <label className="block text-[9px] font-black text-clinical-muted uppercase tracking-widest mb-2">{t('xm_method_protocol')}</label>
                    <div className="grid grid-cols-3 gap-3">
                      {(['IS', 'AHG', 'EXM'] as CrossmatchMethod[]).map(m => (
                        <button key={m} type="button" onClick={() => setMethod(m)}
@@ -220,22 +222,22 @@ export function CrossmatchView({ user }: { user?: any }) {
                      ))}
                    </div>
                    <p className="text-[9px] text-clinical-muted mt-2 italic px-1">
-                      {method === 'IS' && 'Immediate Spin: ABO incompatibility only.'}
-                      {method === 'AHG' && 'Indirect Antiglobulin: Full antibody screen.'}
-                      {method === 'EXM' && 'Electronic: System-validated matching.'}
+                      {method === 'IS' && t('xm_method_is')}
+                      {method === 'AHG' && t('xm_method_ahg')}
+                      {method === 'EXM' && t('xm_method_exm')}
                    </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                    <div>
-                      <label className="block text-[9px] font-black text-clinical-muted uppercase tracking-widest mb-2">Specimen Age</label>
+                      <label className="block text-[9px] font-black text-clinical-muted uppercase tracking-widest mb-2">{t('xm_specimen_age')}</label>
                       <input type="date" value={specimenDate} onChange={e => setSpecimenDate(e.target.value)}
                         className={`clinical-input h-12 w-full text-xs ${specimenValid ? '' : 'border-rose-500 bg-rose-500/5'}`} />
                    </div>
                    <div>
-                      <label className="block text-[9px] font-black text-clinical-muted uppercase tracking-widest mb-2">Technician ID</label>
+                      <label className="block text-[9px] font-black text-clinical-muted uppercase tracking-widest mb-2">{t('xm_technician')}</label>
                       <input required value={testedBy} onChange={e => setTestedBy(e.target.value)}
-                        placeholder="Auth Code"
+                        placeholder={t('xm_auth_code')}
                         className="clinical-input h-12 w-full text-xs" />
                    </div>
                 </div>
@@ -252,7 +254,7 @@ export function CrossmatchView({ user }: { user?: any }) {
                   disabled={!specimenValid || !exmAllowed || !selectedPatient}
                   className="w-full bg-purple-600 hover:bg-purple-500 disabled:opacity-20 disabled:cursor-not-allowed text-clinical-text font-black py-4 rounded-[24px] transition-all shadow-xl shadow-purple-900/20 hover:scale-[1.02] active:scale-95 uppercase tracking-[0.2em] italic text-xs"
                 >
-                  Authorize Crossmatch
+                  {t('xm_authorize')}
                 </button>
               </form>
            </div>
@@ -262,7 +264,7 @@ export function CrossmatchView({ user }: { user?: any }) {
         <div className="col-span-12 lg:col-span-7 flex flex-col gap-8">
            <div className="clinical-card p-8 bg-clinical-card/10 flex-1 flex flex-col min-h-[600px]">
               <div className="flex justify-between items-center mb-8 border-b border-clinical-border pb-6">
-                 <h3 className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] italic">Historical Intelligence Ledger ({records.length})</h3>
+                 <h3 className="text-[10px] font-black text-clinical-muted uppercase tracking-[0.3em] italic">{t('xm_ledger')} ({records.length})</h3>
                  <div className="flex gap-2">
                     <div className="w-2 h-2 rounded-full bg-emerald-500" />
                     <div className="w-2 h-2 rounded-full bg-rose-500" />
@@ -296,7 +298,7 @@ export function CrossmatchView({ user }: { user?: any }) {
                              <span className="text-[9px] bg-clinical-card text-clinical-muted border border-clinical-border px-2 py-0.5 rounded-lg font-black uppercase tracking-widest">{r.method}</span>
                           </div>
                           <div className="text-[10px] text-clinical-muted font-bold uppercase tracking-widest">
-                             Component: <span className="text-clinical-text font-mono">{r.componentId}</span> <span className="mx-2 text-clinical-text">|</span> MRN: <span className="text-clinical-text">{r.patientId}</span>
+                             {t('xm_component_label')}: <span className="text-clinical-text font-mono">{r.componentId}</span> <span className="mx-2 text-clinical-text">|</span> MRN: <span className="text-clinical-text">{r.patientId}</span>
                           </div>
                        </div>
                     </div>
@@ -311,7 +313,7 @@ export function CrossmatchView({ user }: { user?: any }) {
                 {records.length === 0 && (
                   <div className="flex-1 flex flex-col items-center justify-center text-clinical-text py-20 space-y-4">
                      <FlaskConical size={64} className="opacity-10" />
-                     <p className="font-black uppercase tracking-[0.4em] text-xs italic">No Intelligence Found in Current Node</p>
+                     <p className="font-black uppercase tracking-[0.4em] text-xs italic">{t('xm_no_records')}</p>
                   </div>
                 )}
               </div>

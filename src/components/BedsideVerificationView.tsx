@@ -84,13 +84,13 @@ export function BedsideVerificationView() {
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     if(!patientId || !unitBarcodeRaw || !verifier1Id || !verifier1Pin || !verifier2Id || !verifier2Pin) {
-       setResult({ success: false, message: "Both verifiers must provide username and PIN (SOP 6 dual verification)." });
+       setResult({ success: false, message: t('bv_err_dual_required') });
        return;
     }
-    
+
     // Safety Gating
     if(!vitalsChecked || !consentVerified) {
-       setResult({ success: false, message: "CRITICAL SAFETY BLOCK: Clinical prerequisites (EHR Consent & Vitals) must be authenticated." });
+       setResult({ success: false, message: t('bv_err_clinical_block') });
        return;
     }
     
@@ -116,14 +116,14 @@ export function BedsideVerificationView() {
       });
       const data = await res.json();
       if(res.ok) {
-         setResult({ success: true, message: "TRANSFUSION AUTHORIZED: 100% Identification match & clinical prerequisites verified." });
+         setResult({ success: true, message: t('bv_success') });
          // Reset form slightly for next unit but keep patient
          setUnitBarcodeRaw("");
       } else {
-         setResult({ success: false, message: data.error || data.message || "Verification Failed" });
+         setResult({ success: false, message: data.error || data.message || t('bv_err_failed') });
       }
     } catch(err) {
-      setResult({ success: false, message: "Communication failure with Central Hub. Retry authentication." });
+      setResult({ success: false, message: t('bv_err_comm') });
     } finally {
       setIsVerifying(false);
     }
@@ -141,8 +141,8 @@ export function BedsideVerificationView() {
              <div className="bg-clinical-card w-20 h-20 rounded-[32px] flex items-center justify-center mb-6 border border-clinical-border shadow-inner">
                 <ScanFace size={40} className="text-sky-400" />
              </div>
-             <h2 className="text-3xl font-black text-white uppercase italic tracking-tighter leading-none">Bedside Safety Node</h2>
-             <p className="text-clinical-muted text-[10px] font-black uppercase tracking-[0.2em] mt-4 max-w-xs">Dual-Personnel Authentication & ISBT Scanning</p>
+             <h2 className="text-3xl font-black text-white uppercase italic tracking-tighter leading-none">{t('bv_title')}</h2>
+             <p className="text-clinical-muted text-[10px] font-black uppercase tracking-[0.2em] mt-4 max-w-xs">{t('bv_subtitle')}</p>
           </div>
 
           <form onSubmit={handleVerify} className="space-y-8 flex flex-col">
@@ -150,9 +150,9 @@ export function BedsideVerificationView() {
              <div className="p-6 bg-clinical-bg border border-clinical-border rounded-3xl relative">
                 <div className="flex justify-between items-center mb-6">
                    <div className="text-[10px] font-black text-clinical-muted uppercase tracking-widest flex items-center gap-2">
-                      <Database size={14} className="text-sky-500" /> Clinical EHR Bridge
+                      <Database size={14} className="text-sky-500" /> {t('bv_ehr_bridge')}
                    </div>
-                   {ehrStatus === 'linked' && <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/30">Record Linked</span>}
+                   {ehrStatus === 'linked' && <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/30">{t('bv_record_linked')}</span>}
                 </div>
                 
                 <div className="flex gap-3 mb-4">
@@ -165,7 +165,7 @@ export function BedsideVerificationView() {
                         }))}
                         value={patientId}
                         onChange={handlePatientIdChange}
-                        placeholder="Search Patient MRN..."
+                        placeholder={t('bv_search_patient')}
                     />
                   </div>
                   <button 
@@ -180,18 +180,18 @@ export function BedsideVerificationView() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-clinical-card p-4 rounded-2xl border border-clinical-border text-center">
-                     <span className="text-[9px] font-black text-clinical-muted uppercase block mb-1">Blood Group</span>
+                     <span className="text-[9px] font-black text-clinical-muted uppercase block mb-1">{t('bv_blood_group')}</span>
                      <span className="text-xl font-black text-white italic tracking-tighter">{patientAbo} {patientRhd === 'Positive' ? 'RhD+' : 'RhD-'}</span>
                   </div>
                   <div className={`p-4 rounded-2xl border transition-all flex flex-col items-center justify-center ${
                      ehrStatus === 'linked' ? 'bg-emerald-500/10 border-emerald-500/30' : 
                      ehrStatus === 'failed' ? 'bg-rose-500/10 border-rose-500/30' : 'bg-clinical-card border-clinical-border'
                   }`}>
-                     <span className="text-[9px] font-black text-clinical-muted uppercase block mb-1">EHR Status</span>
+                     <span className="text-[9px] font-black text-clinical-muted uppercase block mb-1">{t('bv_ehr_status')}</span>
                      <span className={`text-[10px] font-black uppercase tracking-widest ${
                         ehrStatus === 'linked' ? 'text-emerald-400' : ehrStatus === 'failed' ? 'text-rose-500' : 'text-clinical-muted'
                      }`}>
-                        {ehrStatus === 'linked' ? 'Sync Success' : ehrStatus === 'failed' ? 'Record Missing' : 'Standby'}
+                        {ehrStatus === 'linked' ? t('bv_sync_success') : ehrStatus === 'failed' ? t('bv_record_missing') : t('bv_standby')}
                      </span>
                   </div>
                 </div>
@@ -204,9 +204,9 @@ export function BedsideVerificationView() {
                       <FileText size={20} />
                    </div>
                    <div>
-                      <p className="text-[9px] font-black text-clinical-muted uppercase tracking-widest leading-none mb-1">Consent</p>
+                      <p className="text-[9px] font-black text-clinical-muted uppercase tracking-widest leading-none mb-1">{t('bv_consent')}</p>
                       <p className={`text-[10px] font-black uppercase tracking-tighter ${consentVerified ? 'text-white' : 'text-clinical-muted'}`}>
-                         {consentVerified ? 'Authenticated' : 'Required'}
+                         {consentVerified ? t('bv_authenticated') : t('bv_required')}
                       </p>
                    </div>
                 </div>
@@ -215,9 +215,9 @@ export function BedsideVerificationView() {
                       <Stethoscope size={20} />
                    </div>
                    <div>
-                      <p className="text-[9px] font-black text-clinical-muted uppercase tracking-widest leading-none mb-1">Vitals</p>
+                      <p className="text-[9px] font-black text-clinical-muted uppercase tracking-widest leading-none mb-1">{t('bv_vitals')}</p>
                       <p className={`text-[10px] font-black uppercase tracking-tighter ${vitalsChecked ? 'text-white' : 'text-clinical-muted'}`}>
-                         {vitalsChecked ? 'Stabilized' : 'Required'}
+                         {vitalsChecked ? t('bv_stabilized') : t('bv_required')}
                       </p>
                    </div>
                 </div>
@@ -227,15 +227,15 @@ export function BedsideVerificationView() {
              <div className="space-y-4">
                 <div>
                   <label className="text-[10px] font-black text-clinical-muted uppercase tracking-widest mb-3 block flex justify-between items-center">
-                    <span>ISBT-128 Unit Barcode</span>
-                    <button type="button" onClick={() => setUnitBarcodeRaw("=W0000 23 123456")} className="text-[9px] text-sky-500 font-black uppercase tracking-widest hover:text-white transition-all underline decoration-sky-500/30 underline-offset-4">Mock Scan</button>
+                    <span>{t('bv_isbt_barcode')}</span>
+                    <button type="button" onClick={() => setUnitBarcodeRaw("=W0000 23 123456")} className="text-[9px] text-sky-500 font-black uppercase tracking-widest hover:text-white transition-all underline decoration-sky-500/30 underline-offset-4">{t('bv_mock_scan')}</button>
                   </label>
                   <input 
                     required
                     value={unitBarcodeRaw}
                     onChange={e => setUnitBarcodeRaw(e.target.value)}
                     type="text" 
-                    placeholder="SCAN UNIT LABEL..."
+                    placeholder={t('bv_scan_placeholder')}
                     className="w-full bg-clinical-bg border border-clinical-border text-white p-5 rounded-3xl focus:border-emerald-500/50 outline-none transition-all text-xl font-black tracking-widest font-mono shadow-inner placeholder:text-clinical-text"
                   />
                 </div>
@@ -246,7 +246,7 @@ export function BedsideVerificationView() {
                      value={verifier1Id}
                      onChange={e => setVerifier1Id(e.target.value)}
                      type="text"
-                     placeholder="VERIFIER 1 USERNAME"
+                     placeholder={t('bv_v1_user')}
                      className="w-full bg-clinical-bg border border-clinical-border text-white p-4 rounded-2xl focus:border-emerald-500/50 outline-none transition-all text-xs font-black tracking-widest uppercase shadow-inner placeholder:text-clinical-text"
                    />
                    <input
@@ -254,7 +254,7 @@ export function BedsideVerificationView() {
                      value={verifier1Pin}
                      onChange={e => setVerifier1Pin(e.target.value)}
                      type="password"
-                     placeholder="VERIFIER 1 PIN"
+                     placeholder={t('bv_v1_pin')}
                      className="w-full bg-clinical-bg border border-clinical-border text-white p-4 rounded-2xl focus:border-emerald-500/50 outline-none transition-all text-xs font-black tracking-widest uppercase shadow-inner placeholder:text-clinical-text"
                    />
                    <input
@@ -262,7 +262,7 @@ export function BedsideVerificationView() {
                      value={verifier2Id}
                      onChange={e => setVerifier2Id(e.target.value)}
                      type="text"
-                     placeholder="VERIFIER 2 USERNAME"
+                     placeholder={t('bv_v2_user')}
                      className="w-full bg-clinical-bg border border-clinical-border text-white p-4 rounded-2xl focus:border-emerald-500/50 outline-none transition-all text-xs font-black tracking-widest uppercase shadow-inner placeholder:text-clinical-text"
                    />
                    <input
@@ -270,7 +270,7 @@ export function BedsideVerificationView() {
                      value={verifier2Pin}
                      onChange={e => setVerifier2Pin(e.target.value)}
                      type="password"
-                     placeholder="VERIFIER 2 PIN"
+                     placeholder={t('bv_v2_pin')}
                      className="w-full bg-clinical-bg border border-clinical-border text-white p-4 rounded-2xl focus:border-emerald-500/50 outline-none transition-all text-xs font-black tracking-widest uppercase shadow-inner placeholder:text-clinical-text"
                    />
                 </div>
@@ -286,7 +286,7 @@ export function BedsideVerificationView() {
                }`}
              >
                {isVerifying ? <Loader2 className="animate-spin" /> : isLocked ? <Lock size={18} /> : <Unlock size={18} />}
-               {isVerifying ? 'Authenticating...' : 'Authorize Transfusion'}
+               {isVerifying ? t('bv_authenticating') : t('bv_authorize')}
              </button>
           </form>
 
