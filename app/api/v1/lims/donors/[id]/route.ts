@@ -100,18 +100,30 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     });
     const isPassed = data.deferralStatus === 'Active' ? 0 : 1;
 
-    await db.questionnaires.create({
-      id: questionnaireId,
-      donorId: params.id,
-      answersJson,
-      isPassed,
-      createdAt: new Date().toISOString(),
-      deferralReason: data.deferralReason || '',
-      deferralUntil: data.deferralUntil || '',
-      policyVersion: data.policyVersion || DONOR_DEFERRAL_POLICY.version,
-    }).catch(e => console.error('Error saving updated questionnaire on donor edit:', e));
+    let questionnaireWarning: string | undefined;
+    try {
+      await db.questionnaires.create({
+        id: questionnaireId,
+        donorId: params.id,
+        answersJson,
+        isPassed,
+        createdAt: new Date().toISOString(),
+        deferralReason: data.deferralReason || '',
+        deferralUntil: data.deferralUntil || '',
+        policyVersion: data.policyVersion || DONOR_DEFERRAL_POLICY.version,
+      });
+    } catch (e) {
+      console.error('Error saving updated questionnaire on donor edit:', e);
+      // Donor record is already updated — return 200 with a warning so the caller
+      // knows the questionnaire append failed and can surface it to clinical staff.
+      questionnaireWarning = 'questionnaire_save_failed';
+    }
 
-    return NextResponse.json({ success: true, id: params.id });
+    return NextResponse.json({
+      success: true,
+      id: params.id,
+      ...(questionnaireWarning ? { warning: questionnaireWarning } : {}),
+    });
   } catch (error: any) {
     return internalErrorResponse(request, error, 'LIMS_DONOR_UPDATE_FAILED');
   }

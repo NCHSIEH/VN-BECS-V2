@@ -381,7 +381,8 @@ export const supplementDict: Record<string, Record<string, string>> = {
     "lims_msg_dispatch_success": "Donor dispatched successfully via {mode} mode!",
     "lims_triage_mode_auto_sub": "Auto Load-Balance",
     "lims_triage_mode_shared_sub": "Shared Waiting Pool",
-    "lims_triage_mode_direct_sub": "Direct Chair Assignment"
+    "lims_triage_mode_direct_sub": "Direct Chair Assignment",
+    "lims_mission_site_a": "Site A Registration Overflow"
   },
   "zh-TW": {
     "lims_err_donation_interval": "捐血間隔不足：上次捐血 {date}（距今 {weeks} 週，需滿 {required} 週）",
@@ -760,7 +761,8 @@ export const supplementDict: Record<string, Record<string, string>> = {
     "lims_msg_dispatch_success": "捐血者已透過 {mode} 模式成功派送！",
     "lims_triage_mode_auto_sub": "自動負載均衡",
     "lims_triage_mode_shared_sub": "共用等候池",
-    "lims_triage_mode_direct_sub": "直接指定座椅"
+    "lims_triage_mode_direct_sub": "直接指定座椅",
+    "lims_mission_site_a": "A站登記量溢出"
   },
   "vi": {
     "lims_err_donation_interval": "Khoảng cách hiến máu chưa đủ: lần trước {date} ({weeks} tuần trước; cần {required} tuần)",
@@ -1139,6 +1141,7 @@ export const supplementDict: Record<string, Record<string, string>> = {
     "lims_msg_dispatch_success": "Người hiến đã được điều phối thành công qua chế độ {mode}!",
     "lims_triage_mode_auto_sub": "Cân bằng tải tự động",
     "lims_triage_mode_shared_sub": "Hàng đợi chung",
-    "lims_triage_mode_direct_sub": "Phân công ghế trực tiếp"
+    "lims_triage_mode_direct_sub": "Phân công ghế trực tiếp",
+    "lims_mission_site_a": "Tràn đăng ký Điểm A"
   }
 };

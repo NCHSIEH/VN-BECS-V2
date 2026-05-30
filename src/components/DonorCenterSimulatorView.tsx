@@ -646,7 +646,7 @@ export function DonorCenterSimulatorView({
             <div className="w-3 h-3 rounded-full bg-rose-500 animate-pulse shadow-[0_0_15px_rgba(225,29,72,0.8)]" />
             <div className="flex flex-col">
                <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.4em] italic">{t('lims_active_mission')}</span>
-               <span className="text-sm font-black text-clinical-text uppercase italic tracking-tighter">Site A Registration Overflow</span>
+               <span className="text-sm font-black text-clinical-text uppercase italic tracking-tighter">{t('lims_mission_site_a')}</span>
             </div>
          </div>
          <div className="flex items-center gap-6">

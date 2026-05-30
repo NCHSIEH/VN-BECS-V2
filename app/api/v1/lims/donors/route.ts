@@ -96,6 +96,8 @@ export async function POST(request: Request) {
     });
     const isPassed = (data.deferralStatus === 'Active') ? 0 : 1;
 
+    // Questionnaire is a mandatory safety record — failure is fatal.
+    // Do NOT .catch() here; let errors propagate to the outer try/catch → 500.
     await db.questionnaires.create({
       id: questionnaireId,
       donorId: id,
@@ -106,7 +108,7 @@ export async function POST(request: Request) {
       deferralUntil: data.deferralUntil || '',
       // RTM-DON-03: stamp the deferral policy version used at decision time.
       policyVersion: data.policyVersion || DONOR_DEFERRAL_POLICY.version,
-    }).catch(e => console.error("Error creating questionnaire:", e));
+    });
 
     // Remove transient questionnaire fields from donor record if needed, though they might just be ignored by db layer if not in schema.
     delete donorData.hadTattooRecently;
