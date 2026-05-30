@@ -4,11 +4,11 @@
  * full scan + predicate for repositories or test mocks that only implement
  * getAll(). `byId` should be null when no targeted method is available.
  */
-export async function resolveOne(
-  byId: (() => Promise<any>) | null,
-  list: () => Promise<any[]>,
-  predicate: (x: any) => boolean,
-): Promise<any | undefined> {
+export async function resolveOne<T>(
+  byId: (() => Promise<T | null | undefined>) | null,
+  list: () => Promise<T[]>,
+  predicate: (x: T) => boolean,
+): Promise<T | undefined> {
   if (byId) {
     const hit = await byId();
     if (hit) return hit;
@@ -16,7 +16,18 @@ export async function resolveOne(
   return (await list()).find(predicate);
 }
 
-/** Build a `byId` thunk only if `method` exists on `store`, else null. */
-export function byIdIfAvailable(store: any, method: string, arg: string): (() => Promise<any>) | null {
-  return typeof store?.[method] === 'function' ? () => store[method](arg) : null;
+/**
+ * Build a `byId` thunk only if `method` exists on `store`, else null. Kept loose
+ * (`unknown`-keyed) because the data layer is a dynamic DAO without a uniform
+ * finder interface across stores.
+ */
+export function byIdIfAvailable<T = unknown>(
+  store: Record<string, unknown> | undefined | null,
+  method: string,
+  arg: string,
+): (() => Promise<T | null | undefined>) | null {
+  const fn = store?.[method];
+  return typeof fn === 'function'
+    ? () => (fn as (a: string) => Promise<T | null | undefined>)(arg)
+    : null;
 }
