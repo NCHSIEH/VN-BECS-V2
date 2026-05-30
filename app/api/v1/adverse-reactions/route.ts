@@ -6,6 +6,7 @@ import {
 } from '@/src/server/services/bloodUnitCommands';
 import type { Role } from '@/src/types';
 import { internalErrorResponse } from '@/src/server/apiResponses';
+import { authorizeApiRole, rbacErrorBody } from '@/src/server/rbacPolicy';
 
 function asStringList(value: unknown): string[] {
   if (Array.isArray(value)) return value.filter((v): v is string => typeof v === 'string');
@@ -42,6 +43,8 @@ function isSeriousReaction(reactionType?: string, severity?: string): boolean {
 }
 
 export async function GET(request: Request) {
+  const authz = authorizeApiRole({ request, allowedRoles: ['Admin', 'Manager', 'Auditor', 'QA_Officer', 'Nurse', 'HospitalOperator', 'MedicalReviewer'], action: 'ADVERSE_REACTION_READ' });
+  if (!authz.allowed) return NextResponse.json(rbacErrorBody(authz), { status: 403 });
   try {
     const data = await db.adverse_reactions.getAll();
     return NextResponse.json(data);
@@ -51,6 +54,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const authz = authorizeApiRole({ request, allowedRoles: ['Admin', 'Nurse', 'HospitalOperator', 'MedicalReviewer'], action: 'ADVERSE_REACTION_CREATE' });
+  if (!authz.allowed) return NextResponse.json(rbacErrorBody(authz), { status: 403 });
   try {
     const data = await request.json();
     const id = `AR-${Date.now()}`;

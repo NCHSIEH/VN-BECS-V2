@@ -2,8 +2,11 @@ import { NextResponse } from 'next/server';
 import * as db from '@/src/server/db';
 import { generateDailyReconciliationReports } from '@/src/server/services/reconciliation';
 import { internalErrorResponse } from '@/src/server/apiResponses';
+import { authorizeApiRole, rbacErrorBody } from '@/src/server/rbacPolicy';
 
 export async function POST(request: Request) {
+  const authz = authorizeApiRole({ request, allowedRoles: ['Admin', 'Manager', 'Auditor'], action: 'RECONCILIATION_GENERATE' });
+  if (!authz.allowed) return NextResponse.json(rbacErrorBody(authz), { status: 403 });
   try {
     const [inventory, existingReports] = await Promise.all([
       db.inventory.getAll(),

@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
 import * as db from '@/src/server/db';
 import { internalErrorResponse } from '@/src/server/apiResponses';
+import { authorizeApiRole, rbacErrorBody } from '@/src/server/rbacPolicy';
 
 export async function GET(request: Request) {
+  const authz = authorizeApiRole({ request, allowedRoles: ['Admin', 'Manager', 'Auditor', 'Dispatcher', 'WarehouseIssuer', 'HospitalOperator', 'Nurse', 'Courier', 'MedicalReviewer'], action: 'ORDER_READ' });
+  if (!authz.allowed) return NextResponse.json(rbacErrorBody(authz), { status: 403 });
   try {
     const orders = await db.orders.getAll();
     return NextResponse.json(orders);
@@ -12,6 +15,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const authz = authorizeApiRole({ request, allowedRoles: ['Admin', 'HospitalOperator', 'Nurse'], action: 'ORDER_CREATE' });
+  if (!authz.allowed) return NextResponse.json(rbacErrorBody(authz), { status: 403 });
   try {
     const data = await request.json();
     const id = `ORD-${Math.floor(Math.random() * 90000) + 10000}`;

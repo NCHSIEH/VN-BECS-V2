@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
 import * as db from '@/src/server/db';
 import { apiErrorResponse, internalErrorResponse } from '@/src/server/apiResponses';
+import { authorizeApiRole, rbacErrorBody } from '@/src/server/rbacPolicy';
 
 export async function GET(request: Request) {
+  const authz = authorizeApiRole({ request, allowedRoles: ['Admin', 'Manager', 'Nurse', 'HospitalOperator', 'MedicalReviewer', 'Dispatcher', 'Auditor'], action: 'MTP_CASE_READ' });
+  if (!authz.allowed) return NextResponse.json(rbacErrorBody(authz), { status: 403 });
   try {
     const cases = await db.mtpCases.getAll();
     return NextResponse.json(cases);
@@ -12,6 +15,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(req: Request) {
+  const authz = authorizeApiRole({ request: req, allowedRoles: ['Admin', 'Nurse', 'HospitalOperator'], action: 'MTP_CASE_CREATE' });
+  if (!authz.allowed) return NextResponse.json(rbacErrorBody(authz), { status: 403 });
   try {
     const body = await req.json();
 

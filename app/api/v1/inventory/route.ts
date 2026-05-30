@@ -11,8 +11,11 @@ import {
 } from '@/src/server/services/bloodUnitCommands';
 import type { Role } from '@/src/types';
 import { apiErrorResponse, getRequestId, internalErrorResponse } from '@/src/server/apiResponses';
+import { authorizeApiRole, rbacErrorBody } from '@/src/server/rbacPolicy';
 
 export async function GET(request: Request) {
+  const authz = authorizeApiRole({ request, allowedRoles: ['Admin', 'Manager', 'Auditor', 'QA_Officer', 'Dispatcher', 'WarehouseIssuer', 'HospitalOperator', 'Nurse', 'LIMS_Simulator', 'Courier', 'MedicalReviewer'], action: 'INVENTORY_READ' });
+  if (!authz.allowed) return NextResponse.json(rbacErrorBody(authz), { status: 403 });
   try {
     const data = await db.inventory.getAll();
     return NextResponse.json(data);
@@ -22,6 +25,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const authz = authorizeApiRole({ request, allowedRoles: ['Admin', 'LIMS_Simulator', 'WarehouseIssuer'], action: 'INVENTORY_WRITE' });
+  if (!authz.allowed) return NextResponse.json(rbacErrorBody(authz), { status: 403 });
   try {
     const data = await request.json();
     if (!data.unitId) {

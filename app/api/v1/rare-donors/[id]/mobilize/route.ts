@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
 import * as db from '@/src/server/db';
 import { apiErrorResponse, internalErrorResponse } from '@/src/server/apiResponses';
+import { authorizeApiRole, rbacErrorBody } from '@/src/server/rbacPolicy';
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> | { id: string } }) {
+  const authz = authorizeApiRole({ request, allowedRoles: ['Admin', 'Manager', 'NationalCommander'], action: 'RARE_DONOR_MOBILIZE' });
+  if (!authz.allowed) return NextResponse.json(rbacErrorBody(authz), { status: 403 });
   try {
     const resolvedParams = await params;
     const { id } = resolvedParams;
