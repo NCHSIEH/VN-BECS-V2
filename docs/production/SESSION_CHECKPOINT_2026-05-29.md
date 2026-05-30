@@ -74,7 +74,13 @@ i18n 續作 commit（`14bcaa9` 之後，皆已推送上線）：
 - **效能**：熱路徑全表掃描收斂。新增 `queryHelpers.ts`（`resolveOne`/`byIdIfAvailable`），改寫 crossmatch（5 次全表→目標查詢）、issue、bedside-verify、orders action。新增 repo 目標查詢：`patientRepo.getById`、`donations.getById`、`donors.getById`、`orderRepo.getById`。**僅對實庫有感**。
 - **Tier B / STATE-04**：`executeBloodUnitTransition` 現會派生多軸快照（quality/inventory/assignment）並與舊 `status` 並存寫入 inventory（+best-effort components）。RTM-STATE-04 仍 🟠（待實庫驗證欄位落地）。
 - **型別**：`resolveOne` 泛型化、命令服務 `extraInventoryFields` 收緊。廣泛 `any`（db.ts 101 個多屬動態 DAO）屬漸進大工程，未動。
-- **仍未完成的 Tier B（需實庫/基礎設施，非純程式）**：DB 層 RLS 真正生效（service_role 繞過；`rlsContext.applyFacilityScope` 原語已備，待非-BYPASSRLS 連線接線）、STATE-03 真多表單一 SQL 交易原子性。
+- **Tier B 骨架已寫好（gated，預設不啟用，零風險）**：
+  - `src/server/pg.ts`：延遲建立的 `DATABASE_URL`（直連）/`SCOPED_DATABASE_URL`（非-BYPASSRLS）連線池，未設定回 null。
+  - `transactionalTransition.ts`：STATE-03 單一 `BEGIN…COMMIT` 原子交易（列鎖+樂觀版本+雜湊鏈稽核），接入 `executeBloodUnitTransition`（回 null 則沿用現狀）。
+  - `rlsContext.runScoped`：AUTH-03 scoped 交易查詢路徑（設 GUC）。
+  - 純邏輯測試：`transactionalTransition.test.ts`(6)、`runScoped.test.ts`(4)。
+  - **啟用/驗證**：設 `DATABASE_URL`/`SCOPED_DATABASE_URL`（見 `.env.production.example` 與 `DB_MIGRATION_WORK_PACKAGE.md`「如何在測試 DB 驗證」），需先跑 migration 001。
+  - **仍待實庫**：跑驗證取證（跨機構 SELECT 回 0 列、稽核不可改、強制中途失敗驗回滾），把 STATE-03/AUTH-03 由 🟠 改 ✅。
 
 ## 5. 一句話現況
 

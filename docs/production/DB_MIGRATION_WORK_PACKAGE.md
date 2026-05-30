@@ -69,6 +69,32 @@ To wire the DB layer, use the shipped primitive `src/server/rlsContext.ts`:
 policies read. Route the scoped queries through a non-`BYPASSRLS` connection and
 call it right after `BEGIN`.
 
+## Tier B scaffolding shipped (gated — verify against a test DB)
+
+Code is in place and unit-tested, but **inactive until the env vars below are
+set** (no behaviour change for the current pilot):
+
+| Concern | Module | Activated by |
+| --- | --- | --- |
+| STATE-03 atomic transition (component+inventory+audit in one BEGIN…COMMIT, row-lock + optimistic version + hash-chained audit) | `src/server/services/transactionalTransition.ts` (via `executeBloodUnitTransition`) | `DATABASE_URL` (owner/direct) |
+| AUTH-03 RLS-scoped query path (sets `app.facility_id`/`app.role` GUCs in a transaction) | `rlsContext.runScoped` + `src/server/pg.ts` | `SCOPED_DATABASE_URL` (non-`BYPASSRLS` role) |
+
+Unit tests (no DB needed): `transactionalTransition.test.ts` (6),
+`runScoped.test.ts` (4) — assert the BEGIN→…→COMMIT / ROLLBACK ordering,
+version-conflict rollback, fail-closed, and "unconfigured → null fallback".
+
+### How to verify on a reachable test DB (flips 🟠 → ✅)
+
+1. Apply `supabase_schema.sql` + `db-migrations/001` to the test DB.
+2. Create a non-`BYPASSRLS` role and grant table privileges; set `DATABASE_URL`
+   (owner) and `SCOPED_DATABASE_URL` (that role).
+3. STATE-03: trigger a transition, then force a mid-transaction failure (e.g.
+   temporarily break the audit insert) and confirm **all three tables roll back**
+   (no half-transitioned unit, version unchanged).
+4. AUTH-03: with `app.facility_id` set to facility A, a cross-facility `SELECT`
+   returns **0 rows**; an `UPDATE audit_events` is **rejected** (immutability).
+5. Capture outputs as Gate-1 evidence (see below).
+
 ## Acceptance evidence to capture (for Gate 1 sign-off)
 
 - [ ] `001_tests.sql` output showing TEST 1–5 all PASSED.
