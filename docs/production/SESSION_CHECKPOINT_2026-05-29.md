@@ -69,6 +69,13 @@ i18n 續作 commit（`14bcaa9` 之後，皆已推送上線）：
 - 生產 fail-closed：`NODE_ENV=production` 停用 demo 登入與記憶體 fallback，強制 RBAC，缺 `VN_BECS_SESSION_SECRET`(≥32) 無法簽 token。
 - 本機跑 dev：`npm.cmd run dev`（PowerShell 的 npm.ps1 入口問題），port 54321。
 
+## 4b. 效能 / Tier B / 型別（續作，已推送 ≤ `4dbdfdb`）
+
+- **效能**：熱路徑全表掃描收斂。新增 `queryHelpers.ts`（`resolveOne`/`byIdIfAvailable`），改寫 crossmatch（5 次全表→目標查詢）、issue、bedside-verify、orders action。新增 repo 目標查詢：`patientRepo.getById`、`donations.getById`、`donors.getById`、`orderRepo.getById`。**僅對實庫有感**。
+- **Tier B / STATE-04**：`executeBloodUnitTransition` 現會派生多軸快照（quality/inventory/assignment）並與舊 `status` 並存寫入 inventory（+best-effort components）。RTM-STATE-04 仍 🟠（待實庫驗證欄位落地）。
+- **型別**：`resolveOne` 泛型化、命令服務 `extraInventoryFields` 收緊。廣泛 `any`（db.ts 101 個多屬動態 DAO）屬漸進大工程，未動。
+- **仍未完成的 Tier B（需實庫/基礎設施，非純程式）**：DB 層 RLS 真正生效（service_role 繞過；`rlsContext.applyFacilityScope` 原語已備，待非-BYPASSRLS 連線接線）、STATE-03 真多表單一 SQL 交易原子性。
+
 ## 5. 一句話現況
 
 捐血系統（LIMS 四分頁）UI/UX + 三語 + 合規優化完成並上線；程式碼「乾淨優化」大致到頂；剩餘主要為其他子系統在地化、效能（實庫）、與 Tier B 上線正確性工作（RLS/交易/多軸，需實庫）。

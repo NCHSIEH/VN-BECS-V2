@@ -40,7 +40,7 @@
 | RTM-STATE-01 | AABB, FDA606 | 血袋生命週期狀態轉移集中受控、非法轉移阻擋 | All SOP | `src/lib/stateMachine.ts` | `stateMachine.test.ts` | terminal 不可逆 | ✅ |
 | RTM-STATE-02 | FDA606 | 所有狀態寫入經單一命令服務，無路由直寫 | All SOP | `bloodUnitCommands.ts:executeBloodUnitTransition` | `h1DirectWrites.test.ts` | — | 🟠 命令存在；回歸掃描需強化 |
 | RTM-STATE-03 | FDA606 | 跨表寫入原子化（元件+庫存+審計），失敗即回滾 (fail-closed) | All SOP | `bloodUnitCommands.ts` (production fail-closed) | `commandFailClosed.test.ts` | 🟠 生產環境庫存/審計寫入失敗即回傳失敗；真正多表 DB 交易仍待補 | 🟠 |
-| RTM-STATE-04 | AABB | 多軸狀態（品質/庫存/指派/監管）獨立持久化 | — | `db-migrations/001`（enum+欄位+backfill）, `types.ts` | `db-migrations/001_tests.sql` (TEST 5) | 遷移已備（enum/欄位/回填）；待執行並將命令服務改寫多軸 | 🟠 |
+| RTM-STATE-04 | AABB | 多軸狀態（品質/庫存/指派/監管）獨立持久化 | — | `db-migrations/001`（enum+欄位+backfill）, `types.ts`, **`bloodUnitCommands.executeBloodUnitTransition`（命令服務已寫多軸欄位至 inventory+components）** | `multiAxisStateWrite.test.ts`(2), `db-migrations/001_tests.sql` (TEST 5) | 遷移已備（enum/欄位/回填）；命令服務已派生並寫入多軸快照（與舊 status 並存，cut-over 用）；待連線實庫驗證欄位落地 | 🟠 |
 | RTM-REL-01 | AABB, VN26, FDA606 | 未完成 IDM 陰性檢驗不得放行為可用 | SOP2 | `stateMachine.ts:227-231` (`QUARANTINE→AVAILABLE` guard) | `stateMachine.test.ts`, `limsRelease.test.ts` | — | ✅ |
 | RTM-REL-02 | WHO-HV | Lookback 調查期間禁止釋回庫存 | SOP9 | `stateMachine.ts:229` (`isUnderLookback`) | `lookback.test.ts` | — | ✅ |
 | RTM-XM-01 | AABB | ABO/Rh 相容性須依血品類別（紅血球/血漿/血小板分別） | SOP7 | `bloodSafety.ts:evaluateComponentCompatibility`, `crossmatch/route.ts` | `componentCompatibility.test.ts`, `crossmatch.test.ts` | 類別感知引擎；血漿反向 ABO、血小板 warn、fail-closed | ✅ |
