@@ -66,24 +66,24 @@ export function PortalView({
 
   let pulseColorClass = 'bg-emerald-500 shadow-emerald-500/50';
   let pulseAnimationClass = '';
-  let indicatorLabel = 'Clear';
+  let indicatorLabel = t('portal_status_clear');
 
   if (hasUrgent) {
     pulseColorClass = 'bg-rose-500 shadow-rose-500/50';
     pulseAnimationClass = 'animate-ping';
-    indicatorLabel = 'Urgent Alerts';
+    indicatorLabel = t('portal_urgent_alerts');
   } else if (hasHigh) {
     pulseColorClass = 'bg-sky-500 shadow-sky-500/50';
     pulseAnimationClass = 'animate-pulse';
-    indicatorLabel = 'High Priority';
+    indicatorLabel = t('portal_high_priority');
   } else if (hasRoutine) {
     pulseColorClass = 'bg-emerald-500 shadow-emerald-500/50';
     pulseAnimationClass = '';
-    indicatorLabel = 'Active Tasks';
+    indicatorLabel = t('portal_active_tasks');
   } else {
     pulseColorClass = 'bg-emerald-500 shadow-emerald-500/50';
     pulseAnimationClass = '';
-    indicatorLabel = 'Queue Clear';
+    indicatorLabel = t('portal_queue_clear');
   }
 
   const stations = [
@@ -236,7 +236,7 @@ export function PortalView({
                         <span className={`absolute -top-1 -right-1.5 w-2.5 h-2.5 rounded-full border border-white ${pulseColorClass} ${pulseAnimationClass}`} />
                       </div>
                       <span className="text-[10px] font-black uppercase tracking-[0.2em]">
-                         {showTaskQueue ? 'Hide Queue' : 'My Task Queue'}
+                         {showTaskQueue ? t('portal_hide_queue') : t('portal_my_queue')}
                       </span>
                       {userMissions.length > 0 && (
                         <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${

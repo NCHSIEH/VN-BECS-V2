@@ -314,7 +314,14 @@ export const supplementDict: Record<string, Record<string, string>> = {
     "dashboard_strategic": "Strategic Dashboard",
     "mdm_user_name": "User Name",
     "cour_ai_wastage_prob": "AI Wastage Probability",
-    "mdm_rbac_default_perms_desc": "Default RBAC permissions for this role"
+    "mdm_rbac_default_perms_desc": "Default RBAC permissions for this role",
+    "portal_status_clear": "Clear",
+    "portal_urgent_alerts": "Urgent Alerts",
+    "portal_high_priority": "High Priority",
+    "portal_active_tasks": "Active Tasks",
+    "portal_queue_clear": "Queue Clear",
+    "portal_my_queue": "My Task Queue",
+    "portal_hide_queue": "Hide Queue"
   },
   "zh-TW": {
     "lims_err_donation_interval": "捐血間隔不足：上次捐血 {date}（距今 {weeks} 週，需滿 {required} 週）",
@@ -626,7 +633,14 @@ export const supplementDict: Record<string, Record<string, string>> = {
     "dashboard_strategic": "策略儀表板",
     "mdm_user_name": "使用者名稱",
     "cour_ai_wastage_prob": "AI 報廢機率",
-    "mdm_rbac_default_perms_desc": "此角色的預設 RBAC 權限"
+    "mdm_rbac_default_perms_desc": "此角色的預設 RBAC 權限",
+    "portal_status_clear": "無待辦",
+    "portal_urgent_alerts": "緊急警示",
+    "portal_high_priority": "高優先",
+    "portal_active_tasks": "進行中任務",
+    "portal_queue_clear": "佇列清空",
+    "portal_my_queue": "我的任務佇列",
+    "portal_hide_queue": "隱藏佇列"
   },
   "vi": {
     "lims_err_donation_interval": "Khoảng cách hiến máu chưa đủ: lần trước {date} ({weeks} tuần trước; cần {required} tuần)",
@@ -938,6 +952,13 @@ export const supplementDict: Record<string, Record<string, string>> = {
     "dashboard_strategic": "Bảng điều khiển chiến lược",
     "mdm_user_name": "Tên người dùng",
     "cour_ai_wastage_prob": "Xác suất hao phí AI",
-    "mdm_rbac_default_perms_desc": "Quyền RBAC mặc định cho vai trò này"
+    "mdm_rbac_default_perms_desc": "Quyền RBAC mặc định cho vai trò này",
+    "portal_status_clear": "Trống",
+    "portal_urgent_alerts": "Cảnh báo khẩn",
+    "portal_high_priority": "Ưu tiên cao",
+    "portal_active_tasks": "Nhiệm vụ đang chạy",
+    "portal_queue_clear": "Hàng đợi trống",
+    "portal_my_queue": "Hàng đợi của tôi",
+    "portal_hide_queue": "Ẩn hàng đợi"
   }
 };
