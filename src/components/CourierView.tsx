@@ -117,7 +117,7 @@ export function CourierView() {
 
   const handleWastageReport = async () => {
     if (!selectedOrder) return;
-    if (confirm("CRITICAL: Confirm wastage of this entire shipment due to cold chain breach?")) {
+    if (confirm(t('cour_confirm_wastage'))) {
        try {
           await fetch(`/api/v1/orders/${selectedOrder.id}/waste`, { method: 'POST' });
           fetchOrders();

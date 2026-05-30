@@ -25,7 +25,7 @@ export function RareDonorView() {
   }, []);
 
   const handleMobilize = async (id: string) => {
-    if (!confirm("CONFIRM EMERGENCY MOBILIZATION: This will trigger automated contact protocols and notify regional centers. Proceed?")) return;
+    if (!confirm(t('rare_confirm_mobilize'))) return;
     setMobilizingId(id);
     try {
       const res = await fetch(`/api/v1/rare-donors/${id}/mobilize`, { method: 'POST' });

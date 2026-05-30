@@ -338,7 +338,11 @@ export const supplementDict: Record<string, Record<string, string>> = {
     "portal_close_manual": "Close Command Manual",
     "portal_footer_trend_stable": "Stable",
     "portal_footer_trend_global": "National",
-    "portal_footer_coldchain_value": "Optimal"
+    "portal_footer_coldchain_value": "Optimal",
+    "cour_confirm_wastage": "CRITICAL: Confirm wastage of this entire shipment due to cold chain breach?",
+    "disp_confirm_revert": "Revert this order to SUBMITTED status? This will return it to the triage queue.",
+    "disp_prompt_escalate_reason": "Enter clinical reason for overriding AI and escalating to Medical Reviewer:",
+    "rare_confirm_mobilize": "CONFIRM EMERGENCY MOBILIZATION: This will trigger automated contact protocols and notify regional centers. Proceed?"
   },
   "zh-TW": {
     "lims_err_donation_interval": "捐血間隔不足：上次捐血 {date}（距今 {weeks} 週，需滿 {required} 週）",
@@ -674,7 +678,11 @@ export const supplementDict: Record<string, Record<string, string>> = {
     "portal_close_manual": "關閉指令手冊",
     "portal_footer_trend_stable": "穩定",
     "portal_footer_trend_global": "全國",
-    "portal_footer_coldchain_value": "最佳"
+    "portal_footer_coldchain_value": "最佳",
+    "cour_confirm_wastage": "重要警示：確認因冷鏈異常報廢本批所有血品？",
+    "disp_confirm_revert": "確認將此訂單退回「已提交」狀態？將重回分流佇列。",
+    "disp_prompt_escalate_reason": "請輸入覆蓋 AI 建議並上呈醫療審查者的臨床理由：",
+    "rare_confirm_mobilize": "確認緊急動員：將觸發自動聯繫流程並通知各區域血庫。確定執行？"
   },
   "vi": {
     "lims_err_donation_interval": "Khoảng cách hiến máu chưa đủ: lần trước {date} ({weeks} tuần trước; cần {required} tuần)",
@@ -1010,6 +1018,10 @@ export const supplementDict: Record<string, Record<string, string>> = {
     "portal_close_manual": "Đóng cẩm nang",
     "portal_footer_trend_stable": "Ổn định",
     "portal_footer_trend_global": "Toàn quốc",
-    "portal_footer_coldchain_value": "Tối ưu"
+    "portal_footer_coldchain_value": "Tối ưu",
+    "cour_confirm_wastage": "QUAN TRỌNG: Xác nhận hủy toàn bộ lô hàng do vi phạm chuỗi lạnh?",
+    "disp_confirm_revert": "Hoàn nguyên đơn hàng về trạng thái ĐÃ GỬI? Đơn sẽ quay lại hàng đợi phân loại.",
+    "disp_prompt_escalate_reason": "Nhập lý do lâm sàng để ghi đè AI và chuyển lên Người xét duyệt y tế:",
+    "rare_confirm_mobilize": "XÁC NHẬN HUY ĐỘNG KHẨN CẤP: Sẽ kích hoạt giao thức liên hệ tự động và thông báo các trung tâm khu vực. Tiến hành?"
   }
 };

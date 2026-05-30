@@ -63,7 +63,7 @@ export function DispatcherView() {
 
   const handleRevert = async () => {
     if (!selectedOrder) return;
-    if (!confirm("Revert this order to SUBMITTED status? This will return it to the triage queue.")) return;
+    if (!confirm(t('disp_confirm_revert'))) return;
     setError(null);
     try {
       const res = await fetch(`/api/v1/orders/${selectedOrder.id}/revert`, { method: 'POST' });
@@ -80,7 +80,7 @@ export function DispatcherView() {
 
   const handleEscalate = async () => {
     if (!selectedOrder) return;
-    const reason = prompt("Enter clinical reason for overriding AI and escalating to Medical Reviewer:");
+    const reason = prompt(t('disp_prompt_escalate_reason'));
     if (!reason) return;
     setError(null);
     try {
