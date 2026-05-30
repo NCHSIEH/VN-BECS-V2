@@ -19,6 +19,7 @@
  * a scoped connection that calls `applyFacilityScope` first.
  */
 import type { Role } from '../types';
+import { getScopedPool } from './pg';
 
 export interface FacilityScopeIdentity {
   role?: string;
@@ -90,4 +91,46 @@ export async function applyFacilityScope(
     await client.query(stmt.text, stmt.values);
   }
   return true;
+}
+
+export interface ScopedPoolLike {
+  connect: () => Promise<ScopedQueryClient & { query: (t: string, v?: any[]) => Promise<any>; release: () => void }>;
+}
+
+/**
+ * Run `fn` against a facility-scoped DB connection so migration 001's RLS
+ * policies apply. Opens a transaction, sets the `app.facility_id` / `app.role`
+ * GUCs from the verified session, runs the callback, then commits.
+ *
+ * Returns null (without running `fn`) when:
+ *  - no scoped pool is configured (`SCOPED_DATABASE_URL` unset), or
+ *  - the identity is not session-derived (fail-closed).
+ * Callers treat null as "RLS path unavailable" and fall back.
+ */
+export async function runScoped<T>(
+  identity: FacilityScopeIdentity,
+  fn: (client: ScopedQueryClient) => Promise<T>,
+  deps: { pool?: ScopedPoolLike | null; env?: Record<string, string | undefined> } = {},
+): Promise<T | null> {
+  if (identity.source !== 'session') return null;
+  const pool = (deps.pool !== undefined ? deps.pool : getScopedPool(deps.env)) as ScopedPoolLike | null;
+  if (!pool) return null;
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const ok = await applyFacilityScope(client, identity);
+    if (!ok) {
+      await client.query('ROLLBACK');
+      return null;
+    }
+    const result = await fn(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (err) {
+    try { await client.query('ROLLBACK'); } catch { /* ignore */ }
+    throw err;
+  } finally {
+    client.release();
+  }
 }

@@ -6,6 +6,7 @@ import {
 } from '../../lib/stateMachine';
 import type { BloodUnitStatus, DomainError, Role } from '../../types';
 import * as db from '../db';
+import { tryTransactionalTransition } from './transactionalTransition';
 
 export interface BloodUnitTransitionCommand {
   unitId: string;
@@ -138,6 +139,25 @@ export async function executeBloodUnitTransition(
       console.warn(`[Multi-axis Component Sync] Unit ${command.unitId}:`, axisErr);
     }
   };
+
+  // STATE-03: when a direct DB pool is configured, run the component + inventory
+  // + audit writes as a single atomic transaction. Returns null when not
+  // applicable (unconfigured, no inventory row, or extra columns) -> fall back
+  // to the sequential fail-closed path below (current pilot behaviour).
+  const txResult = await tryTransactionalTransition({
+    unitId: command.unitId,
+    fromStatus,
+    targetStatus,
+    clientVersion: command.context?.baseVersion,
+    actorId,
+    actorRole: command.role,
+    deviceId,
+    reasonCode,
+    requestId,
+    multiAxis,
+    hasExtraInventoryFields: !!extraInventoryFields && Object.keys(extraInventoryFields).length > 0,
+  });
+  if (txResult) return txResult;
 
   // 2. Sync inventory status with optimistic lock or default create
   try {
