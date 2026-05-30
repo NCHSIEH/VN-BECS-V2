@@ -4,9 +4,9 @@
 > CSV-validation (IQ/OQ/PQ) evidence starting point for Gate 3 sign-off.
 > Regenerate: `npx vitest run --reporter=json --outputFile=.tmp-vitest.json && node scripts/gen-validation-report.cjs`
 
-- Generated: 2026-05-30T06:26:32.930Z
-- Commit: `f6e8f31`
-- Automated suite: **278/278 passed** across 47 files (0 failed)
+- Generated: 2026-05-30T06:32:27.615Z
+- Commit: `7e70ef3`
+- Automated suite: **292/292 passed** across 48 files (0 failed)
 
 Legend: ✅ verified (tests pass) · 🔴 failing · ⚪ no automated test · `OQ*` = OQ done in app layer, PQ pending live DB.
 
@@ -59,6 +59,7 @@ Legend: ✅ verified (tests pass) · 🔴 failing · ⚪ no automated test · `O
 | `auditChainVerify.test.ts` | 4/4 | ✅ PASS |
 | `authPolicy.test.ts` | 3/3 | ✅ PASS |
 | `bedsideVerifyRoute.test.ts` | 12/12 | ✅ PASS |
+| `bloodSafety.test.ts` | 14/14 | ✅ PASS |
 | `bloodUnitCommands.test.ts` | 8/8 | ✅ PASS |
 | `collectionVolume.test.ts` | 8/8 | ✅ PASS |
 | `commandFailClosed.test.ts` | 3/3 | ✅ PASS |

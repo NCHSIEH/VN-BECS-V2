@@ -68,29 +68,29 @@ export function ManagerKPIView({ onBack }: { onBack?: () => void }) {
     setShowConfig(false);
   };
 
-  if (!kpis) return <div className="text-center p-12 text-clinical-muted font-black uppercase tracking-[0.3em] animate-pulse">Initializing Executive Dashboard...</div>;
+  if (!kpis) return <div className="text-center p-12 text-clinical-muted font-black uppercase tracking-[0.3em] animate-pulse">{t('mgr_loading')}</div>;
 
   const kpiCards = [
     {
-      label: 'Days of Supply (O-)', icon: <CalendarRange size={16} className="text-emerald-600" />,
+      label: t('mgr_kpi_dos'), icon: <CalendarRange size={16} className="text-emerald-600" />,
       value: '15.2 Days', sparkData: sparklines.supplyDays, sparkColor: '#10b981',
       color: 'green' as any,
       tooltip: 'Projected inventory coverage based on rolling 30-day demand.', trend: '+0.7 days vs goal', trendUp: true,
     },
     {
-      label: 'STAT Response Time', icon: <Target size={16} className="text-rose-500" />,
+      label: t('mgr_kpi_stat'), icon: <Target size={16} className="text-rose-500" />,
       value: kpis.statResponseTime, sparkData: sparklines.statTime, sparkColor: '#f43f5e',
       color: getKpiColorLevel(2.8, 5, 10),
       tooltip: t('tt_kpi_stat'), trend: 'Under 5m SLA target met', trendUp: false,
     },
     {
-      label: 'Wastage Rate (Expiry)', icon: <PieChart size={16} className="text-amber-500" />,
+      label: t('mgr_kpi_wastage'), icon: <PieChart size={16} className="text-amber-500" />,
       value: kpis.wastageRate, sparkData: sparklines.wastage, sparkColor: '#f59e0b',
       color: getKpiColorLevel(1.2, thresholds?.wastageGreen || 2, thresholds?.wastageYellow || 5),
       tooltip: t('tt_kpi_wastage'), trend: '0.5% reduction vs last month', trendUp: false,
     },
     {
-      label: 'Dual Review Compliance', icon: <ShieldCheckIcon size={16} className="text-sky-500" />,
+      label: t('mgr_kpi_compliance'), icon: <ShieldCheckIcon size={16} className="text-sky-500" />,
       value: kpis.dualReviewCompletionRate, sparkData: sparklines.compliance, sparkColor: '#0ea5e9',
       color: getKpiColorLevel(99.5, thresholds?.complianceGreen || 98, thresholds?.complianceYellow || 95, true),
       tooltip: t('tt_kpi_compliance'), trend: 'Regulatory requirement met', trendUp: true,
@@ -107,17 +107,17 @@ export function ManagerKPIView({ onBack }: { onBack?: () => void }) {
                <button 
                  onClick={onBack} 
                  className="p-3 bg-clinical-card border border-clinical-border hover:bg-slate-200 dark:hover:bg-slate-800 rounded-[20px] text-clinical-text hover:text-rose-500 transition-all mt-1 shadow-md active:scale-95 duration-150 cursor-pointer"
-                 title="Back to Dashboard"
+                 title={t('mgr_back')}
                >
                   <ArrowLeft size={20} />
                </button>
             )}
             <div className="space-y-2">
                <div className="premium-subtitle">
-                  Executive Oversight Node
+                  {t('mgr_oversight_node')}
                </div>
-               <h1 className="premium-heading">Operational Intelligence</h1>
-               <p className="text-clinical-muted text-[11px] font-black uppercase tracking-[0.3em] mt-1 opacity-80">Real-time Performance Metrics & Decision Support</p>
+               <h1 className="premium-heading">{t('mgr_title')}</h1>
+               <p className="text-clinical-muted text-[11px] font-black uppercase tracking-[0.3em] mt-1 opacity-80">{t('mgr_subtitle')}</p>
             </div>
          </div>
          <div className="flex items-center gap-6">
@@ -163,17 +163,17 @@ export function ManagerKPIView({ onBack }: { onBack?: () => void }) {
           <div className="clinical-card p-10 bg-clinical-card/20 border border-clinical-border backdrop-blur-xl relative overflow-hidden">
              <div className="flex justify-between items-center mb-10">
                <div>
-                 <h2 className="text-2xl font-black text-clinical-text uppercase tracking-[0.2em] italic">Network Throughput Analysis</h2>
-                 <p className="text-clinical-muted text-[10px] font-black uppercase tracking-widest mt-1">Units processed vs demand forecast</p>
+                 <h2 className="text-2xl font-black text-clinical-text uppercase tracking-[0.2em] italic">{t('mgr_throughput_title')}</h2>
+                 <p className="text-clinical-muted text-[10px] font-black uppercase tracking-widest mt-1">{t('mgr_throughput_sub')}</p>
                </div>
                <div className="flex gap-3">
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-clinical-bg border border-clinical-border rounded-xl">
                      <div className="w-2 h-2 rounded-full bg-rose-500"></div>
-                     <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">Actual</span>
+                     <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">{t('mgr_actual')}</span>
                   </div>
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-clinical-bg border border-clinical-border rounded-xl">
                      <div className="w-2 h-2 rounded-full bg-slate-700"></div>
-                     <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">Forecast</span>
+                     <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">{t('mgr_forecast')}</span>
                   </div>
                </div>
              </div>
@@ -192,9 +192,9 @@ export function ManagerKPIView({ onBack }: { onBack?: () => void }) {
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                    <div className="bg-clinical-bg/90 border border-clinical-border p-6 rounded-3xl backdrop-blur-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-all translate-y-4 group-hover:translate-y-0 scale-95 group-hover:scale-100">
-                      <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em] mb-1">Peak Performance</p>
+                      <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em] mb-1">{t('mgr_peak_perf')}</p>
                       <p className="text-2xl font-black text-clinical-text italic tracking-tighter">+18.4% WoW</p>
-                      <p className="text-[9px] text-clinical-muted font-bold uppercase tracking-widest mt-2">Optimization target achieved</p>
+                      <p className="text-[9px] text-clinical-muted font-bold uppercase tracking-widest mt-2">{t('mgr_opt_target')}</p>
                    </div>
                 </div>
              </div>
@@ -247,7 +247,7 @@ export function ManagerKPIView({ onBack }: { onBack?: () => void }) {
                      </div>
                    )) : (
                      <div className="h-32 flex items-center justify-center border-2 border-dashed border-clinical-border rounded-3xl">
-                        <p className="text-[10px] font-black text-clinical-text uppercase tracking-widest italic">No Critical Anomalies</p>
+                        <p className="text-[10px] font-black text-clinical-text uppercase tracking-widest italic">{t('mgr_no_anomalies')}</p>
                      </div>
                    )}
                 </div>
@@ -259,7 +259,7 @@ export function ManagerKPIView({ onBack }: { onBack?: () => void }) {
         <div className="xl:col-span-4 space-y-8">
            <div className="clinical-card p-8 bg-clinical-card/20 border border-clinical-border backdrop-blur-xl">
               <div className="flex items-center justify-between mb-8">
-                <h3 className="text-xs font-black text-clinical-muted uppercase tracking-[0.3em] italic">Hub Health Index</h3>
+                <h3 className="text-xs font-black text-clinical-muted uppercase tracking-[0.3em] italic">{t('mgr_hub_health')}</h3>
                 <Filter size={14} className="text-clinical-text" />
               </div>
               <div className="space-y-8">
@@ -304,7 +304,7 @@ export function ManagerKPIView({ onBack }: { onBack?: () => void }) {
                 </p>
                 <div className="flex items-center justify-between p-4 bg-clinical-bg rounded-2xl border border-clinical-border backdrop-blur-sm">
                    <div>
-                      <p className="text-[8px] font-black text-clinical-text/50 uppercase tracking-widest mb-0.5">Network Status</p>
+                      <p className="text-[8px] font-black text-clinical-text/50 uppercase tracking-widest mb-0.5">{t('mgr_network_status')}</p>
                       <p className="text-sm font-black text-clinical-text tracking-tighter uppercase italic">100% Compliant</p>
                    </div>
                    <div className="w-8 h-8 rounded-full border-2 border-clinical-border border-t-white animate-spin"></div>
@@ -334,8 +334,8 @@ export function ManagerKPIView({ onBack }: { onBack?: () => void }) {
             ))}
           </div>
           <div className="mt-10 pt-8 border-t border-clinical-border flex justify-end gap-4">
-             <button onClick={() => setShowConfig(false)} className="px-8 py-3 text-[10px] font-black text-clinical-muted uppercase tracking-widest hover:text-clinical-text transition-all">Discard Changes</button>
-             <button onClick={handleSaveThresholds} className="px-10 py-3 bg-rose-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-900/40 hover:scale-105 active:scale-95 transition-all">Commit Thresholds</button>
+             <button onClick={() => setShowConfig(false)} className="px-8 py-3 text-[10px] font-black text-clinical-muted uppercase tracking-widest hover:text-clinical-text transition-all">{t('mgr_discard')}</button>
+             <button onClick={handleSaveThresholds} className="px-10 py-3 bg-rose-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-900/40 hover:scale-105 active:scale-95 transition-all">{t('mgr_commit')}</button>
           </div>
         </div>
       )}
