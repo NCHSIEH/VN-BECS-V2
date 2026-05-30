@@ -74,7 +74,7 @@ describe('reconciliation reports', () => {
   it('lists existing reports for the reconciliation view', async () => {
     mockDb.reconciliation_reports.getAll.mockResolvedValue([{ id: 'REC-1' }]);
 
-    const response = await listReports();
+    const response = await listReports(new Request('http://localhost/api/v1/reconciliation'));
     const body = await response.json();
 
     expect(body).toEqual([{ id: 'REC-1' }]);
@@ -91,7 +91,7 @@ describe('reconciliation reports', () => {
       },
     ]);
 
-    const response = await generateReports();
+    const response = await generateReports(new Request('http://localhost/api/v1/reconciliation/generate', { method: 'POST' }));
     const body = await response.json();
 
     expect(response.status).toBe(200);

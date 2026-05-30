@@ -36,7 +36,7 @@ describe('blood unit command validation', () => {
     });
 
     expect(decision.allowed).toBe(false);
-    if (!decision.allowed) {
+    if (decision.allowed === false) {
       expect(decision.error.code).toBe('TRANSITION_BLOCKED');
       expect(decision.error.message).toContain('Break-Glass emergency mode');
     }
@@ -91,7 +91,7 @@ describe('blood unit command validation', () => {
     });
 
     expect(decision.allowed).toBe(false);
-    if (!decision.allowed) {
+    if (decision.allowed === false) {
       expect(decision.httpStatus).toBe(400);
       expect(decision.error.code).toBe('UNKNOWN_CURRENT_STATUS');
       expect(decision.error.correlationId).toMatch(/^DERR-/);

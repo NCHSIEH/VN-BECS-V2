@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { isApiRbacEnforced } from '../server/rbacPolicy';
 import { isFallbackAllowed, isTableMissingError } from '../server/db';
 
+const mutableEnv = process.env as Record<string, string | undefined>;
+
 describe('Production Hardening Gates & Safety Safeguards', () => {
   it('enforces API RBAC mandatory by default in production mode', () => {
     // Non-production: depends on env variable
@@ -20,7 +22,7 @@ describe('Production Hardening Gates & Safety Safeguards', () => {
     
     try {
       // 1. In development, fallback should be allowed by default
-      process.env.NODE_ENV = 'development';
+      mutableEnv.NODE_ENV ='development';
       delete process.env.VN_BECS_ALLOW_FALLBACK;
       expect(isFallbackAllowed()).toBe(true);
 
@@ -30,7 +32,7 @@ describe('Production Hardening Gates & Safety Safeguards', () => {
 
       // 3. In production, fallback must be UNCONDITIONALLY blocked — even with VN_BECS_ALLOW_FALLBACK=true
       // This is the critical safety gate: no env var can override production mode.
-      process.env.NODE_ENV = 'production';
+      mutableEnv.NODE_ENV ='production';
       process.env.VN_BECS_ALLOW_FALLBACK = 'true';
       expect(isFallbackAllowed()).toBe(false); // Must ALWAYS be false in production
 
@@ -38,7 +40,7 @@ describe('Production Hardening Gates & Safety Safeguards', () => {
       delete process.env.VN_BECS_ALLOW_FALLBACK;
       expect(isFallbackAllowed()).toBe(false);
     } finally {
-      process.env.NODE_ENV = originalEnv;
+      mutableEnv.NODE_ENV =originalEnv;
       if (originalAllowFallback !== undefined) {
         process.env.VN_BECS_ALLOW_FALLBACK = originalAllowFallback;
       } else {
@@ -50,7 +52,7 @@ describe('Production Hardening Gates & Safety Safeguards', () => {
   it('raises hard exceptions on missing tables under production hardening', () => {
     const originalEnv = process.env.NODE_ENV;
     try {
-      process.env.NODE_ENV = 'production';
+      mutableEnv.NODE_ENV ='production';
       
       const mockTableMissingError = {
         code: 'PGRST205',
@@ -63,7 +65,7 @@ describe('Production Hardening Gates & Safety Safeguards', () => {
       }).toThrowError(/Fallback stores are disabled in production mode/);
 
     } finally {
-      process.env.NODE_ENV = originalEnv;
+      mutableEnv.NODE_ENV =originalEnv;
     }
   });
 
