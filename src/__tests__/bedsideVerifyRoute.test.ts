@@ -18,6 +18,9 @@ const mockDb = vi.hoisted(() => ({
     getAll: vi.fn(),
     updateStatus: vi.fn(),
   },
+  labTests: {
+    getAll: vi.fn(() => Promise.resolve([])),
+  },
   inventory: {
     create: vi.fn(),
     getAll: vi.fn(),
@@ -257,6 +260,26 @@ describe('bedside verification route safeguards', () => {
     expect(body.code).toBe('BEDSIDE_ABO_RH_MISMATCH');
     expect(mockDb.transfusions.create).not.toHaveBeenCalled();
     expect(mockDb.components.updateStatus).not.toHaveBeenCalled();
+  });
+
+  it('BED-02: uses tested serology ABO (lab_tests) over the component record for the bedside re-check', async () => {
+    // Component record says O (would pass for an O patient), but the tested
+    // serology is A — the bedside re-check must use the tested A and block.
+    mockDb.components.getAll.mockResolvedValue([
+      { id: 'CMP-1', donationId: 'DON-1', status: 'ISSUED', expiryDate: '2027-01-01T00:00:00Z', type: 'RBC', abo: 'O', rhd: 'Positive' },
+    ]);
+    mockDb.labTests.getAll.mockResolvedValue([
+      { donationId: 'DON-1', abo: 'A', rhd: 'Positive', idmStatus: 'CLEARED' },
+    ]);
+    mockDb.patients.getAll.mockResolvedValue([
+      { id: 'MRN-1', mrn: 'MRN-1', name: 'Test Patient', hospitalId: 'HOSP-1', abo: 'O', rhd: 'Positive' },
+    ]);
+
+    const response = await POST(bedsideRequest(validPayload));
+    const body = await response.json();
+    expect(response.status).toBe(409);
+    expect(body.code).toBe('BEDSIDE_ABO_RH_MISMATCH');
+    expect(mockDb.transfusions.create).not.toHaveBeenCalled();
   });
 
   it('records transfusion and marks an issued component as transfused', async () => {

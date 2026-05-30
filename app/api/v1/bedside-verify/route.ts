@@ -186,8 +186,17 @@ export async function POST(request: Request) {
     // against the patient at the bedside (catches wrong-unit/clerical errors,
     // not just the presence of a crossmatch record). Enforced when both blood
     // groups are recorded; otherwise a warning is logged (cannot verify).
-    const unitAbo = component.abo ?? component.bloodType;
-    const unitRhd = component.rhd;
+    // Like XM-02, the authoritative unit blood type is the tested serology
+    // (lab_tests) joined on donationId, falling back to the component record.
+    const bedLabTest = component.donationId
+      ? await resolveOne(
+          byIdIfAvailable(db.labTests, 'getByDonationId', component.donationId),
+          () => db.labTests.getAll(),
+          (lt: any) => lt.donationId === component.donationId,
+        )
+      : null;
+    const unitAbo = bedLabTest?.abo ?? component.abo ?? component.bloodType;
+    const unitRhd = bedLabTest?.rhd ?? component.rhd;
     const patientAbo = (patient as any).abo;
     const patientRhd = (patient as any).rhd;
     if (unitAbo && patientAbo) {
