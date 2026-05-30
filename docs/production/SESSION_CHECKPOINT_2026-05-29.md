@@ -25,6 +25,21 @@
 
 捐血系統四分頁（DONOR/LAB/PROCESS/RELEASE）現已**全面三語化**（EN/zh-TW/vi）。
 
+### 後續續作（同日 session，已 commit；`9e30204` 之後）
+
+| commit | 內容 |
+|---|---|
+| `9e30204` | 本檢查點文件（docs） |
+| `0bce44a` | **臨床安全 i18n**：BedsideVerificationView（t()=0→全三語，含雙人核對/臨床前置安全阻斷訊息）、CrossmatchView（補 useI18n、全三語、方法說明/gating 錯誤）；**bug 修正**：crossmatch 病人清單原抓不存在的 `/api/v1/mdm/patients`→改 `/api/v1/patients` |
+| `4acb564` | **HemovigilanceView 全三語**（不良反應通報/嚴重度/lookback/預防性隔離 confirm+success/監測日誌） |
+
+臨床安全三元件（床邊驗證、配血、血液警訊）現已**全面三語化**。
+⚠️ 注意：`0bce44a`、`4acb564` 等「續作」commit **尚未推送/部署**（origin/main 仍在 `c9f7f28`）。明天可一併 push 觸發 App Hosting 建置。
+
+### 各子系統 i18n 覆蓋現況（剩餘待做）
+已完成：DonorCenterSimulator（LIMS 四分頁）、Bedside、Crossmatch、Hemovigilance、IssueReturn、RareDonor、Dispatcher、Warehouse（後二者原本 t()≈26 已高）。
+**仍偏低、建議優先**：HospitalOperatorView（t()=11）、HospitalInventoryView（t()=2）、MtpEmergencyView（t()=5, 527 行）、ReconciliationView（t()=0）、CourierView（t()=19 尚可）。
+
 ## 3. 下一步候選（明天可挑）
 
 依先前分析的優先序：
