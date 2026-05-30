@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { fallbackDict } from './i18nFallbackDict';
+import { supplementDict } from './i18nSupplement';
 
 export type Language = 'en' | 'zh-TW' | 'vi';
 
@@ -91,10 +92,12 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
   const t = (key: string, variables?: Record<string, string>) => {
     // Priority: DB dict translation -> Fallback static dict -> Fallback English DB/Static -> key
-    let text = dbDict[lang]?.[key] || 
-               fallbackDict[lang]?.[key] || 
-               dbDict['en']?.[key] || 
-               fallbackDict['en']?.[key] || 
+    let text = dbDict[lang]?.[key] ||
+               fallbackDict[lang]?.[key] ||
+               supplementDict[lang]?.[key] ||
+               dbDict['en']?.[key] ||
+               fallbackDict['en']?.[key] ||
+               supplementDict['en']?.[key] ||
                key;
                
     if (variables) {
