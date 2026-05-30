@@ -33,6 +33,33 @@ export const orders = {
     }
   },
 
+  async getById(id: string) {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*, order_items(*)')
+        .eq('id', id)
+        .maybeSingle();
+      if (error) {
+        if (isTableMissingError(error)) {
+          return this.getFallbackOrders().find(o => o.id === id) || null;
+        }
+        throw error;
+      }
+      if (!data) return null;
+      return {
+        ...data,
+        items: data.order_items || [],
+        allocatedUnits: (data.order_items || []).flatMap((i: any) => i.allocatedUnits ? i.allocatedUnits.split(',') : []),
+      };
+    } catch (e: any) {
+      if (isTableMissingError(e)) {
+        return this.getFallbackOrders().find(o => o.id === id) || null;
+      }
+      throw e;
+    }
+  },
+
   getFallbackOrders() {
     return fallbackStores.orders.map(o => {
       const items = (fallbackStores as any).order_items?.filter((i: any) => i.orderId === o.id) || [];

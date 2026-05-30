@@ -68,7 +68,18 @@ describe('Blood Unit Issue Route Optimistic Locking', () => {
     expect(response.status).toBe(200);
     expect(body.id).toBeDefined();
     expect(mockDb.components.updateStatus).toHaveBeenCalledWith('CMP-ISS-1', 'ISSUED');
-    expect(mockDb.inventory.updateStatusWithLock).toHaveBeenCalledWith('CMP-ISS-1', 4, { status: 'ISSUED' });
+    // Payload now also carries the multi-axis snapshot (RTM-STATE-04) alongside
+    // the legacy status, so assert containment rather than exact equality.
+    expect(mockDb.inventory.updateStatusWithLock).toHaveBeenCalledWith(
+      'CMP-ISS-1',
+      4,
+      expect.objectContaining({
+        status: 'ISSUED',
+        quality_status: 'RELEASED',
+        inventory_status: 'ISSUED',
+        assignment_status: 'PATIENT_ASSIGNED',
+      }),
+    );
     expect(mockDb.issueRecords.create).toHaveBeenCalled();
     expect(mockDb.auditEvents.create).toHaveBeenCalled();
   });

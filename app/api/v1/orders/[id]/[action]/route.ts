@@ -10,6 +10,7 @@ import {
 import type { BloodUnitStatus, Role } from '@/src/types';
 import { apiErrorResponse, getRequestId, internalErrorResponse } from '@/src/server/apiResponses';
 import { authorizeApiRole, authorizeFacilityScope, facilityIdOf, facilityScopeErrorBody, rbacErrorBody } from '@/src/server/rbacPolicy';
+import { resolveOne, byIdIfAvailable } from '@/src/server/repositories/queryHelpers';
 
 type InventoryItem = {
   unitId: string;
@@ -260,8 +261,11 @@ export async function POST(
 ) {
   try {
     const { id, action } = await params;
-    const ordersList = await db.orders.getAll();
-    const order = ordersList.find((o: any) => o.id === id);
+    const order = await resolveOne(
+      byIdIfAvailable(db.orders, 'getById', id),
+      () => db.orders.getAll(),
+      (o: any) => o.id === id,
+    );
 
     if (!order) {
       return apiErrorResponse({

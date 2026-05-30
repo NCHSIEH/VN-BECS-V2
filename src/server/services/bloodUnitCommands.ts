@@ -1,5 +1,6 @@
 import {
   BloodUnitStateMachine,
+  normalizeBloodUnitState,
   normalizeBloodUnitStatus,
   type TransitionContext,
 } from '../../lib/stateMachine';
@@ -98,7 +99,7 @@ export async function executeBloodUnitTransition(
   deviceId = 'SERVER',
   reasonCode = 'SOP_TRANSITION',
   requestId = 'REQ-AUTO',
-  extraInventoryFields?: Partial<any>
+  extraInventoryFields?: Record<string, unknown>
 ): Promise<BloodUnitExecutionResult> {
   const decision = evaluateBloodUnitTransition(command);
   if (decision.allowed === false) {
@@ -112,6 +113,31 @@ export async function executeBloodUnitTransition(
   }
 
   const { fromStatus, targetStatus } = decision;
+
+  // Multi-axis status snapshot (RTM-STATE-04). Written alongside the legacy
+  // single `status` column during cut-over (migration 001 adds these columns to
+  // both components and inventory). Snake_case to match the DB columns.
+  const snapshot = normalizeBloodUnitState(targetStatus);
+  const multiAxis: Record<string, string> = snapshot
+    ? {
+        quality_status: snapshot.qualityStatus,
+        inventory_status: snapshot.inventoryStatus,
+        assignment_status: snapshot.assignmentStatus,
+      }
+    : {};
+
+  // Best-effort multi-axis write to the components row (additive; the legacy
+  // `status` remains authoritative, so a failure here must not fail the
+  // transition). Guarded for repositories/test mocks without update().
+  const writeComponentAxis = async () => {
+    if (Object.keys(multiAxis).length === 0) return;
+    if (typeof (db.components as any).update !== 'function') return;
+    try {
+      await (db.components as any).update(command.unitId, multiAxis);
+    } catch (axisErr) {
+      console.warn(`[Multi-axis Component Sync] Unit ${command.unitId}:`, axisErr);
+    }
+  };
 
   // 2. Sync inventory status with optimistic lock or default create
   try {
@@ -143,17 +169,20 @@ export async function executeBloodUnitTransition(
 
       // 1a. Update component status now (version check passed)
       await db.components.updateStatus(command.unitId, targetStatus);
+      await writeComponentAxis();
 
       // 1b. Sync inventory
       if (typeof db.inventory.updateStatusWithLock === 'function') {
         await db.inventory.updateStatusWithLock(command.unitId, currentVer, {
           ...extraInventoryFields,
+          ...multiAxis,
           status: targetStatus,
         });
       } else {
         await db.inventory.create({
           ...invItem,
           ...extraInventoryFields,
+          ...multiAxis,
           status: targetStatus,
           version: currentVer + 1,
         });
@@ -161,6 +190,7 @@ export async function executeBloodUnitTransition(
     } else {
       // No existing inventory item — component update + create new inventory record
       await db.components.updateStatus(command.unitId, targetStatus);
+      await writeComponentAxis();
 
       let comp: any = null;
       if (typeof db.components.getById === 'function') {
@@ -179,6 +209,7 @@ export async function executeBloodUnitTransition(
           expiryDate: comp.expiryDate,
           version: 1,
           ...extraInventoryFields,
+          ...multiAxis,
           status: targetStatus,
         });
       }
