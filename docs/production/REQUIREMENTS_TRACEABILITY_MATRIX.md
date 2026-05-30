@@ -44,7 +44,7 @@
 | RTM-REL-01 | AABB, VN26, FDA606 | 未完成 IDM 陰性檢驗不得放行為可用 | SOP2 | `stateMachine.ts:227-231` (`QUARANTINE→AVAILABLE` guard) | `stateMachine.test.ts`, `limsRelease.test.ts` | — | ✅ |
 | RTM-REL-02 | WHO-HV | Lookback 調查期間禁止釋回庫存 | SOP9 | `stateMachine.ts:229` (`isUnderLookback`) | `lookback.test.ts` | — | ✅ |
 | RTM-XM-01 | AABB | ABO/Rh 相容性須依血品類別（紅血球/血漿/血小板分別） | SOP7 | `bloodSafety.ts:evaluateComponentCompatibility`, `crossmatch/route.ts` | `componentCompatibility.test.ts`, `crossmatch.test.ts` | 類別感知引擎；血漿反向 ABO、血小板 warn、fail-closed | ✅ |
-| RTM-XM-02 | AABB | 配對使用成分實測 ABO（非捐血者登記血型） | SOP7 | `crossmatch/route.ts`（`component.abo` 優先） | _需新增測試_ | 🟠 已改用 `component.abo/rhd`；DB join 仍待補 | 🟠 |
+| RTM-XM-02 | AABB | 配對使用成分實測 ABO（非捐血者登記血型） | SOP7 | `crossmatch/route.ts`（**lab_tests 實測 serology 優先，DB join by donationId**；`labTests.getByDonationId`），fallback component→donor | `crossmatchRoute.test.ts`（XM-02：登記 A vs 實測 O） | 實測 serology ABO 為權威來源（lab_tests join 已補），其次 component，最後才捐血者登記；已測 | ✅ |
 | RTM-XM-03 | AABB | 有抗體史者禁用電子/即時離心配血 | SOP7 | `crossmatch/route.ts:90-96` | `crossmatch.test.ts` | — | ✅ |
 | RTM-XM-04 | AABB | 檢體有效期（含近期輸血/孕史 3 天）超期須重抽 | SOP7 | `validators.ts:validateSpecimenDate` | `validators.test.ts` | 預設 3 天 | ✅ |
 | RTM-XM-05 | AABB | 病人血型未知不得常規配血（除緊急政策） | SOP7 | `crossmatch/route.ts:79-81` | `crossmatch.test.ts` | — | ✅ |

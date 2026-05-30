@@ -16,6 +16,9 @@ const mockDb = vi.hoisted(() => ({
   donors: {
     getAll: vi.fn(),
   },
+  labTests: {
+    getAll: vi.fn(),
+  },
   inventory: {
     create: vi.fn(),
     getAll: vi.fn(),
@@ -67,6 +70,7 @@ describe('crossmatch route status synchronization', () => {
     mockDb.patients.getAll.mockResolvedValue([
       { id: 'MRN-XM-1', mrn: 'MRN-XM-1', abo: 'O', rhd: 'Negative', antibodyHistory: [] },
     ]);
+    mockDb.labTests.getAll.mockResolvedValue([]);
   });
 
   it('marks compatible crossmatches in both components and inventory using inventory as authoritative state', async () => {
@@ -89,5 +93,28 @@ describe('crossmatch route status synchronization', () => {
       (c: any) => c[0]?.unitId === 'CMP-XM-1' && c[0]?.status === 'CROSSMATCHED'
     );
     expect(calledLock || calledCreate).toBe(true);
+  });
+
+  it('RTM-XM-02: uses the tested serology ABO (lab_tests) over the donor registered type', async () => {
+    // Donor registered as A (e.g. stale/erroneous), but the tested serology is O.
+    mockDb.donors.getAll.mockResolvedValue([{ id: 'DONOR-XM-1', bloodType: 'A', rhd: 'Positive' }]);
+    mockDb.labTests.getAll.mockResolvedValue([
+      { id: 'TST-XM-1', donationId: 'DON-XM-1', abo: 'O', rhd: 'Negative', idmStatus: 'CLEARED' },
+    ]);
+
+    const response = await POST(crossmatchRequest({
+      componentId: 'CMP-XM-1',
+      patientId: 'MRN-XM-1', // O Negative
+      method: 'AHG',
+      specimenDate: new Date().toISOString(),
+      testedBy: 'Tech Nguyen',
+      role: 'HospitalOperator',
+    }));
+    const body = await response.json();
+
+    // Tested O into O patient => Compatible. Had it used the donor 'A', an
+    // A-unit into an O patient would be Incompatible.
+    expect(response.status).toBe(200);
+    expect(body.result).toBe('Compatible');
   });
 });

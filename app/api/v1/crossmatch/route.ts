@@ -94,10 +94,19 @@ export async function POST(request: Request) {
       return apiErrorResponse({ request, code: 'PATIENT_BLOOD_TYPE_UNKNOWN', message: 'Patient blood type is Unknown, cannot crossmatch', status: 400 });
     }
 
+    // RTM-XM-02: the authoritative unit blood type is the TESTED serology
+    // (lab_tests for the donation), NOT the donor's registered type. Resolve it
+    // via a DB join on donationId, then fall back to the component record, then
+    // the donor registration only as a last resort.
+    const labTest = await resolveOne(
+      byIdIfAvailable(db.labTests, 'getByDonationId', component.donationId),
+      () => db.labTests.getAll(),
+      (t: any) => t.donationId === component.donationId,
+    );
+
     // Perform Strict Validation — component-class aware (RBC vs plasma vs platelet).
-    // Prefer the component's tested ABO/Rh over the donor's registered type (RTM-XM-02).
-    const unitAbo = component.abo || donor.bloodType;
-    const unitRhd = component.rhd || donor.rhd;
+    const unitAbo = labTest?.abo || component.abo || donor.bloodType;
+    const unitRhd = labTest?.rhd || component.rhd || donor.rhd;
     const compatibility = evaluateComponentCompatibility({
       componentClass: component.type || component.productCode,
       donorAbo: unitAbo,

@@ -629,6 +629,12 @@ export const labTests = {
       (data) => (!data || data.length === 0 ? fallbackStores.lab_tests : data),
     );
   },
+  async getByDonationId(donationId: string) {
+    return readWithFallback(
+      () => supabase.from('lab_tests').select('*').eq('donationId', donationId).maybeSingle(),
+      () => fallbackStores.lab_tests.find(t => t.donationId === donationId) || null,
+    );
+  },
   async updateByDonationId(donationId: string, data: any) {
     try {
       const { error } = await supabase.from('lab_tests').update(data).eq('donationId', donationId);
