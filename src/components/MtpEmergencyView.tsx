@@ -81,10 +81,10 @@ export function MtpEmergencyView() {
         setShowActivate(false);
         fetchCases();
       } else {
-        setErrorMsg(`ACTIVATION FAILED: ${data.error || data.message || 'Access Denied'}`);
+        setErrorMsg(t('mtp_err_activation', { detail: data.error || data.message || 'Access Denied' }));
       }
     } catch (e) {
-      setErrorMsg("Network Error");
+      setErrorMsg(t('mtp_err_network'));
     }
   };
 
@@ -108,10 +108,10 @@ export function MtpEmergencyView() {
         setShowBreakGlass(false);
         fetchCases();
       } else {
-        setErrorMsg(`BREAK-GLASS FAILED: ${data.error || data.message || 'Access Denied'}`);
+        setErrorMsg(t('mtp_err_breakglass', { detail: data.error || data.message || 'Access Denied' }));
       }
     } catch (e) {
-      setErrorMsg("Network Error");
+      setErrorMsg(t('mtp_err_network'));
     }
   };
 
@@ -123,10 +123,10 @@ export function MtpEmergencyView() {
       if (res.ok) {
         fetchCases();
       } else {
-        setErrorMsg(`ISSUE FAILED: ${data.error || data.message || 'Access Denied'}`);
+        setErrorMsg(t('mtp_err_issue', { detail: data.error || data.message || 'Access Denied' }));
       }
     } catch (e) {
-      setErrorMsg("Network Error");
+      setErrorMsg(t('mtp_err_network'));
     }
   };
 
@@ -150,7 +150,7 @@ export function MtpEmergencyView() {
                </div>
                <div>
                   <h1 className="text-3xl font-bold text-clinical-text uppercase tracking-tight">{t('mtp_title') || 'Massive Transfusion Protocol'}</h1>
-                  <p className="text-rose-600 font-semibold uppercase tracking-wider text-xs mt-1">Circular 26/2013/TT-BYT Compliant &middot; Rapid Release</p>
+                  <p className="text-rose-600 font-semibold uppercase tracking-wider text-xs mt-1">{t('mtp_compliant_sub')}</p>
                </div>
             </div>
          </div>
@@ -159,7 +159,7 @@ export function MtpEmergencyView() {
              onClick={() => setShowBreakGlass(true)}
              className="flex-1 md:flex-none px-6 py-4 bg-orange-100 hover:bg-orange-200 text-orange-700 font-bold rounded-xl transition-all flex items-center justify-center gap-2 uppercase tracking-wide text-xs border border-orange-200"
            >
-             <FileWarning size={18} /> Break-Glass (O-Neg)
+             <FileWarning size={18} /> {t('mtp_breakglass_btn')}
            </button>
            <button
              onClick={() => setShowActivate(true)}
@@ -179,7 +179,7 @@ export function MtpEmergencyView() {
                  <Activity size={18} className="text-rose-600" /> {t('mtp_monitor') || 'Active Protocol Monitor'}
               </h2>
               <span className="text-xs font-bold text-rose-700 bg-rose-100 px-3 py-1 rounded-full">
-                 {mtpCases.length} {t('national_surveillance') || 'Active Cases'}
+                 {mtpCases.length} {t('mtp_active_cases')}
               </span>
            </div>
            
@@ -191,7 +191,7 @@ export function MtpEmergencyView() {
            ) : (
              <div className="grid grid-cols-1 gap-6">
                 {mtpCases.map(mtp => (
-                  <MtpCaseCard key={mtp.id} mtp={mtp} onIssue={() => handleIssueUnit(mtp.id)} />
+                  <MtpCaseCard key={mtp.id} mtp={mtp} onIssue={() => handleIssueUnit(mtp.id)} t={t} />
                 ))}
              </div>
            )}
@@ -201,22 +201,22 @@ export function MtpEmergencyView() {
         <div className="xl:col-span-1 space-y-6">
            <div className="flex items-center gap-2 px-2">
               <ClipboardCheck className="text-clinical-text" size={18} />
-              <h2 className="text-sm font-bold text-clinical-text uppercase tracking-wider">Circular 26/2013/TT-BYT Guidelines</h2>
+              <h2 className="text-sm font-bold text-clinical-text uppercase tracking-wider">{t('mtp_guidelines_title')}</h2>
            </div>
            
            <div className="clinical-card p-6 bg-clinical-card border-clinical-border space-y-6">
               <div className="space-y-4">
-                 <GuidelineItem step="1" title="Immediate Release (O-)" desc="Issue uncrossmatched O- PRBCs immediately upon physician approval (SOP 10)." active />
-                 <GuidelineItem step="2" title="Retrospective Sample" desc="Collect patient sample for crossmatch as soon as possible." active={mtpCases.some(c => c.currentRound >= 1)} />
-                 <GuidelineItem step="3" title="Ratio Transfusion (1:1:1)" desc="Maintain balanced ratio of PRBC:FFP:PLT to prevent coagulopathy." active={mtpCases.some(c => c.unitsIssued >= 4)} />
-                 <GuidelineItem step="4" title="Mandatory Documentation" desc="Update all records post-emergency. Retrospective testing mandatory within 24h." />
+                 <GuidelineItem step="1" title={t('mtp_g1_title')} desc={t('mtp_g1_desc')} active />
+                 <GuidelineItem step="2" title={t('mtp_g2_title')} desc={t('mtp_g2_desc')} active={mtpCases.some(c => c.currentRound >= 1)} />
+                 <GuidelineItem step="3" title={t('mtp_g3_title')} desc={t('mtp_g3_desc')} active={mtpCases.some(c => c.unitsIssued >= 4)} />
+                 <GuidelineItem step="4" title={t('mtp_g4_title')} desc={t('mtp_g4_desc')} />
               </div>
 
               <div className="p-4 bg-orange-50 rounded-xl border border-orange-200 flex items-start gap-3">
                  <AlertTriangle size={20} className="text-orange-600 shrink-0 mt-0.5" />
                  <div>
-                    <h4 className="text-xs font-bold text-orange-800 uppercase tracking-wide">Compliance Alert</h4>
-                    <p className="text-xs text-orange-700 mt-1 leading-relaxed">Emergency uncrossmatched blood release requires documented authorization by the attending physician per Article 17, Circular 26.</p>
+                    <h4 className="text-xs font-bold text-orange-800 uppercase tracking-wide">{t('mtp_compliance_alert')}</h4>
+                    <p className="text-xs text-orange-700 mt-1 leading-relaxed">{t('mtp_compliance_desc')}</p>
                  </div>
               </div>
            </div>
@@ -229,8 +229,8 @@ export function MtpEmergencyView() {
           <div className="clinical-card max-w-lg w-full bg-clinical-card border-clinical-border p-8 shadow-2xl">
              <div className="flex justify-between items-start mb-8">
                 <div>
-                   <h3 className="text-2xl font-bold text-clinical-text uppercase tracking-tight">Initiate MTP</h3>
-                   <p className="text-rose-600 text-xs font-bold uppercase tracking-wider mt-1">Standard Protocol</p>
+                   <h3 className="text-2xl font-bold text-clinical-text uppercase tracking-tight">{t('mtp_initiate')}</h3>
+                   <p className="text-rose-600 text-xs font-bold uppercase tracking-wider mt-1">{t('mtp_standard_protocol')}</p>
                 </div>
                 <div className="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center text-rose-600">
                    <Zap size={24} />
@@ -239,7 +239,7 @@ export function MtpEmergencyView() {
              
              <div className="space-y-5">
                  <div className="space-y-1.5 relative">
-                   <label className="text-xs font-bold text-clinical-muted uppercase tracking-wider">Patient Profile (MRN)</label>
+                   <label className="text-xs font-bold text-clinical-muted uppercase tracking-wider">{t('mtp_patient_profile')}</label>
                    
                    <div 
                      onClick={() => setShowPatientDropdown(!showPatientDropdown)}
@@ -252,7 +252,7 @@ export function MtpEmergencyView() {
                              <span className="text-clinical-muted text-[10px] font-bold uppercase">{selectedPatient.name}</span>
                            </>
                          ) : (
-                           <span className="font-bold text-clinical-muted uppercase tracking-widest">Loading patients...</span>
+                           <span className="font-bold text-clinical-muted uppercase tracking-widest">{t('mtp_loading_patients')}</span>
                          )}
                       </div>
                       <ChevronDown size={18} className={`text-clinical-muted transition-transform ${showPatientDropdown ? 'rotate-180' : ''}`} />
@@ -280,19 +280,19 @@ export function MtpEmergencyView() {
                    )}
                  </div>
                 <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-clinical-muted uppercase tracking-wider">Location</label>
+                   <label className="text-xs font-bold text-clinical-muted uppercase tracking-wider">{t('mtp_location')}</label>
                    <input value={location} onChange={e=>setLocation(e.target.value)} className="clinical-input" />
                 </div>
                 <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-clinical-muted uppercase tracking-wider">Authorized Clinician</label>
+                   <label className="text-xs font-bold text-clinical-muted uppercase tracking-wider">{t('mtp_authorized_clinician')}</label>
                    <input value={doctor} onChange={e=>setDoctor(e.target.value)} className="clinical-input" />
                 </div>
              </div>
              
              <div className="mt-8 flex gap-4">
-                <button onClick={() => setShowActivate(false)} className="flex-1 py-3 text-sm font-bold text-clinical-muted hover:text-clinical-text transition-colors bg-clinical-bg rounded-xl">Cancel</button>
+                <button onClick={() => setShowActivate(false)} className="flex-1 py-3 text-sm font-bold text-clinical-muted hover:text-clinical-text transition-colors bg-clinical-bg rounded-xl">{t('mtp_cancel')}</button>
                 <button onClick={handleActivate} className="flex-[2] bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 rounded-xl shadow-md transition-all uppercase tracking-wide text-sm">
-                   Initiate Protocol
+                   {t('mtp_initiate_protocol')}
                 </button>
              </div>
           </div>
@@ -307,8 +307,8 @@ export function MtpEmergencyView() {
 
              <div className="flex justify-between items-start mb-8">
                 <div>
-                   <h3 className="text-2xl font-bold text-orange-600 uppercase tracking-tight">Break-Glass Release</h3>
-                   <p className="text-clinical-muted text-xs font-bold uppercase tracking-wider mt-1">Uncrossmatched O-Negative</p>
+                   <h3 className="text-2xl font-bold text-orange-600 uppercase tracking-tight">{t('mtp_bg_title')}</h3>
+                   <p className="text-clinical-muted text-xs font-bold uppercase tracking-wider mt-1">{t('mtp_bg_sub')}</p>
                 </div>
                 <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center text-orange-600">
                    <FileWarning size={24} />
@@ -316,24 +316,24 @@ export function MtpEmergencyView() {
              </div>
 
              <div className="p-4 bg-orange-50 border border-orange-200 rounded-xl mb-6 text-sm text-orange-800 font-medium">
-                You are authorizing the emergency release of uncrossmatched blood. A retrospective crossmatch and formal documentation must be completed within 24 hours per SOP 10.
+                {t('mtp_bg_warning')}
              </div>
 
              <div className="space-y-5">
                 <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-clinical-muted uppercase tracking-wider">Authorizing Clinician (Mandatory)</label>
+                   <label className="text-xs font-bold text-clinical-muted uppercase tracking-wider">{t('mtp_authorizing_clinician')}</label>
                    <input value={bgDoctor} onChange={e=>setBgDoctor(e.target.value)} className="clinical-input border-orange-200 focus:ring-orange-500/20 focus:border-orange-500" />
                 </div>
                 <div className="space-y-1.5">
-                   <label className="text-xs font-bold text-clinical-muted uppercase tracking-wider">Emergency Reason</label>
+                   <label className="text-xs font-bold text-clinical-muted uppercase tracking-wider">{t('mtp_emergency_reason')}</label>
                    <input value={bgReason} onChange={e=>setBgReason(e.target.value)} className="clinical-input border-orange-200 focus:ring-orange-500/20 focus:border-orange-500" />
                 </div>
              </div>
 
              <div className="mt-8 flex gap-4">
-                <button onClick={() => setShowBreakGlass(false)} className="flex-1 py-3 text-sm font-bold text-clinical-muted hover:text-clinical-text transition-colors bg-clinical-bg rounded-xl">Cancel</button>
+                <button onClick={() => setShowBreakGlass(false)} className="flex-1 py-3 text-sm font-bold text-clinical-muted hover:text-clinical-text transition-colors bg-clinical-bg rounded-xl">{t('mtp_cancel')}</button>
                 <button onClick={handleBreakGlass} className="flex-[2] bg-orange-600 hover:bg-orange-700 text-clinical-text font-bold py-3 rounded-xl shadow-md transition-all uppercase tracking-wide text-sm flex justify-center items-center gap-2">
-                   Authorize Release <ArrowRight size={18} />
+                   {t('mtp_authorize_release')} <ArrowRight size={18} />
                 </button>
              </div>
           </div>
@@ -369,11 +369,11 @@ export function MtpEmergencyView() {
                          </div>
                       </div>
                       <div>
-                         <h4 className="text-lg font-bold text-rose-500 tracking-tight">Fatal Error: Specimen Expired</h4>
-                         <p className="text-slate-300 text-sm mt-1 leading-relaxed">The latest patient blood specimen was drawn <strong className="text-white">{selectedPatient.specimenHours} hours ago</strong>. Per Circular 26/2013/TT-BYT, specimens for crossmatching must not exceed 72 hours.</p>
+                         <h4 className="text-lg font-bold text-rose-500 tracking-tight">{t('mtp_cdss_specimen_title')}</h4>
+                         <p className="text-slate-300 text-sm mt-1 leading-relaxed">{t('mtp_cdss_specimen_desc', { hours: String(selectedPatient.specimenHours) })}</p>
                          <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-rose-950/50 border border-rose-900/30">
                             <AlertCircle size={14} className="text-rose-400" />
-                            <span className="text-xs font-bold text-rose-400 uppercase tracking-wider">Action Required: New Draw Required</span>
+                            <span className="text-xs font-bold text-rose-400 uppercase tracking-wider">{t('mtp_cdss_specimen_action')}</span>
                          </div>
                       </div>
                    </div>
@@ -389,11 +389,11 @@ export function MtpEmergencyView() {
                          </div>
                       </div>
                       <div>
-                         <h4 className="text-lg font-bold text-orange-500 tracking-tight">Clinical Block: Irregular Antibody</h4>
-                         <p className="text-slate-300 text-sm mt-1 leading-relaxed">FHIR historical records indicate the presence of <strong className="text-white">{selectedPatient.antibodyType}</strong> antibodies. To prevent hemolytic transfusion reactions (HTR), automated electronic crossmatching is strictly disabled.</p>
+                         <h4 className="text-lg font-bold text-orange-500 tracking-tight">{t('mtp_cdss_antibody_title')}</h4>
+                         <p className="text-slate-300 text-sm mt-1 leading-relaxed">{t('mtp_cdss_antibody_desc', { type: selectedPatient.antibodyType })}</p>
                          <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-orange-950/50 border border-orange-900/30">
                             <History size={14} className="text-orange-400" />
-                            <span className="text-xs font-bold text-orange-400 uppercase tracking-wider">Protocol Switch: Manual AHG Enforced</span>
+                            <span className="text-xs font-bold text-orange-400 uppercase tracking-wider">{t('mtp_cdss_antibody_action')}</span>
                          </div>
                       </div>
                    </div>
@@ -405,14 +405,14 @@ export function MtpEmergencyView() {
                    onClick={() => setShowCdssAlert(false)} 
                    className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition-all text-sm uppercase tracking-wider"
                  >
-                    Acknowledge & Cancel Order
+                    {t('mtp_cdss_acknowledge')}
                  </button>
                  {/* 故意移除強制送出按鈕，展現 Hard Stop 邏輯 */}
                  <button 
                    disabled
                    className="px-6 py-3 bg-rose-900/20 border border-rose-900/30 text-rose-900/50 font-bold rounded-xl cursor-not-allowed text-sm uppercase tracking-wider flex items-center gap-2"
                  >
-                    Override (Disabled)
+                    {t('mtp_cdss_override')}
                  </button>
               </div>
            </div>
@@ -422,7 +422,7 @@ export function MtpEmergencyView() {
   );
 }
 
-function MtpCaseCard({ mtp, onIssue }: { mtp: any, onIssue: () => void }) {
+function MtpCaseCard({ mtp, onIssue, t }: { mtp: any, onIssue: () => void, t: (key: string, vars?: Record<string, string>) => string }) {
   const isEmergency = mtp.isBreakGlass;
   const progress = Math.min(((mtp.unitsIssued || 0) / (mtp.unitsTarget || 6)) * 100, 100);
   
@@ -430,7 +430,7 @@ function MtpCaseCard({ mtp, onIssue }: { mtp: any, onIssue: () => void }) {
     <div className={`clinical-card p-6 bg-clinical-card border ${isEmergency ? 'border-orange-300 shadow-orange-100' : 'border-clinical-border'} transition-all relative`}>
        {isEmergency && (
          <div className="absolute top-0 right-0 bg-orange-500 text-clinical-text text-[10px] font-bold px-3 py-1 rounded-bl-xl uppercase tracking-wider">
-            Uncrossmatched / Break-Glass
+            {t('mtp_uncrossmatched_bg')}
          </div>
        )}
        
@@ -444,24 +444,24 @@ function MtpCaseCard({ mtp, onIssue }: { mtp: any, onIssue: () => void }) {
                    <h3 className="text-2xl font-bold text-clinical-text tracking-tight uppercase">{mtp.patientIdentifier}</h3>
                    <div className="flex items-center gap-2 mt-1">
                       <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                      <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Active &middot; Round {mtp.currentRound || 1}</span>
+                      <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">{t('mtp_active_round', { n: String(mtp.currentRound || 1) })}</span>
                    </div>
                 </div>
              </div>
              
              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-clinical-bg rounded-xl border border-clinical-border">
-                <MtpStat label="Clinician" value={mtp.authorizedClinician} />
-                <MtpStat label="Location" value={mtp.clinicalScenario} />
-                <MtpStat label="Time Active" value="14:22" highlight={!isEmergency} />
-                <MtpStat label="Round Goal" value={`Pack ${mtp.currentRound || 1}`} highlight={isEmergency} />
+                <MtpStat label={t('mtp_stat_clinician')} value={mtp.authorizedClinician} />
+                <MtpStat label={t('mtp_stat_location')} value={mtp.clinicalScenario} />
+                <MtpStat label={t('mtp_stat_time')} value="14:22" highlight={!isEmergency} />
+                <MtpStat label={t('mtp_stat_round_goal')} value={t('mtp_pack', { n: String(mtp.currentRound || 1) })} highlight={isEmergency} />
              </div>
 
              {(mtp.unitsIssued || 0) >= 4 && (
                 <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
                    <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
                    <div>
-                      <p className="text-xs font-bold text-amber-800 uppercase tracking-wide">Ratio Warning</p>
-                      <p className="text-xs text-amber-700 mt-0.5">Ensure 1:1:1 ratio (PRBC:FFP:PLT) is maintained per protocol.</p>
+                      <p className="text-xs font-bold text-amber-800 uppercase tracking-wide">{t('mtp_ratio_warning')}</p>
+                      <p className="text-xs text-amber-700 mt-0.5">{t('mtp_ratio_desc')}</p>
                    </div>
                 </div>
              )}
@@ -470,7 +470,7 @@ function MtpCaseCard({ mtp, onIssue }: { mtp: any, onIssue: () => void }) {
           <div className="w-full md:w-[280px] space-y-4">
              <div className="bg-clinical-bg rounded-xl p-5 border border-clinical-border">
                 <div className="flex justify-between items-end mb-3">
-                   <span className="text-xs font-bold text-clinical-muted uppercase tracking-wider">Units Issued</span>
+                   <span className="text-xs font-bold text-clinical-muted uppercase tracking-wider">{t('mtp_units_issued')}</span>
                    <span className="text-3xl font-bold text-clinical-text leading-none">
                       {mtp.unitsIssued || 0}
                       <span className="text-xs text-clinical-muted ml-1">/{mtp.unitsTarget || 6}</span>
@@ -488,12 +488,12 @@ function MtpCaseCard({ mtp, onIssue }: { mtp: any, onIssue: () => void }) {
                onClick={onIssue}
                className={`w-full text-clinical-text font-bold py-4 rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 uppercase tracking-wide text-xs ${isEmergency ? 'bg-orange-600 hover:bg-orange-700' : 'bg-rose-600 hover:bg-rose-700'}`}
              >
-                <Barcode size={18} /> Record Issue
+                <Barcode size={18} /> {t('mtp_record_issue')}
              </button>
 
              {isEmergency && (
                  <button className="w-full bg-clinical-card border border-clinical-border hover:bg-clinical-bg text-clinical-text font-bold py-3 rounded-xl transition-all text-xs flex items-center justify-center gap-2">
-                     <ClipboardCheck size={16}/> Submit Retro-Crossmatch
+                     <ClipboardCheck size={16}/> {t('mtp_submit_retro')}
                  </button>
              )}
           </div>
