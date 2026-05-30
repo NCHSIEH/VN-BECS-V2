@@ -4,9 +4,9 @@
 > CSV-validation (IQ/OQ/PQ) evidence starting point for Gate 3 sign-off.
 > Regenerate: `npx vitest run --reporter=json --outputFile=.tmp-vitest.json && node scripts/gen-validation-report.cjs`
 
-- Generated: 2026-05-30T06:16:07.136Z
-- Commit: `50b1e7a`
-- Automated suite: **272/272 passed** across 46 files (0 failed)
+- Generated: 2026-05-30T06:26:32.930Z
+- Commit: `f6e8f31`
+- Automated suite: **278/278 passed** across 47 files (0 failed)
 
 Legend: ✅ verified (tests pass) · 🔴 failing · ⚪ no automated test · `OQ*` = OQ done in app layer, PQ pending live DB.
 
@@ -26,7 +26,7 @@ Legend: ✅ verified (tests pass) · 🔴 failing · ⚪ no automated test · `O
 | RTM-XM-01 | Component-class-aware ABO/Rh compatibility | OQ | ✅ | `componentCompatibility.test.ts`, `crossmatch.test.ts` (23 assertions PASS) |
 | RTM-XM-02 | Crossmatch uses tested serology ABO (not donor registration) | OQ | ✅ | `crossmatchRoute.test.ts` (2 assertions PASS) |
 | RTM-XM-03/04/05 | Antibody-history method rules, specimen validity, unknown-type block | OQ | ✅ | `crossmatch.test.ts`, `validators.test.ts` (21 assertions PASS) |
-| RTM-BED-01/02/03 | Bedside dual verification, re-check ABO/Rh, clinical prerequisites | OQ | ✅ | `bedsideVerifyRoute.test.ts` (11 assertions PASS) |
+| RTM-BED-01/02/03 | Bedside dual verification, re-check ABO/Rh, clinical prerequisites | OQ | ✅ | `bedsideVerifyRoute.test.ts` (12 assertions PASS) |
 | RTM-ISS-01/02 | Issue requires order/emergency; 30-min return rule | OQ | ✅ | `issueReturnRoute.test.ts`, `issueRouteOptimisticLock.test.ts` (3 assertions PASS) |
 | RTM-EMG-01 | Emergency/MTP release policy (approver, indication, RhD, SLA) | OQ | ✅ | `emergencyPolicy.test.ts` (7 assertions PASS) |
 | RTM-DON-01/02/03 | Donor eligibility, collection volume (VN26), deferral rules | OQ | ✅ | `validators.test.ts`, `collectionVolume.test.ts` (21 assertions PASS) |
@@ -58,7 +58,7 @@ Legend: ✅ verified (tests pass) · 🔴 failing · ⚪ no automated test · `O
 | `auditChain.test.ts` | 4/4 | ✅ PASS |
 | `auditChainVerify.test.ts` | 4/4 | ✅ PASS |
 | `authPolicy.test.ts` | 3/3 | ✅ PASS |
-| `bedsideVerifyRoute.test.ts` | 11/11 | ✅ PASS |
+| `bedsideVerifyRoute.test.ts` | 12/12 | ✅ PASS |
 | `bloodUnitCommands.test.ts` | 8/8 | ✅ PASS |
 | `collectionVolume.test.ts` | 8/8 | ✅ PASS |
 | `commandFailClosed.test.ts` | 3/3 | ✅ PASS |
@@ -88,6 +88,7 @@ Legend: ✅ verified (tests pass) · 🔴 failing · ⚪ no automated test · `O
 | `rbacPolicy.test.ts` | 5/5 | ✅ PASS |
 | `reconciliationAutoCorrect.test.ts` | 2/2 | ✅ PASS |
 | `reconciliationRoutes.test.ts` | 5/5 | ✅ PASS |
+| `reportingService.test.ts` | 5/5 | ✅ PASS |
 | `rlsContext.test.ts` | 5/5 | ✅ PASS |
 | `runScoped.test.ts` | 4/4 | ✅ PASS |
 | `sessionIdentity.test.ts` | 9/9 | ✅ PASS |
