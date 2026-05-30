@@ -62,7 +62,7 @@
 | RTM-AUD-01 | FDA211 | 稽核紀錄 append-only、不可竄改（DB 層強制） | — | `supabase_schema.sql:142-160,402-427` | `db-migrations/001_tests.sql` (TEST 2) | trigger+RLS 已有；竄改測試已撰；待連線測試庫執行附證據 | 🟠 |
 | RTM-AUD-02 | FDA211 | 稽核 hash chain 完整性可驗證（驗證端點 + 排程檢查） | — | `auditChain.verifyAuditChain`, `app/api/v1/audit-events/verify/route.ts` | `auditChainVerify.test.ts` | 驗證端點 + 竄改/斷鏈偵測測試已建；排程化待補 | ✅ |
 | RTM-COLD-01 | VN26, EU-GMP | 冷鏈：經驗證裝置、excursion 閾值、自動隔離、CAPA | SOP5 | `transport_jobs`, route-local | _需冷鏈 excursion 端到端測試_ | 🔴 目前為模擬值 | 🔴 |
-| RTM-OFF-01 | FDA606 | 離線僅限緊急命令、簽章、idempotency、衝突送審不自動覆蓋 | — | `offlineSync.ts`, `sync/push-events/route.ts` | `offlineSyncScenarios.test.ts` | 🟠 衝突/版本檢查有；範圍限制與簽章待強化 | 🟠 |
+| RTM-OFF-01 | FDA606 | 離線僅限緊急命令、簽章、idempotency、衝突送審不自動覆蓋 | — | `offlineSync.ts`（**HMAC 事件簽章 `verifyOfflineEventSignature`、過期送審 `isOfflineEventStale`、緊急命令集 `EMERGENCY_OFFLINE_OPERATIONS`**）, `sync/push-events/route.ts` | `offlineSyncScenarios.test.ts`, `offlineHardening.test.ts`(8) | idempotency/衝突/terminal/版本檢查有；**事件簽章驗證（gated `VN_BECS_OFFLINE_SIGNING_SECRET`）、過期事件送審、緊急命令白名單已補**；client 端簽名與生產啟用待 cut-over | 🟠 |
 | RTM-FHIR-01 | (互通) | FHIR 資源完整對應（Patient/ServiceRequest/Specimen/DiagnosticReport/SupplyDelivery/Procedure/AdverseEvent） | — | `FhirAdapter.ts`, `app/api/v1/fhir/route.ts` | `fhirAdapter.test.ts` | 7 類資源 mapper + 路由 bundle 查詢已建；外部訊息驗證/版本化待 P2 | ✅ |
 | RTM-VAL-01 | FDA-BECS, ISO15189 | CSV 驗證套件：需求→測試→IQ/OQ/PQ 證據；上線前簽核 | — | （本 RTM 即起點） | — | 🔴 尚未建立 | 🔴 |
 | RTM-REG-01 | VN26 | 越南法規正式對應與 12 項臨床政策書面決策 | — | `00_vietnam_readiness_gap.md` | — | 🔴 待主管機關/試點醫院簽核 | 🔴 |

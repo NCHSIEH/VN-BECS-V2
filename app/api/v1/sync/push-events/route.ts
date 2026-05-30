@@ -13,8 +13,10 @@ import type { BloodUnitStatus, Role } from '@/src/types';
 import {
   buildOfflineEventReceipt,
   findPriorOfflineSyncResult,
+  isOfflineEventStale,
   offlineEventKey,
   syncResult,
+  verifyOfflineEventSignature,
 } from '@/src/server/services/offlineSync';
 import { authorizeApiRole, rbacErrorBody } from '@/src/server/rbacPolicy';
 import { apiErrorResponse, internalErrorResponse } from '@/src/server/apiResponses';
@@ -129,9 +131,27 @@ const SYNC_OPERATIONS: Record<string, SyncOperation> = {
 };
 
 async function processOfflineEvent(event: any, requestId: string | null): Promise<SyncOutcome> {
+  // OFF-01: reject tampered/forged events when offline signing is configured.
+  const sig = verifyOfflineEventSignature(event);
+  if (!sig.ok) {
+    return syncResult(event, 'Rejected', {
+      error: sig.reason === 'MISSING_SIGNATURE' ? 'Offline event signature is required' : 'Offline event signature is invalid',
+      errorCode: sig.reason,
+    });
+  }
+
   const op = SYNC_OPERATIONS[event.operationType];
   if (!op) {
     return syncResult(event, 'Rejected', { error: 'Unknown operationType', errorCode: 'UNKNOWN_OPERATION_TYPE' });
+  }
+
+  // OFF-01: stale offline events go to manual review instead of auto-applying.
+  const staleness = isOfflineEventStale(event);
+  if (staleness.stale) {
+    return syncResult(event, 'NeedsReview', {
+      error: `Offline event is ${staleness.ageHours}h old (> ${staleness.maxHours}h limit); manual review required`,
+      errorCode: 'OFFLINE_EVENT_STALE',
+    });
   }
 
   const precheckFailure = op.precheck?.(event);
