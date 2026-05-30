@@ -36,9 +36,18 @@
 臨床安全三元件（床邊驗證、配血、血液警訊）現已**全面三語化**。
 ⚠️ 注意：`0bce44a`、`4acb564` 等「續作」commit **尚未推送/部署**（origin/main 仍在 `c9f7f28`）。明天可一併 push 觸發 App Hosting 建置。
 
-### 各子系統 i18n 覆蓋現況（剩餘待做）
-已完成：DonorCenterSimulator（LIMS 四分頁）、Bedside、Crossmatch、Hemovigilance、IssueReturn、RareDonor、Dispatcher、Warehouse（後二者原本 t()≈26 已高）。
-**仍偏低、建議優先**：HospitalOperatorView（t()=11）、HospitalInventoryView（t()=2）、MtpEmergencyView（t()=5, 527 行）、ReconciliationView（t()=0）、CourierView（t()=19 尚可）。
+### 各子系統 i18n 覆蓋現況
+**✅ 全部臨床操作子系統已三語化完成**（EN / zh-TW / vi）：
+DonorCenterSimulator（LIMS 四分頁）、Bedside、Crossmatch、Hemovigilance、Reconciliation、HospitalInventory、HospitalOperator、MtpEmergency、IssueReturn、RareDonor、Dispatcher、Warehouse。
+
+i18n 續作 commit（`14bcaa9` 之後，皆已推送上線）：
+- `0e3...`（reconciliation + hospital inventory）、`20e816b`（hospital operator）、`4d65798`（MTP 全套含 CDSS 攔截覆蓋層）。
+- E2E 對齊：`cdss-alert.spec.ts`、`lims-happy-path.spec.ts` 加入 `addInitScript` 強制英文語系，並修 `HUB INTRANSIT`→`HUB IN-TRANSIT` 斷言（兩 spec 原本就紅、需執行中 server+DB 才能跑）。
+
+### i18n 慣例備忘（重要）
+- 新 UI 文案一律 `t('key', { var })` + 在 `src/lib/i18nFallbackDict.ts` 三語補鍵（用小腳本在三個語言區塊開頭插入，避免逐一手改）。
+- 子元件（module-level function，無法用 useI18n hook）→ 將 `t` 當 prop 傳入（見 MtpCaseCard、GuidelineItem）。
+- 元件單元測試 mock `t:(k)=>k`，斷言要對「鍵名」；E2E 則用 `addInitScript` 設 `becs_lang='en'` 後對英文值斷言。
 
 ## 3. 下一步候選（明天可挑）
 

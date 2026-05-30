@@ -41,6 +41,9 @@ test('LIMS Happy Path - Complete Blood Donation Workflow', async ({ page }) => {
   // ─────────────────────────────────────────────────────────────────────────
   // INTRO: Cinematic blur-in effect
   // ─────────────────────────────────────────────────────────────────────────
+  // Force English locale before boot so text assertions are deterministic
+  // (the app defaults to Vietnamese and persists `becs_lang`).
+  await page.addInitScript(() => localStorage.setItem('becs_lang', 'en'));
   await page.goto('http://localhost:54321');
 
   await page.addStyleTag({
@@ -281,7 +284,7 @@ test('LIMS Happy Path - Complete Blood Donation Workflow', async ({ page }) => {
   await pause(page, 4000, '🚀 Transmitting to VN-BECS National Command Center...');
 
   // Confirm HUB INTRANSIT status — wait longer since API call may take time
-  const hubStatus = page.locator('text=HUB INTRANSIT').first();
+  const hubStatus = page.locator('text=HUB IN-TRANSIT').first();
   await hubStatus.waitFor({ state: 'visible', timeout: 20000 });
   await pause(page, 5000, '✅ MISSION COMPLETE — Blood product entered national logistics chain!');
 

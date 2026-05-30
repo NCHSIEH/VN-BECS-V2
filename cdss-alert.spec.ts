@@ -6,6 +6,10 @@ test.use({
 });
 
 test('CDSS Dual Alert Block Simulation', async ({ page }) => {
+  // Force English locale before the app boots so the text assertions below are
+  // deterministic (the app defaults to Vietnamese and persists `becs_lang`).
+  await page.addInitScript(() => localStorage.setItem('becs_lang', 'en'));
+
   // Go to the local app (assuming it runs on port 54321 as per package.json)
   await page.goto('http://localhost:54321');
 
