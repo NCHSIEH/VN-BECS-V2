@@ -1,5 +1,42 @@
 import { Patient, BloodComponent, InventoryUnit } from '../types';
 
+/** A minimal structural type for an emitted FHIR resource. */
+export interface FhirResource {
+  resourceType: string;
+  id?: string;
+  [key: string]: unknown;
+}
+
+// Lightweight input shapes for the internal records the adapter maps from.
+// All fields optional — the adapter tolerates partial rows.
+export interface FhirOrderInput {
+  id?: string; status?: string; priority?: string; patientId?: string;
+  hospital?: string; clinicalIndication?: string; submittedAt?: string;
+}
+export interface FhirSpecimenInput {
+  id?: string; specimenType?: string; patientId?: string; specimenDate?: string;
+}
+export interface FhirLabTestInput {
+  id?: string; idmStatus?: string; abo?: string; rhd?: string; testedAt?: string;
+  natResult?: string; serologyResult?: string;
+}
+export interface FhirIssueInput {
+  id?: string; returnedAt?: string; patientId?: string; componentId?: string;
+  issuedAt?: string; issuedTo?: string;
+}
+export interface FhirTransfusionInput {
+  id?: string; completedAt?: string; startedAt?: string; patientId?: string; componentId?: string;
+}
+export interface FhirReactionInput {
+  id?: string; severity?: string; reactionType?: string; patientId?: string;
+  reportedAt?: string; transfusionId?: string; description?: string;
+}
+export interface FhirPatientResource {
+  id?: string;
+  identifier?: Array<{ system?: string; value?: string }>;
+  name?: Array<{ text?: string }>;
+}
+
 /**
  * FhirAdapter Utility
  * Converts VN-BBMS internal models to HL7 FHIR (R4/R5) compliant JSON resources.
@@ -9,7 +46,7 @@ export const FhirAdapter = {
   /**
    * Convert Patient to FHIR Patient resource
    */
-  toFhirPatient(patient: Patient): any {
+  toFhirPatient(patient: Patient): FhirResource {
     return {
       resourceType: 'Patient',
       id: patient.id,
@@ -46,7 +83,7 @@ export const FhirAdapter = {
   /**
    * Convert InventoryUnit to FHIR BiologicallyDerivedProduct
    */
-  toFhirProduct(unit: InventoryUnit): any {
+  toFhirProduct(unit: InventoryUnit): FhirResource {
     return {
       resourceType: 'BiologicallyDerivedProduct',
       id: unit.unitId.replace(/[^a-zA-Z0-9]/g, '-'),
@@ -81,13 +118,13 @@ export const FhirAdapter = {
   /**
    * Convert a blood Order to a FHIR ServiceRequest (RTM-FHIR-01).
    */
-  toFhirServiceRequest(order: any): any {
+  toFhirServiceRequest(order: FhirOrderInput): FhirResource {
     return {
       resourceType: 'ServiceRequest',
       id: order.id,
       status: order.status === 'COMPLETED' ? 'completed' : 'active',
       intent: 'order',
-      priority: ({ Routine: 'routine', ASAP: 'asap', STAT: 'stat', MTP: 'stat' } as any)[order.priority] || 'routine',
+      priority: ({ Routine: 'routine', ASAP: 'asap', STAT: 'stat', MTP: 'stat' } as Record<string, string>)[order.priority || ''] || 'routine',
       code: { text: 'Blood component request' },
       subject: order.patientId ? { reference: `Patient/${order.patientId}` } : undefined,
       requester: order.hospital ? { display: order.hospital } : undefined,
@@ -99,7 +136,7 @@ export const FhirAdapter = {
   /**
    * Convert a crossmatch/donation specimen reference to a FHIR Specimen.
    */
-  toFhirSpecimen(record: any): any {
+  toFhirSpecimen(record: FhirSpecimenInput): FhirResource {
     return {
       resourceType: 'Specimen',
       id: record.id,
@@ -112,7 +149,7 @@ export const FhirAdapter = {
   /**
    * Convert a LabTest (IDM / ABO-Rh) to a FHIR DiagnosticReport.
    */
-  toFhirDiagnosticReport(labTest: any): any {
+  toFhirDiagnosticReport(labTest: FhirLabTestInput): FhirResource {
     const idmCode = labTest.idmStatus === 'CLEARED' ? 'negative' : labTest.idmStatus === 'REACTIVE' ? 'positive' : 'pending';
     return {
       resourceType: 'DiagnosticReport',
@@ -133,7 +170,7 @@ export const FhirAdapter = {
   /**
    * Convert an issue record (unit dispatched/issued) to a FHIR SupplyDelivery.
    */
-  toFhirSupplyDelivery(issue: any): any {
+  toFhirSupplyDelivery(issue: FhirIssueInput): FhirResource {
     return {
       resourceType: 'SupplyDelivery',
       id: issue.id,
@@ -150,7 +187,7 @@ export const FhirAdapter = {
   /**
    * Convert a transfusion record to a FHIR Procedure.
    */
-  toFhirProcedure(transfusion: any): any {
+  toFhirProcedure(transfusion: FhirTransfusionInput): FhirResource {
     return {
       resourceType: 'Procedure',
       id: transfusion.id,
@@ -167,7 +204,7 @@ export const FhirAdapter = {
   /**
    * Convert an adverse reaction to a FHIR AdverseEvent.
    */
-  toFhirAdverseEvent(reaction: any): any {
+  toFhirAdverseEvent(reaction: FhirReactionInput): FhirResource {
     const sev = String(reaction.severity || '').toLowerCase();
     return {
       resourceType: 'AdverseEvent',
@@ -190,8 +227,8 @@ export const FhirAdapter = {
   /**
    * Mock HIS Sync: Convert FHIR Patient back to internal model
    */
-  fromFhirPatient(fhirPatient: any): Partial<Patient> {
-    const mrn = fhirPatient.identifier?.find((i: any) => i.system === 'http://hospital.vn/mrn')?.value;
+  fromFhirPatient(fhirPatient: FhirPatientResource): Partial<Patient> {
+    const mrn = fhirPatient.identifier?.find((i) => i.system === 'http://hospital.vn/mrn')?.value;
     return {
       id: fhirPatient.id,
       mrn: mrn || fhirPatient.id,
