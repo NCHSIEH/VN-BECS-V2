@@ -27,7 +27,7 @@ export function ReconciliationView() {
       const res = await fetch('/api/v1/reconciliation/generate', { method: 'POST' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setStatus({ type: 'success', msg: `Generated ${data.reports.length} new daily reports.` });
+      setStatus({ type: 'success', msg: t('rec_msg_generated', { n: String(data.reports.length) }) });
       loadReports();
     } catch (e: any) {
       setStatus({ type: 'error', msg: e.message });
@@ -43,7 +43,7 @@ export function ReconciliationView() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resolvedBy: 'System Admin' })
       });
-      if (!res.ok) throw new Error('Failed to resolve');
+      if (!res.ok) throw new Error(t('rec_err_resolve'));
       loadReports();
     } catch (e: any) {
       setStatus({ type: 'error', msg: e.message });
@@ -60,8 +60,8 @@ export function ReconciliationView() {
         body: JSON.stringify({ resolvedBy: 'System Auto-Correction' })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to auto-correct');
-      setStatus({ type: 'success', msg: `Successfully resolved ${data.correctedCount} inconsistencies for report ${id}.` });
+      if (!res.ok) throw new Error(data.error || t('rec_err_autocorrect'));
+      setStatus({ type: 'success', msg: t('rec_msg_corrected', { n: String(data.correctedCount), id }) });
       loadReports();
     } catch (e: any) {
       setStatus({ type: 'error', msg: e.message });
@@ -75,7 +75,7 @@ export function ReconciliationView() {
         <div className="flex justify-between items-center mb-6 border-b border-clinical-border pb-4">
           <h2 className="text-lg font-bold text-clinical-text flex items-center gap-2">
             <FileCheck className="text-purple-600" />
-            SOP 10: Daily Reconciliation Reports
+            {t('rec_title')}
           </h2>
           <button 
             onClick={handleGenerate}
@@ -83,7 +83,7 @@ export function ReconciliationView() {
             className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-clinical-text px-4 py-2 rounded-lg text-sm font-bold transition disabled:opacity-50"
           >
             <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-            Trigger Daily Job (06:00)
+            {t('rec_trigger_job')}
           </button>
         </div>
 
@@ -116,10 +116,10 @@ export function ReconciliationView() {
                         hasConflicts ? 'bg-rose-950/30 text-rose-600 border-rose-900' :
                         'bg-blue-50 text-blue-600 border-blue-900'
                       }`}>
-                        {resolved ? 'Resolved' : hasConflicts ? 'Needs Review' : 'Pending Review'}
+                        {resolved ? t('rec_status_resolved') : hasConflicts ? t('rec_status_needs_review') : t('rec_status_pending')}
                       </span>
                     </div>
-                    <div className="text-xs text-clinical-muted">Date: {r.date} | Hospital: {r.hospitalId}</div>
+                    <div className="text-xs text-clinical-muted">{t('rec_date')}: {r.date} | {t('rec_hospital')}: {r.hospitalId}</div>
                   </div>
                   {!resolved && (
                     <div className="flex gap-2">
@@ -132,7 +132,7 @@ export function ReconciliationView() {
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 21l8.982-11.795H14l1-6-8.982 11.795h5.813z" />
                           </svg>
-                          Auto-Correct Data
+                          {t('rec_auto_correct')}
                         </button>
                       )}
                       <button 
@@ -140,7 +140,7 @@ export function ReconciliationView() {
                         disabled={loading}
                         className="bg-clinical-bg border border-clinical-border hover:border-slate-500 text-clinical-text px-3 py-1.5 rounded text-xs font-bold transition disabled:opacity-50"
                       >
-                        Mark Resolved
+                        {t('rec_mark_resolved')}
                       </button>
                     </div>
                   )}
@@ -148,24 +148,24 @@ export function ReconciliationView() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-clinical-bg p-3 rounded-lg border border-clinical-border">
-                    <div className="text-[10px] text-clinical-muted uppercase font-bold mb-2">Borrowed Units ({borrowed.length})</div>
+                    <div className="text-[10px] text-clinical-muted uppercase font-bold mb-2">{t('rec_borrowed_units')} ({borrowed.length})</div>
                     <div className="text-xs text-clinical-muted font-mono flex flex-wrap gap-1">
                       {borrowed.map((u: string, idx: number) => (
                         <span key={idx} className="bg-clinical-card px-1.5 py-0.5 rounded">{u}</span>
                       ))}
-                      {borrowed.length === 0 && 'None'}
+                      {borrowed.length === 0 && t('rec_none')}
                     </div>
                   </div>
                   
                   <div className={`p-3 rounded-lg border ${hasConflicts ? 'bg-rose-950/30 border-rose-900/50' : 'bg-clinical-bg border-clinical-border'}`}>
                     <div className={`text-[10px] uppercase font-bold mb-2 ${hasConflicts ? 'text-rose-600' : 'text-clinical-muted'}`}>
-                      Conflicts Detected ({conflicts.length})
+                      {t('rec_conflicts_detected')} ({conflicts.length})
                     </div>
                     <div className="text-xs font-mono flex flex-wrap gap-1">
                       {conflicts.map((c: string, idx: number) => (
                         <span key={idx} className="bg-rose-950 text-rose-300 px-1.5 py-0.5 rounded border border-rose-900">{c}</span>
                       ))}
-                      {conflicts.length === 0 && <span className="text-lime-500">No conflicts</span>}
+                      {conflicts.length === 0 && <span className="text-lime-500">{t('rec_no_conflicts')}</span>}
                     </div>
                   </div>
                 </div>
@@ -173,14 +173,14 @@ export function ReconciliationView() {
                 {resolved && (
                   <div className="mt-3 text-[10px] text-clinical-muted border-t border-clinical-border pt-2 flex items-center gap-1">
                     <CheckCircle2 size={12} className="text-lime-500" />
-                    Resolved by {r.resolvedBy} at {new Date(r.resolvedAt).toLocaleString()}
+                    {t('rec_resolved_by', { by: r.resolvedBy, time: new Date(r.resolvedAt).toLocaleString() })}
                   </div>
                 )}
               </div>
             );
           })}
           {reports.length === 0 && !loading && (
-            <div className="text-center p-8 text-clinical-muted text-sm">No reconciliation reports found.</div>
+            <div className="text-center p-8 text-clinical-muted text-sm">{t('rec_no_reports')}</div>
           )}
         </div>
       </div>

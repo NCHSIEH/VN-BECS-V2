@@ -85,7 +85,7 @@ export function HospitalInventoryView() {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4 text-clinical-muted animate-pulse">
         <Building2 className="animate-bounce" size={48} />
-        <span className="font-black uppercase tracking-[0.3em]">Synchronizing Regional Inventory...</span>
+        <span className="font-black uppercase tracking-[0.3em]">{t('hinv_loading')}</span>
       </div>
     );
   }
@@ -97,10 +97,10 @@ export function HospitalInventoryView() {
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 px-2">
          <div className="space-y-2">
             <div className="flex items-center gap-3">
-               <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.4em] bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/20">VMI Protocol Active</span>
+               <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.4em] bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/20">{t('hinv_vmi')}</span>
                <div className="h-px w-12 bg-clinical-bg"></div>
             </div>
-            <h1 className="text-4xl font-black text-clinical-text tracking-tighter uppercase italic leading-none">Regional Inventory Visibility</h1>
+            <h1 className="text-4xl font-black text-clinical-text tracking-tighter uppercase italic leading-none">{t('hinv_title')}</h1>
          </div>
 
          <div className="flex gap-4">
@@ -109,7 +109,7 @@ export function HospitalInventoryView() {
                   <Package size={20} />
                </div>
                <div>
-                  <p className="text-[10px] font-black text-clinical-muted uppercase tracking-widest leading-none mb-1">Total Units</p>
+                  <p className="text-[10px] font-black text-clinical-muted uppercase tracking-widest leading-none mb-1">{t('hinv_total_units')}</p>
                   <p className="text-xl font-black text-clinical-text tracking-tighter">{regionalStats.totalUnits}</p>
                </div>
             </div>
@@ -118,7 +118,7 @@ export function HospitalInventoryView() {
                   <AlertCircle size={20} />
                </div>
                <div>
-                  <p className="text-[10px] font-black text-clinical-muted uppercase tracking-widest leading-none mb-1">Critical</p>
+                  <p className="text-[10px] font-black text-clinical-muted uppercase tracking-widest leading-none mb-1">{t('hinv_critical')}</p>
                   <p className="text-xl font-black text-rose-500 tracking-tighter">{regionalStats.criticalHospitals}</p>
                </div>
             </div>
@@ -131,7 +131,7 @@ export function HospitalInventoryView() {
             <Search size={18} className="text-clinical-muted ml-2" />
             <input 
               type="text" 
-              placeholder="Search by Hospital Name or Province..." 
+              placeholder={t('hinv_search')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-transparent border-none focus:ring-0 text-sm font-medium text-clinical-text w-full md:w-80"
@@ -139,10 +139,10 @@ export function HospitalInventoryView() {
          </div>
          <div className="flex gap-3">
             <button className="flex items-center gap-2 px-6 py-3 bg-clinical-bg text-clinical-text rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-700 transition-all">
-               <TrendingUp size={14} /> Usage Analytics
+               <TrendingUp size={14} /> {t('hinv_usage_analytics')}
             </button>
             <button className="flex items-center gap-2 px-6 py-3 bg-sky-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-sky-900/40 hover:scale-105 active:scale-95 transition-all">
-               <Activity size={14} /> Replenishment Run
+               <Activity size={14} /> {t('hinv_replenishment')}
             </button>
          </div>
       </div>
@@ -174,7 +174,7 @@ export function HospitalInventoryView() {
                      hospital.status === 'Low Stock' ? 'bg-amber-500/10 text-amber-500 border-amber-500/30' : 
                      'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
                   }`}>
-                     {hospital.status}
+                     {hospital.status === 'Critical' ? t('hinv_status_critical') : hospital.status === 'Low Stock' ? t('hinv_status_low') : t('hinv_status_optimal')}
                   </div>
                </div>
 
@@ -199,19 +199,19 @@ export function HospitalInventoryView() {
                <div className="p-8 bg-clinical-card/10 border-t border-clinical-border flex justify-between items-center mt-auto">
                   <div className="flex items-center gap-6">
                      <div className="space-y-1">
-                        <p className="text-[8px] font-black text-clinical-muted uppercase tracking-widest leading-none">Daily Burn Rate</p>
-                        <p className="text-sm font-black text-clinical-muted tracking-tighter">{hospital.avgDailyUsage} Units/Day</p>
+                        <p className="text-[8px] font-black text-clinical-muted uppercase tracking-widest leading-none">{t('hinv_burn_rate')}</p>
+                        <p className="text-sm font-black text-clinical-muted tracking-tighter">{t('hinv_units_day', { n: String(hospital.avgDailyUsage) })}</p>
                      </div>
                      <div className="h-8 w-px bg-clinical-bg"></div>
                      <div className="space-y-1">
-                        <p className="text-[8px] font-black text-clinical-muted uppercase tracking-widest leading-none">Last Supply</p>
+                        <p className="text-[8px] font-black text-clinical-muted uppercase tracking-widest leading-none">{t('hinv_last_supply')}</p>
                         <p className="text-sm font-black text-clinical-muted tracking-tighter flex items-center gap-2">
                            <Clock size={12} /> {new Date(hospital.lastDelivery).toLocaleDateString()}
                         </p>
                      </div>
                   </div>
                   <button className="flex items-center gap-2 px-6 py-3 bg-clinical-card text-clinical-muted border border-clinical-border rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-clinical-bg hover:text-white transition-all">
-                     View Details <ChevronRight size={14} />
+                     {t('hinv_view_details')} <ChevronRight size={14} />
                   </button>
                </div>
             </div>
