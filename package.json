@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "validation-report": "vitest run --reporter=json --outputFile=.tmp-vitest.json && node scripts/gen-validation-report.cjs .tmp-vitest.json"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",
