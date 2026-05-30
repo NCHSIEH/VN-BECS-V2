@@ -16,15 +16,19 @@ INSERT INTO organizations (id, name, type, location, "createdAt") VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- 2. Users
+-- NOTE: password column stores bcrypt('123') so the published test credentials
+-- (username / 123) work in production, where plaintext passwords are rejected
+-- by the security hardening (verifyPassword). Re-hash here keeps the seed usable
+-- under NODE_ENV=production. Login with each username and the password "123".
 INSERT INTO users (id, username, password, role, "orgId", permitted_systems, "isActive", "createdAt") VALUES
-('USR-ADMIN', 'admin', '123', 'Admin', 'ORG-HUB-01', 'LIMS,HUB,MDM,HOSPITAL,NATIONAL', 1, NOW()),
-('USR-MGR', 'manager', '123', 'Manager', 'ORG-HUB-01', 'HUB', 1, NOW()),
-('USR-DISP-1', 'dispatcher_hn', '123', 'HubDispatcher', 'ORG-HUB-01', 'HUB', 1, NOW()),
-('USR-DISP-2', 'dispatcher_hcm', '123', 'HubDispatcher', 'ORG-HUB-01', 'HUB', 1, NOW()),
-('USR-DR-1', 'doctor_hosp_1', '123', 'Doctor', 'ORG-HOSP-01', 'HUB', 1, NOW()),
-('USR-NS-1', 'nurse_hosp_1', '123', 'Nurse', 'ORG-HOSP-01', 'HUB', 1, NOW()),
-('USR-WH-1', 'warehouse_hosp_1', '123', 'WarehouseIssuer', 'ORG-HOSP-01', 'HUB', 1, NOW())
-ON CONFLICT (id) DO NOTHING;
+('USR-ADMIN', 'admin', '$2b$10$PiZhGQIUqvOwDR/3fsPG2.Mj/llp4UwUndKeTpkSMJ.ROZFO3zKPS', 'Admin', 'ORG-HUB-01', 'LIMS,HUB,MDM,HOSPITAL,NATIONAL', 1, NOW()),
+('USR-MGR', 'manager', '$2b$10$PiZhGQIUqvOwDR/3fsPG2.Mj/llp4UwUndKeTpkSMJ.ROZFO3zKPS', 'Manager', 'ORG-HUB-01', 'HUB', 1, NOW()),
+('USR-DISP-1', 'dispatcher_hn', '$2b$10$PiZhGQIUqvOwDR/3fsPG2.Mj/llp4UwUndKeTpkSMJ.ROZFO3zKPS', 'HubDispatcher', 'ORG-HUB-01', 'HUB', 1, NOW()),
+('USR-DISP-2', 'dispatcher_hcm', '$2b$10$PiZhGQIUqvOwDR/3fsPG2.Mj/llp4UwUndKeTpkSMJ.ROZFO3zKPS', 'HubDispatcher', 'ORG-HUB-01', 'HUB', 1, NOW()),
+('USR-DR-1', 'doctor_hosp_1', '$2b$10$PiZhGQIUqvOwDR/3fsPG2.Mj/llp4UwUndKeTpkSMJ.ROZFO3zKPS', 'Doctor', 'ORG-HOSP-01', 'HUB', 1, NOW()),
+('USR-NS-1', 'nurse_hosp_1', '$2b$10$PiZhGQIUqvOwDR/3fsPG2.Mj/llp4UwUndKeTpkSMJ.ROZFO3zKPS', 'Nurse', 'ORG-HOSP-01', 'HUB', 1, NOW()),
+('USR-WH-1', 'warehouse_hosp_1', '$2b$10$PiZhGQIUqvOwDR/3fsPG2.Mj/llp4UwUndKeTpkSMJ.ROZFO3zKPS', 'WarehouseIssuer', 'ORG-HOSP-01', 'HUB', 1, NOW())
+ON CONFLICT (id) DO UPDATE SET password = EXCLUDED.password, role = EXCLUDED.role, "isActive" = 1;
 
 -- 3. Product Catalog
 INSERT INTO product_catalog ("productCode", alias, "componentClass", "aboRequired", "rhdRequired") VALUES
