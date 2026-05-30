@@ -82,6 +82,33 @@ i18n 續作 commit（`14bcaa9` 之後，皆已推送上線）：
   - **啟用/驗證**：設 `DATABASE_URL`/`SCOPED_DATABASE_URL`（見 `.env.production.example` 與 `DB_MIGRATION_WORK_PACKAGE.md`「如何在測試 DB 驗證」），需先跑 migration 001。
   - **仍待實庫**：跑驗證取證（跨機構 SELECT 回 0 列、稽核不可改、強制中途失敗驗回滾），把 STATE-03/AUTH-03 由 🟠 改 ✅。
 
+## 4c. 下午延伸 session（已全部推送上線，HEAD `4597569`）
+
+順序：型別/效能/Tier B → security+code review → TRACE-01 → OFF-01 → STATE-02。
+
+| commit | 內容 | RTM |
+|---|---|---|
+| `4dbdfdb` | orders.getById（效能）+ STATE-04 多軸寫入器接入命令服務（+2 測試） | STATE-04 🟠 |
+| `7c483b8` | **Tier B 骨架（gated、零風險）**：`pg.ts` 延遲連線池、`transactionalTransition.ts` 單一 `BEGIN…COMMIT` 原子交易、`rlsContext.runScoped`；+10 測試 | STATE-03/AUTH-03 🟠 |
+| `0a693c7` | **security review 發現並修復**：`patients.getById` PostgREST `.or()` 過濾注入（可解析到錯誤病人）→ 加字元集限制 + 回歸測試 | — |
+| `f5bb976` | **TRACE-01 後端**：`services/traceability.ts` 雙向追溯（forward/backward）+ `GET /api/v1/trace`（RBAC）+5 測試 | TRACE-01 🟠 |
+| `a58da05` | **TRACE-01 前端**：`TraceabilityPanel` 嵌入 HemovigilanceView（三語） | TRACE-01 🟠 |
+| `dcc150f` | **OFF-01 離線硬化**：HMAC 事件簽章（gated）、過期送審、緊急命令白名單；+8 測試 | OFF-01 🟠 |
+| `4597569` | **STATE-02 直寫回歸防線**：靜態掃描路由 vs allowlist 棘輪；+2 測試 | STATE-02 ✅ |
+
+**驗證基線**：`npm test` = **267/267**；`npm run build` 綠燈；線上 healthy。
+
+### 新增環境變數（皆 OPTIONAL，未設 = 維持現狀；見 `.env.production.example`）
+- `DATABASE_URL`（STATE-03 原子交易）、`SCOPED_DATABASE_URL`（AUTH-03 RLS，非-BYPASSRLS 角色）
+- `VN_BECS_OFFLINE_SIGNING_SECRET`、`VN_BECS_OFFLINE_MAX_AGE_HOURS`（OFF-01）
+
+### 下午 session 下一步候選（純程式、可在此驗證）
+1. **TRACE-01 端到端測試 / reviewer 簽核**（讓它 🟠→✅）
+2. **XM-02**：配血改 join 成分實測 ABO（DB 層）
+3. **型別安全分批清理**（FhirAdapter 11、orderRepo 30 個 `any` 等，一次一模組）
+4. **VAL-01 起點**：建「需求→測試→IQ/OQ/PQ 證據」報表骨架
+5. 仍需實庫：跑 `001_tests.sql` + 新 Tier B env 取證（STATE-03/04、AUTH-03、AUD-01）
+
 ## 5. 一句話現況
 
 捐血系統（LIMS 四分頁）UI/UX + 三語 + 合規優化完成並上線；程式碼「乾淨優化」大致到頂；剩餘主要為其他子系統在地化、效能（實庫）、與 Tier B 上線正確性工作（RLS/交易/多軸，需實庫）。
