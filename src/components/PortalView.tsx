@@ -95,7 +95,7 @@ export function PortalView({
       roles: ['Nurse', 'Manager', 'Admin', 'LabTech', 'LabTech_Crossmatch'],
       description: t('portal_station_lims_desc'),
       color: 'rose',
-      status: 'High Volume',
+      status: t('portal_badge_high_volume'),
       system: 'LIMS' as SystemType
     },
     {
@@ -106,7 +106,7 @@ export function PortalView({
       roles: ['LabTech_Crossmatch', 'MedicalReviewer', 'Admin'],
       description: t('portal_station_lab_desc'),
       color: 'sky',
-      status: 'Optimized',
+      status: t('portal_badge_optimized'),
       system: 'LAB' as SystemType
     },
     {
@@ -117,7 +117,7 @@ export function PortalView({
       roles: ['Dispatcher', 'WarehouseIssuer', 'Courier', 'Admin'],
       description: t('portal_station_hub_desc'),
       color: 'emerald',
-      status: 'Live Sync',
+      status: t('portal_badge_live_sync'),
       system: 'HUB' as SystemType
     },
     {
@@ -128,7 +128,7 @@ export function PortalView({
       roles: ['Nurse', 'HospitalOperator', 'Admin'],
       description: t('portal_station_hospital_desc'),
       color: 'amber',
-      status: 'Operational',
+      status: t('portal_badge_operational'),
       system: 'HOSPITAL' as SystemType
     },
     {
@@ -139,7 +139,7 @@ export function PortalView({
       roles: ['Manager', 'NationalCommander', 'Auditor', 'Admin'],
       description: t('portal_station_national_desc'),
       color: 'violet',
-      status: 'Strategic',
+      status: t('portal_badge_strategic'),
       system: 'NATIONAL' as SystemType
     },
     {
@@ -150,29 +150,29 @@ export function PortalView({
       roles: ['Admin'],
       description: t('portal_station_mdm_desc'),
       color: 'slate',
-      status: 'Secured',
+      status: t('portal_badge_secured'),
       system: 'MDM' as SystemType
     },
     {
       id: 'IAM',
       title: t('portal_station_iam_title'),
-      subtitle: 'IAM',
+      subtitle: t('portal_station_iam_sub'),
       icon: <Database className="text-fuchsia-500" size={32} />,
       roles: ['Admin'],
       description: t('portal_station_iam_desc'),
       color: 'fuchsia',
-      status: 'Protected',
+      status: t('portal_badge_protected'),
       system: 'IAM' as SystemType
     },
     {
       id: 'DASHBOARD',
-      title: 'Strategic Dashboard',
-      subtitle: 'Command & Control',
+      title: t('portal_station_dashboard_title'),
+      subtitle: t('portal_station_dashboard_sub'),
       icon: <Database className="text-amber-500" size={32} />,
       roles: ['Admin', 'Manager'],
-      description: 'High-level metrics, inventory overview, alerts',
+      description: t('portal_station_dashboard_desc'),
       color: 'amber',
-      status: 'Live Sync',
+      status: t('portal_badge_live_sync'),
       system: 'DASHBOARD' as SystemType
     }
   ];
@@ -216,7 +216,7 @@ export function PortalView({
           <div className="flex flex-col items-end gap-6 w-full md:w-auto shrink-0">
              <div className="flex flex-wrap items-center gap-8 justify-end w-full">
                 <div className="flex flex-col items-end gap-3">
-                   <p className="text-[9px] font-black text-clinical-muted uppercase tracking-[0.4em] italic">Missions & Reminders</p>
+                   <p className="text-[9px] font-black text-clinical-muted uppercase tracking-[0.4em] italic">{t('portal_label_missions')}</p>
                    <button 
                      onClick={() => setShowTaskQueue(!showTaskQueue)}
                      className={`flex items-center gap-3 px-6 py-2.5 rounded-[20px] border-2 transition-all group active:scale-95 duration-200 ${
@@ -264,7 +264,7 @@ export function PortalView({
 
                 {/* System Manual Button */}
                 <div className="flex flex-col items-end gap-3">
-                   <p className="text-[9px] font-black text-clinical-muted uppercase tracking-[0.4em] italic">Knowledge Base</p>
+                   <p className="text-[9px] font-black text-clinical-muted uppercase tracking-[0.4em] italic">{t('portal_label_knowledge_base')}</p>
                    <button 
                      onClick={() => setShowManual(true)}
                      className="flex items-center gap-3 px-6 py-2.5 bg-clinical-card border border-clinical-border text-clinical-text rounded-[20px] hover:bg-clinical-primary hover:text-white transition-all group shadow-sm active:scale-95 duration-200"
@@ -276,7 +276,7 @@ export function PortalView({
 
                 {/* Language Switcher */}
                 <div className="flex flex-col items-end gap-3">
-                   <p className="text-[9px] font-black text-clinical-muted uppercase tracking-[0.4em] italic">Interface Language</p>
+                   <p className="text-[9px] font-black text-clinical-muted uppercase tracking-[0.4em] italic">{t('portal_label_language')}</p>
                    <div className="flex items-center gap-2 bg-clinical-card p-1.5 rounded-[22px] border border-clinical-border shadow-sm">
                       <button 
                         onClick={() => setLang('en')} 
@@ -420,9 +420,9 @@ export function PortalView({
         <footer className="mt-8 flex flex-wrap justify-center gap-12 pt-12 border-t border-clinical-border">
            {[
              { label: t('portal_footer_inventory'), value: '184.2k Units', trend: '+2.4%' },
-             { label: t('portal_footer_uptime'), value: '99.99%', trend: 'Stable' },
+             { label: t('portal_footer_uptime'), value: '99.99%', trend: t('portal_footer_trend_stable') },
              { label: t('portal_footer_efficiency'), value: '94.2%', trend: '+0.8%' },
-             { label: t('portal_footer_coldchain'), value: 'Optimal', trend: 'Global' },
+             { label: t('portal_footer_coldchain'), value: t('portal_footer_coldchain_value'), trend: t('portal_footer_trend_global') },
            ].map((stat, i) => (
              <div key={i} className="flex flex-col items-center">
                 <span className="text-[10px] font-black text-clinical-muted uppercase tracking-widest mb-2">{stat.label}</span>
@@ -543,7 +543,7 @@ export function PortalView({
                      onClick={() => setShowManual(false)}
                      className="px-12 py-4 bg-clinical-card hover:bg-clinical-primary border border-clinical-border text-clinical-text hover:text-white hover:border-clinical-primary rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] transition-all shadow-md duration-200"
                    >
-                      Close Command Manual
+                      {t('portal_close_manual')}
                    </button>
                 </div>
              </motion.div>

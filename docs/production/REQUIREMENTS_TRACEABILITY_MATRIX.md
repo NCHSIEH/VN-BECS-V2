@@ -64,7 +64,7 @@
 | RTM-COLD-01 | VN26, EU-GMP | 冷鏈：經驗證裝置、excursion 閾值、自動隔離、CAPA | SOP5 | `transport_jobs`, route-local | _需冷鏈 excursion 端到端測試_ | 🔴 目前為模擬值 | 🔴 |
 | RTM-OFF-01 | FDA606 | 離線僅限緊急命令、簽章、idempotency、衝突送審不自動覆蓋 | — | `offlineSync.ts`（**HMAC 事件簽章 `verifyOfflineEventSignature`、過期送審 `isOfflineEventStale`、緊急命令集 `EMERGENCY_OFFLINE_OPERATIONS`**）, `sync/push-events/route.ts` | `offlineSyncScenarios.test.ts`, `offlineHardening.test.ts`(8) | idempotency/衝突/terminal/版本檢查有；**事件簽章驗證（gated `VN_BECS_OFFLINE_SIGNING_SECRET`）、過期事件送審、緊急命令白名單已補**；client 端簽名與生產啟用待 cut-over | 🟠 |
 | RTM-FHIR-01 | (互通) | FHIR 資源完整對應（Patient/ServiceRequest/Specimen/DiagnosticReport/SupplyDelivery/Procedure/AdverseEvent） | — | `FhirAdapter.ts`, `app/api/v1/fhir/route.ts` | `fhirAdapter.test.ts` | 7 類資源 mapper + 路由 bundle 查詢已建；外部訊息驗證/版本化待 P2 | ✅ |
-| RTM-VAL-01 | FDA-BECS, ISO15189 | CSV 驗證套件：需求→測試→IQ/OQ/PQ 證據；上線前簽核 | — | **`scripts/gen-validation-report.cjs` → `docs/production/validation_report.md`（自動產生 RTM×測試證據 + IQ/OQ/PQ 簽核表）；`npm run validation-report`** | 268/268 OQ 證據 | OQ 證據矩陣已自動化（23 需求列對應測試、可重複產生）；IQ/PQ（實庫）與 reviewer 簽核待補 | 🟠 |
+| RTM-VAL-01 | FDA-BECS, ISO15189 | CSV 驗證套件：需求→測試→IQ/OQ/PQ 證據；上線前簽核 | — | **`scripts/gen-validation-report.cjs` → `docs/production/validation_report.md`（自動產生 RTM×測試證據 + IQ/OQ/PQ 簽核表）；`npm run validation-report`** | **292/292 OQ 證據**（2026-05-30 更新） | OQ 證據矩陣已自動化（23 需求列對應測試、可重複產生）；IQ/PQ（實庫）與 reviewer 簽核待補 | 🟠 |
 | RTM-REG-01 | VN26 | 越南法規正式對應與 12 項臨床政策書面決策 | — | `00_vietnam_readiness_gap.md` | — | 🔴 待主管機關/試點醫院簽核 | 🔴 |
 
 ---
@@ -74,7 +74,7 @@
 | Gate | 對應 RTM 列 | 目前阻斷 (Gap) |
 |---|---|---|
 | Gate 1 工程安全 | AUTH-*, STATE-*, AUD-* | STATE-03(交易/fail-closed)、STATE-04(多軸落地)、AUTH-03(RLS/facility) |
-| Gate 2 臨床流程 | XM-*, BED-*, EMG-*, COLD-*, LBL-* | XM-01(血品分類)、BED-02(床邊比型)、EMG-01、LBL-01、COLD-01 |
+| Gate 2 臨床流程 | XM-*, BED-*, EMG-*, COLD-*, LBL-* | **COLD-01**（冷鏈 excursion 端到端測試）；XM-01/BED-02/EMG-01/LBL-01 已 ✅ |
 | Gate 3 法規品質 | VAL-01, REG-01, TRACE-01, FHIR-01 | 全部待辦 |
 
 ---
