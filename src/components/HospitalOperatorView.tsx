@@ -43,7 +43,7 @@ export function HospitalOperatorView({
 
   const handleOfflineRelease = () => {
     if (!offlineBarcode || !offlineTempId || !offlineDocId) {
-      alert("Please fill all emergency fields");
+      alert(t('hosp_alert_fill'));
       return;
     }
     onOfflineRelease(offlineBarcode, offlineTempId, offlineDocId);
@@ -110,13 +110,13 @@ export function HospitalOperatorView({
          <div className="flex items-center gap-6">
             <div className="w-3 h-3 rounded-full bg-amber-500 animate-pulse shadow-[0_0_15px_rgba(245,158,11,0.8)]" />
             <div className="flex flex-col">
-               <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.4em] italic">Clinical Node Status</span>
-               <span className="text-sm font-black text-clinical-text uppercase italic tracking-tighter">Emergency Requisition Active - Node 4</span>
+               <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.4em] italic">{t('hosp_node_status')}</span>
+               <span className="text-sm font-black text-clinical-text uppercase italic tracking-tighter">{t('hosp_emergency_active')}</span>
             </div>
          </div>
          <div className="flex items-center gap-6">
             <div className="flex flex-col items-end">
-               <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">Inventory Readiness</span>
+               <span className="text-[9px] font-black text-clinical-muted uppercase tracking-widest">{t('hosp_inventory_readiness')}</span>
                <div className="flex items-center gap-3 mt-1">
                   <div className="h-1.5 w-48 bg-clinical-card rounded-full overflow-hidden p-0.5 border border-clinical-border shadow-inner">
                      <div className="h-full bg-amber-500 w-[78%] shadow-[0_0_10px_rgba(245,158,11,0.6)] rounded-full transition-all duration-1000" />
@@ -129,12 +129,12 @@ export function HospitalOperatorView({
 
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-8 border-b border-clinical-border pb-12">
         <div>
-           <p className="premium-subtitle">Hospital Operations Node</p>
+           <p className="premium-subtitle">{t('hosp_ops_node')}</p>
            <h1 className="premium-heading">{t('hospital_title')}</h1>
            <div className="flex items-center gap-6 mt-6">
               <span className="flex items-center gap-2 text-emerald-500 text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 px-4 py-1.5 rounded-full border border-emerald-500/20">
                 <ShieldCheck size={14} />
-                {user.orgId} • SECURED LINK
+                {user.orgId} • {t('hosp_secured_link')}
               </span>
               {localEventsCount > 0 && (
                  <button 
@@ -143,7 +143,7 @@ export function HospitalOperatorView({
                    className="flex items-center gap-2 text-amber-500 text-[10px] font-black uppercase tracking-widest hover:text-amber-400 transition-colors bg-amber-500/10 px-4 py-1.5 rounded-full border border-amber-500/20"
                  >
                    <RefreshCcw size={14} className={syncing ? 'animate-spin' : ''} />
-                   {localEventsCount} Pending Sync
+                   {localEventsCount} {t('hosp_pending_sync')}
                  </button>
               )}
            </div>
@@ -155,7 +155,7 @@ export function HospitalOperatorView({
              className="clinical-btn-primary h-16 px-8"
            >
              <Zap size={20} className="text-amber-300" />
-             STAT Requisition (叫血)
+             {t('hosp_stat_btn')}
            </button>
            <div className="relative group">
               <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-clinical-muted group-focus-within:text-rose-500 transition-colors" size={20} />
@@ -187,7 +187,7 @@ export function HospitalOperatorView({
         {filteredInventory.length === 0 && (
           <div className="col-span-full border-2 border-dashed border-clinical-border rounded-[48px] p-32 flex flex-col items-center justify-center text-clinical-text">
             <Package size={64} className="mb-6 opacity-20" />
-            <p className="font-black uppercase tracking-[0.3em] text-xs italic">Zero inventory records detected in this node</p>
+            <p className="font-black uppercase tracking-[0.3em] text-xs italic">{t('hosp_zero_inventory')}</p>
           </div>
         )}
       </div>
@@ -203,8 +203,8 @@ export function HospitalOperatorView({
           >
              <div className="p-12 border-b border-clinical-border flex justify-between items-center bg-rose-500/5">
                 <div>
-                   <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.5em] mb-2 italic">Life-Threatening STAT</p>
-                   <h2 className="text-4xl font-black text-clinical-text uppercase italic tracking-tighter">STAT Requisition (叫血單)</h2>
+                   <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.5em] mb-2 italic">{t('hosp_modal_life_threatening')}</p>
+                   <h2 className="text-4xl font-black text-clinical-text uppercase italic tracking-tighter">{t('hosp_modal_title')}</h2>
                 </div>
                 <button onClick={() => setShowOrderModal(false)} className="w-14 h-14 bg-clinical-card border border-clinical-border rounded-full text-clinical-muted hover:text-clinical-text transition-all flex items-center justify-center">
                    <Clock size={28} />
@@ -214,27 +214,27 @@ export function HospitalOperatorView({
              <div className="p-12 space-y-10">
                 <div className="grid grid-cols-2 gap-10">
                    <div className="space-y-4">
-                      <label className="clinical-label">Patient ID / National ID</label>
-                      <input type="text" placeholder="Scan Patient Wristband..." className="clinical-input py-8 text-xl" />
+                      <label className="clinical-label">{t('hosp_patient_nid')}</label>
+                      <input type="text" placeholder={t('hosp_scan_wristband')} className="clinical-input py-8 text-xl" />
                    </div>
                    <div className="space-y-4">
-                      <label className="clinical-label">Ordering Physician</label>
-                      <input type="text" placeholder="Physician Code..." className="clinical-input py-8 text-xl" />
+                      <label className="clinical-label">{t('hosp_ordering_physician')}</label>
+                      <input type="text" placeholder={t('hosp_physician_code')} className="clinical-input py-8 text-xl" />
                    </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-10">
                    <div className="space-y-4">
-                      <label className="clinical-label">Blood Product</label>
+                      <label className="clinical-label">{t('hosp_blood_product')}</label>
                       <select className="clinical-input py-8 text-xl appearance-none italic bg-clinical-bg">
-                         <option>Red Blood Cells (LR)</option>
-                         <option>Fresh Frozen Plasma</option>
-                         <option>Platelets Apheresis</option>
-                         <option>Cryoprecipitate</option>
+                         <option>{t('hosp_prod_rbc')}</option>
+                         <option>{t('hosp_prod_ffp')}</option>
+                         <option>{t('hosp_prod_plt')}</option>
+                         <option>{t('hosp_prod_cryo')}</option>
                       </select>
                    </div>
                    <div className="space-y-4">
-                      <label className="clinical-label">Quantity (Units)</label>
+                      <label className="clinical-label">{t('hosp_quantity')}</label>
                       <input type="number" defaultValue="2" className="clinical-input py-8 text-2xl text-center" />
                    </div>
                 </div>
@@ -242,10 +242,10 @@ export function HospitalOperatorView({
                 <div className="p-8 bg-rose-500/5 border border-rose-500/20 rounded-[32px] space-y-4">
                    <div className="flex items-center gap-4 text-rose-500">
                       <AlertCircle size={24} />
-                      <p className="text-[11px] font-black uppercase tracking-[0.2em]">Clinical Justification mandatory for STAT</p>
+                      <p className="text-[11px] font-black uppercase tracking-[0.2em]">{t('hosp_justification')}</p>
                    </div>
-                   <textarea 
-                     placeholder="State emergency clinical condition (e.g. Massive Hemorrhage, MTP Activation)..." 
+                   <textarea
+                     placeholder={t('hosp_justification_placeholder')}
                      className="w-full bg-clinical-bg/80 border border-clinical-border rounded-[24px] p-6 text-clinical-text text-lg focus:outline-none focus:ring-4 focus:ring-rose-500/20 focus:border-rose-500/50 transition-all h-32 italic"
                    />
                 </div>
@@ -253,18 +253,18 @@ export function HospitalOperatorView({
                 <div className="flex gap-6 pt-6">
                    <button 
                      onClick={() => {
-                        alert("STAT Request Transmitted to Regional Hub via Secure Channel");
+                        alert(t('hosp_alert_transmitted'));
                         setShowOrderModal(false);
                      }}
                      className="clinical-btn-primary flex-1 py-8 text-base"
                    >
-                     Transmit Emergency STAT
+                     {t('hosp_transmit_stat')}
                    </button>
                    <button 
                      onClick={() => setShowOrderModal(false)}
                      className="px-12 bg-clinical-card text-clinical-muted hover:text-clinical-text font-black rounded-[24px] border border-clinical-border uppercase tracking-widest text-[11px] transition-all"
                    >
-                     Cancel
+                     {t('hosp_cancel')}
                    </button>
                 </div>
              </div>
