@@ -109,6 +109,26 @@ i18n 續作 commit（`14bcaa9` 之後，皆已推送上線）：
 4. **VAL-01 起點**：建「需求→測試→IQ/OQ/PQ 證據」報表骨架
 5. 仍需實庫：跑 `001_tests.sql` + 新 Tier B env 取證（STATE-03/04、AUTH-03、AUD-01）
 
+## 4d. Chrome 實測發現的關鍵問題（已修，HEAD `f847ee1`）
+
+用 Chrome 模擬使用者實測，抓到兩個自動測試無法發現的線上問題：
+
+### ⚠️ i18n CRLF bug（最重要）— 已修
+- **根因**：`src/lib/i18nFallbackDict.ts` 是 **CRLF 行尾**，所有補鍵腳本（匹配 `'  en: {\n'`）**靜默失敗**（回報成功但沒寫入）。結果本/前 session 加的 ~298 個臨床子系統 i18n 鍵**從未進字典**，線上全顯示原始鍵名（如 `lims_hdr_registry_control`、`bv_title`）。
+- **為何沒被發現**：`t()` 缺鍵回傳鍵名（不報錯）、單元測試 mock 也回傳鍵名、build 不檢查字典完整性 → **只有 Chrome 實測抓得到**。
+- **修法**：新增 `src/lib/i18nSupplement.ts`（**317 鍵 × EN/繁中/越南文**，獨立檔避開 CRLF），在 `i18n.tsx` 的 `t()` 合併查找。缺失鍵 298→~11（剩餘為動態 `t(變數)`/誤判）。瀏覽器驗證 0 原始鍵。
+- **⚠️ 教訓**：日後補 i18n 鍵**改用 `i18nSupplement.ts`**（直接編輯該檔的物件），**不要**再對 CRLF 的 `i18nFallbackDict.ts` 跑 `\n` 字串替換腳本。
+
+### ⚠️ 正式環境登入失敗 — 已備修法
+- **根因**：生產 `NODE_ENV=production` 下 (1) demo 登入（admin/admin123）停用、(2) 我加的安全硬化拒絕**明文密碼**；但 `seed_data.sql` 帳號密碼是明文 `123` → 全部 401。
+- **修法**：`seed_data.sql` 已改存 bcrypt('123')（commit `c3121c6`，`ON CONFLICT DO UPDATE` 可修既有列）。**線上庫需手動跑一次** Supabase SQL：
+  `UPDATE users SET password = '$2b$10$PiZhGQIUqvOwDR/3fsPG2.Mj/llp4UwUndKeTpkSMJ.ROZFO3zKPS' WHERE password = '123';`
+  之後發布的帳密（admin/123、manager/123…）即可登入（密碼不變，只是改存雜湊）。
+
+### i18n 覆蓋現況
+✅ 臨床操作子系統 + Portal 指示/任務佇列已三語化（透過 supplement）。
+🔶 **仍混雜英文（外觀，不影響功能）**：Portal 系統卡片狀態徽章（High Volume/Live Sync…）、抬頭（HOSPITAL NODE COMMAND/CLINICAL FLOW/LIMS STAGES）、角色名（Hospital Operator…）約 30+ 字串 → 下次補（加到 `i18nSupplement.ts` + 元件接 `t()`）。
+
 ## 5. 一句話現況
 
 捐血系統（LIMS 四分頁）UI/UX + 三語 + 合規優化完成並上線；程式碼「乾淨優化」大致到頂；剩餘主要為其他子系統在地化、效能（實庫）、與 Tier B 上線正確性工作（RLS/交易/多軸，需實庫）。
