@@ -30,7 +30,12 @@ const LOCAL_T: Record<string, Record<string, string>> = {
     sim_click_copy: "點選複製驗證碼",
     sim_copied: "驗證碼已複製！",
     forgot_loading: "驗證信箱並發送中...",
-    reset_loading: "驗證中並重設密碼..."
+    reset_loading: "驗證中並重設密碼...",
+    err_send_reset: "無法發送重設驗證信",
+    err_generic: "發生錯誤",
+    err_reset_fail: "重設密碼失敗",
+    msg_otp_sent: "驗證碼已發送！",
+    msg_reset_success: "密碼變更成功，請輸入新密碼登入。"
   },
   en: {
     forgot_link: "Forgot Password?",
@@ -51,7 +56,12 @@ const LOCAL_T: Record<string, Record<string, string>> = {
     sim_click_copy: "Click to Copy OTP Code",
     sim_copied: "OTP Copied to Clipboard!",
     forgot_loading: "Verifying & generating OTP...",
-    reset_loading: "Verifying OTP & resetting..."
+    reset_loading: "Verifying OTP & resetting...",
+    err_send_reset: "Failed to send the reset email",
+    err_generic: "An error occurred",
+    err_reset_fail: "Password reset failed",
+    msg_otp_sent: "OTP code sent successfully!",
+    msg_reset_success: "Password reset successful. Please log in with your new password."
   },
   vi: {
     forgot_link: "Quên mật khẩu?",
@@ -72,7 +82,12 @@ const LOCAL_T: Record<string, Record<string, string>> = {
     sim_click_copy: "Nhấp để sao chép mã OTP",
     sim_copied: "Đã sao chép mã OTP!",
     forgot_loading: "Đang xác thực & tạo OTP...",
-    reset_loading: "Đang xác thực OTP & đặt lại..."
+    reset_loading: "Đang xác thực OTP & đặt lại...",
+    err_send_reset: "Không gửi được email đặt lại",
+    err_generic: "Đã xảy ra lỗi",
+    err_reset_fail: "Đặt lại mật khẩu thất bại",
+    msg_otp_sent: "Đã gửi mã OTP!",
+    msg_reset_success: "Đặt lại mật khẩu thành công. Vui lòng đăng nhập bằng mật khẩu mới."
   }
 };
 
@@ -146,7 +161,7 @@ export function LoginView({ onLogin, onOpenDocs }: LoginViewProps) {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || '無法發送重設驗證信');
+        throw new Error(data.error || lt.err_send_reset);
       }
 
       if (data.simulation && data.otpCode) {
@@ -155,9 +170,9 @@ export function LoginView({ onLogin, onOpenDocs }: LoginViewProps) {
       }
 
       setAuthState('RESET');
-      setSuccessMsg(currentLang === 'zh-TW' ? '驗證碼已發送！' : currentLang === 'vi' ? 'Mã xác thực đã gửi!' : 'OTP Code sent successfully!');
+      setSuccessMsg(lt.msg_otp_sent);
     } catch (err: any) {
-      setError(err.message || '發生錯誤');
+      setError(err.message || lt.err_generic);
     } finally {
       setLoading(false);
     }
@@ -183,7 +198,7 @@ export function LoginView({ onLogin, onOpenDocs }: LoginViewProps) {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || '重設密碼失敗');
+        throw new Error(data.error || lt.err_reset_fail);
       }
 
       // Hide simulator
@@ -200,12 +215,12 @@ export function LoginView({ onLogin, onOpenDocs }: LoginViewProps) {
       if (!loginRes.ok) {
         // Fallback to login screen
         setAuthState('LOGIN');
-        setSuccessMsg(currentLang === 'zh-TW' ? '密碼變更成功，請輸入新密碼登入。' : 'Password reset successful. Please login.');
+        setSuccessMsg(lt.msg_reset_success);
       } else {
         onLogin(loginData);
       }
     } catch (err: any) {
-      setError(err.message || '重設密碼失敗');
+      setError(err.message || lt.err_reset_fail);
     } finally {
       setLoading(false);
     }
